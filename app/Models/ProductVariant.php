@@ -9,6 +9,7 @@ class ProductVariant extends Model
     protected $fillable = [
         'product_id',
         'buyer_sku_code',
+        'digiflazz_variant_id',
         'name',
         'base_price',
         'markup_rp',
@@ -26,12 +27,22 @@ class ProductVariant extends Model
         return $this->belongsTo(Product::class);
     }
 
-    // final_price = base_price + (variant_markup ?? product_markup ?? 0)
+    public function digiflazzVariant()
+    {
+        return $this->belongsTo(DigiflazzVariant::class);
+    }
+
     public function getFinalPriceAttribute(): int
     {
-        $productMarkup = (int) ($this->product->markup_rp ?? 0);
-        $selfMarkup = (int) ($this->markup_rp ?? 0);
-        return (int) $this->base_price + ($selfMarkup ?: $productMarkup);
+        $base = $this->base_price ?? 0;
+        $markup = $this->markup_rp ?? ($this->product->markup_rp ?? 0);
+
+        return $base + $markup;
+    }
+
+    public function usesDigiflazz(): bool
+    {
+        return !is_null($this->digiflazz_variant_id);
     }
 
 }

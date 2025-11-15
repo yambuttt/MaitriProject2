@@ -10,6 +10,7 @@ use App\Http\Controllers\AdminSubcategoryController;
 use App\Http\Controllers\AdminProductController;
 use App\Http\Controllers\AdminProductVariantController;
 use App\Http\Controllers\CatalogController;
+use App\Http\Controllers\AdminDigiflazzController;
 
 Route::view('/', 'pages.landing')->name('landing');
 Route::get('/catalog', [CatalogController::class, 'index'])->name('catalog');
@@ -89,6 +90,13 @@ Route::middleware(['auth'])->group(function () {
             '/admin/catalog/products/{product}/variants/bulk',
             [AdminProductVariantController::class, 'bulkUpdate']
         )->name('admin.products.variants.bulk');
+        Route::prefix('admin/digiflazz')->name('admin.digiflazz.')->group(function () {
+            Route::post('/sync-master', [AdminDigiflazzController::class, 'syncMaster'])
+                ->name('sync-master');
+
+            Route::post('/sync-variant-prices', [AdminDigiflazzController::class, 'syncVariantPrices'])
+                ->name('sync-variant-prices');
+        });
 
     });
 });
