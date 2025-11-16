@@ -94,9 +94,12 @@ Route::middleware(['auth'])->group(function () {
             Route::post('/sync-master', [AdminDigiflazzController::class, 'syncMaster'])
                 ->name('sync-master');
 
+
             Route::post('/sync-variant-prices', [AdminDigiflazzController::class, 'syncVariantPrices'])
                 ->name('sync-variant-prices');
         });
+       
+
 
     });
 });

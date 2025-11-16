@@ -8,6 +8,9 @@ use Illuminate\Http\Request;
 use Illuminate\Validation\Rule;
 use App\Services\DigiflazzClient;
 use Illuminate\Support\Arr;
+use App\Models\DigiflazzVariant;
+
+
 
 
 class AdminProductVariantController extends Controller
@@ -103,78 +106,101 @@ class AdminProductVariantController extends Controller
 
 
     // Cari SKU dari Digiflazz (AJAX) dengan query q
-    public function searchDigiflazz(Product $product, Request $request, DigiflazzClient $client)
+    public function searchDigiflazz(Request $request, Product $product)
     {
-        $q = trim((string) $request->query('q', ''));
-        if ($q === '') {
-            return response()->json(['items' => []]);
+        $search = trim($request->input('q', ''));
+
+        $query = DigiflazzVariant::query();
+
+        if ($search !== '') {
+            $like = "%{$search}%";
+
+            $query->where(function ($q) use ($like) {
+                $q->where('product_name', 'like', $like)
+                    ->orWhere('brand', 'like', $like)
+                    ->orWhere('buyer_sku_code', 'like', $like);
+            });
         }
 
-        $rows = $client->pricelist();
+        // Biar nggak kebanyakan, batasi 100 dulu
+        $variants = $query
+            ->orderBy('brand')
+            ->orderBy('product_name')
+            ->limit(100)
+            ->get();
 
-        // filter sederhana di sisi kita: cocokkan nama/brand/buyer_sku_code
-        $filtered = array_values(array_filter($rows, function ($r) use ($q) {
-            $hay = mb_strtolower(
-                ($r['product_name'] ?? '')
-                . ' ' . ($r['brand'] ?? '')
-                . ' ' . ($r['buyer_sku_code'] ?? '')
-            );
-            return str_contains($hay, mb_strtolower($q));
-        }));
-
-        // map hanya field yang diperlukan UI
-        $items = array_map(function ($r) {
+        // Bentuk JSON supaya mirip dengan struktur lama yang dipakai JS
+        $data = $variants->map(function (DigiflazzVariant $v) {
             return [
-                'buyer_sku_code' => (string) ($r['buyer_sku_code'] ?? ''),
-                'name' => (string) ($r['product_name'] ?? ''),
-                'brand' => (string) ($r['brand'] ?? ''),
-                'category' => (string) ($r['category'] ?? ''),
-                'price' => (int) ($r['price'] ?? 0), // base price / modal
-                'seller_name' => (string) ($r['seller_name'] ?? ''),
-                'status' => (string) ($r['status'] ?? ''), // active / gangguan
+                'id' => $v->id,               // id master
+                'buyer_sku_code' => $v->buyer_sku_code,
+                'name' => $v->product_name,
+                'brand' => $v->brand,
+                'category' => $v->category,
+                'price' => $v->base_price,
+                'status' => $v->status,
             ];
-        }, array_slice($filtered, 0, 50)); // batasi 50 hasil
+        })->values();
 
-        return response()->json(['items' => $items]);
+        return response()->json([
+            'data' => $data,
+        ]);
     }
 
+
     // Import SKU terpilih menjadi varian produk
-    public function importFromDigiflazz(Product $product, Request $request)
+    public function importFromDigiflazz(Request $request, Product $product)
     {
-        $data = $request->validate([
-            'items' => ['required', 'array', 'min:1'],
-            'items.*.buyer_sku_code' => ['required', 'string', 'max:120'],
-            'items.*.name' => ['required', 'string', 'max:180'],
-            'items.*.price' => ['required', 'integer', 'min:0'],
-        ]);
+        $items = $request->input('items', []);
+
+        if (!is_array($items)) {
+            return back()->with('error', 'Data import tidak valid.');
+        }
 
         $created = 0;
-        $skipped = 0;
-        foreach ($data['items'] as $row) {
-            $exists = \App\Models\ProductVariant::where('product_id', $product->id)
-                ->where('buyer_sku_code', $row['buyer_sku_code'])
-                ->exists();
 
-            if ($exists) {
-                $skipped++;
+        foreach ($items as $item) {
+            // dari front-end kita minta kirim id master
+            $masterId = $item['digiflazz_variant_id'] ?? $item['id'] ?? null;
+            if (!$masterId) {
                 continue;
             }
 
-            \App\Models\ProductVariant::create([
+            /** @var \App\Models\DigiflazzVariant|null $master */
+            $master = DigiflazzVariant::find($masterId);
+            if (!$master) {
+                continue;
+            }
+
+            // cek apakah varian untuk SKU ini di produk ini sudah ada
+            $alreadyExists = ProductVariant::where('product_id', $product->id)
+                ->where('digiflazz_variant_id', $master->id)
+                ->exists();
+
+            if ($alreadyExists) {
+                continue;
+            }
+
+            ProductVariant::create([
                 'product_id' => $product->id,
-                'buyer_sku_code' => $row['buyer_sku_code'],
-                'name' => $row['name'],
-                'base_price' => (int) $row['price'],
-                'markup_rp' => null,        // pakai markup produk sebagai default
-                'is_active' => true,        // aktifkan langsung
+                'digiflazz_variant_id' => $master->id,
+                'buyer_sku_code' => $master->buyer_sku_code,
+                'name' => $master->product_name,
+                'base_price' => $master->base_price, // harga modal dari master
+                'markup_rp' => null,                 // pakai markup default product
+                'is_active' => true,
             ]);
 
             $created++;
         }
 
-        return redirect()->route('admin.products.variants.index', $product)
-            ->with('ok', "Import selesai: {$created} ditambahkan, {$skipped} dilewati.");
+        if ($created === 0) {
+            return back()->with('warning', 'Tidak ada varian baru yang diimport.');
+        }
+
+        return back()->with('success', "{$created} varian berhasil diimport dari Digiflazz.");
     }
+
 
     // Sinkronkan base_price & status varian terhadap pricelist terbaru
     public function syncFromDigiflazz(Product $product, DigiflazzClient $client)
