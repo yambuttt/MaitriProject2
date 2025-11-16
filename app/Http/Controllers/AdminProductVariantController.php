@@ -122,29 +122,26 @@ class AdminProductVariantController extends Controller
             });
         }
 
-        // Biar nggak kebanyakan, batasi 100 dulu
         $variants = $query
             ->orderBy('brand')
             ->orderBy('product_name')
             ->limit(100)
             ->get();
 
-        // Bentuk JSON supaya mirip dengan struktur lama yang dipakai JS
-        $data = $variants->map(function (DigiflazzVariant $v) {
-            return [
-                'id' => $v->id,               // id master
-                'buyer_sku_code' => $v->buyer_sku_code,
-                'name' => $v->product_name,
-                'brand' => $v->brand,
-                'category' => $v->category,
-                'price' => $v->base_price,
-                'status' => $v->status,
-            ];
-        })->values();
-
-        return response()->json([
-            'data' => $data,
-        ]);
+        // KIRIM ARRAY LANGSUNG, TANPA BUNGKUS "data"
+        return response()->json(
+            $variants->map(function (DigiflazzVariant $v) {
+                return [
+                    'id' => $v->id,               // penting buat import
+                    'buyer_sku_code' => $v->buyer_sku_code,
+                    'name' => $v->product_name,
+                    'brand' => $v->brand,
+                    'category' => $v->category,
+                    'price' => $v->base_price,
+                    'status' => $v->status,
+                ];
+            })->values()
+        );
     }
 
 
