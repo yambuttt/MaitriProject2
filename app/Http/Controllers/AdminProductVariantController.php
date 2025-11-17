@@ -18,24 +18,31 @@ class AdminProductVariantController extends Controller
     // List varian per produk + form tambah cepat
     public function index(Product $product, Request $request)
     {
-        $q = trim((string) $request->query('q', ''));
-        $pp = (int) $request->query('per_page', 20);
-        $pp = $pp > 0 && $pp <= 200 ? $pp : 20;
+        $pp = (int) $request->input('per_page', 20);
+        $q = trim($request->input('q', ''));
 
-        $variants = ProductVariant::query()
-            ->where('product_id', $product->id)
-            ->when($q !== '', function ($qb) use ($q) {
-                $qb->where(function ($w) use ($q) {
-                    $w->where('name', 'like', "%{$q}%")
-                        ->orWhere('buyer_sku_code', 'like', "%{$q}%");
-                });
-            })
-            ->orderBy('name')
-            ->paginate($pp)
-            ->withQueryString();
+        $variantsQuery = $product->variants()
+            ->with(['product', 'digiflazzVariant'])   // <— penting
+            ->orderBy('buyer_sku_code');
 
-        return view('dashboard.admin.products.variants.index', compact('product', 'variants', 'q', 'pp'));
+        if ($q !== '') {
+            $like = "%{$q}%";
+            $variantsQuery->where(function ($query) use ($like) {
+                $query->where('buyer_sku_code', 'like', $like)
+                    ->orWhere('name', 'like', $like);
+            });
+        }
+
+        $variants = $variantsQuery->paginate($pp)->withQueryString();
+
+        return view('dashboard.admin.products.variants.index', [
+            'product' => $product,
+            'variants' => $variants,
+            'q' => $q,
+            'pp' => $pp,
+        ]);
     }
+
 
     public function store(Product $product, Request $request)
     {
@@ -79,7 +86,7 @@ class AdminProductVariantController extends Controller
                     ->ignore($variant->id)
             ],
             'name' => ['required', 'string', 'max:180'],
-            'base_price' => ['required', 'integer', 'min:0'],
+            
             'markup_rp' => ['nullable', 'integer', 'min:0'],
             'is_active' => ['nullable', 'boolean'],
         ]);
@@ -129,10 +136,10 @@ class AdminProductVariantController extends Controller
             ->get();
 
         // KIRIM ARRAY LANGSUNG, TANPA BUNGKUS "data"
-        return response()->json(
-            $variants->map(function (DigiflazzVariant $v) {
+        return response()->json([
+            'items' => $variants->map(function (DigiflazzVariant $v) {
                 return [
-                    'id' => $v->id,               // penting buat import
+                    'id' => $v->id,
                     'buyer_sku_code' => $v->buyer_sku_code,
                     'name' => $v->product_name,
                     'brand' => $v->brand,
@@ -140,12 +147,12 @@ class AdminProductVariantController extends Controller
                     'price' => $v->base_price,
                     'status' => $v->status,
                 ];
-            })->values()
-        );
+            })->values(),
+        ]);
+
     }
 
 
-    // Import SKU terpilih menjadi varian produk
     public function importFromDigiflazz(Request $request, Product $product)
     {
         $items = $request->input('items', []);
@@ -157,7 +164,6 @@ class AdminProductVariantController extends Controller
         $created = 0;
 
         foreach ($items as $item) {
-            // dari front-end kita minta kirim id master
             $masterId = $item['digiflazz_variant_id'] ?? $item['id'] ?? null;
             if (!$masterId) {
                 continue;
@@ -169,7 +175,6 @@ class AdminProductVariantController extends Controller
                 continue;
             }
 
-            // cek apakah varian untuk SKU ini di produk ini sudah ada
             $alreadyExists = ProductVariant::where('product_id', $product->id)
                 ->where('digiflazz_variant_id', $master->id)
                 ->exists();
@@ -183,8 +188,8 @@ class AdminProductVariantController extends Controller
                 'digiflazz_variant_id' => $master->id,
                 'buyer_sku_code' => $master->buyer_sku_code,
                 'name' => $master->product_name,
-                'base_price' => $master->base_price, // harga modal dari master
-                'markup_rp' => null,                 // pakai markup default product
+                // TIDAK ADA base_price di sini
+                'markup_rp' => null,
                 'is_active' => true,
             ]);
 

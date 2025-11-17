@@ -2,25 +2,33 @@
 
 namespace App\Models;
 
+use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 
 class ProductVariant extends Model
 {
+    use HasFactory;
+
     protected $fillable = [
         'product_id',
-        'buyer_sku_code',
         'digiflazz_variant_id',
+        'buyer_sku_code',
         'name',
-        'base_price',
+        // 'base_price' DIHILANGKAN dari fillable
         'markup_rp',
-        'is_active'
+        'is_active',
     ];
 
     protected $casts = [
-        'is_active' => 'boolean',
-        'base_price' => 'integer',
         'markup_rp' => 'integer',
+        'is_active' => 'boolean',
     ];
+
+    /*
+    |--------------------------------------------------------------------------
+    | RELATIONS
+    |--------------------------------------------------------------------------
+    */
 
     public function product()
     {
@@ -32,17 +40,57 @@ class ProductVariant extends Model
         return $this->belongsTo(DigiflazzVariant::class);
     }
 
+    /*
+    |--------------------------------------------------------------------------
+    | ACCESSORS
+    |--------------------------------------------------------------------------
+    */
+
+    /**
+     * Base price “single source”:
+     * SELALU ambil dari digiflazz_variants kalau relasi ada.
+     * Kalau tidak ada relasi → dianggap 0.
+     */
+    public function getBasePriceAttribute($value): int
+    {
+        // kalau sudah di-eager load
+        if ($this->relationLoaded('digiflazzVariant') && $this->digiflazzVariant) {
+            return (int) $this->digiflazzVariant->base_price;
+        }
+
+        // kalau belum di-load, tetap coba ambil
+        if ($this->digiflazz_variant_id) {
+            $master = $this->digiflazzVariant; // lazy load
+            if ($master) {
+                return (int) $master->base_price;
+            }
+        }
+
+        // fallback: kalau benar-benar tidak ada master (varian manual)
+        return 0;
+    }
+
+    /**
+     * Harga jual akhir:
+     * base_price (dari Digiflazz) + markup varian / produk.
+     */
     public function getFinalPriceAttribute(): int
     {
-        $base = $this->base_price ?? 0;
-        $markup = $this->markup_rp ?? ($this->product->markup_rp ?? 0);
+        $base = $this->base_price; // lewat accessor di atas
+
+        $markup = (int) ($this->markup_rp ?? $this->product->markup_rp ?? 0);
 
         return $base + $markup;
     }
 
-    public function usesDigiflazz(): bool
-    {
-        return !is_null($this->digiflazz_variant_id);
-    }
+    /*
+    |--------------------------------------------------------------------------
+    | SCOPES
+    |--------------------------------------------------------------------------
+    */
 
+    public function scopeActive($query)
+    {
+        return $query->where('is_active', true);
+    }
 }

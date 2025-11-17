@@ -42,6 +42,22 @@ Route::middleware('auth')->group(function () {
     Route::get('/admin/users', [AdminUserController::class, 'index'])->name('admin.users.index');
 });
 
+Route::middleware(['auth', 'admin'])
+    ->prefix('admin')
+    ->name('admin.')
+    ->group(function () {
+
+        // ...
+
+        Route::get('/digiflazz', [AdminDigiflazzController::class, 'index'])
+            ->name('digiflazz.index');
+
+        Route::post('/digiflazz/sync-master', [AdminDigiflazzController::class, 'syncMaster'])
+            ->name('digiflazz.sync-master');
+
+    });
+
+
 
 Route::middleware(['auth'])->group(function () {
     Route::middleware('admin')->group(function () {

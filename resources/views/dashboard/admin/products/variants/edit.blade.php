@@ -26,11 +26,6 @@
 
       <div class="grid md:grid-cols-2 gap-4">
         <div>
-          <label class="text-sm text-slate-300">Base Price (Rp)</label>
-          <input name="base_price" type="number" min="0" step="1" value="{{ old('base_price',$variant->base_price) }}" required
-                 class="mt-1 h-11 w-full rounded-xl bg-[#0E1524] border border-slate-700/60 px-3 outline-none focus:border-violet-500/70 focus:ring-2 focus:ring-violet-500/30">
-        </div>
-        <div>
           <label class="text-sm text-slate-300">Markup Varian (Rp)</label>
           <input name="markup_rp" type="number" min="0" step="1" value="{{ old('markup_rp',$variant->markup_rp) }}"
                  placeholder="kosongkan = pakai markup produk"

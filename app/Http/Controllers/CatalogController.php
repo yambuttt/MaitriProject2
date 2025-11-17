@@ -76,15 +76,27 @@ class CatalogController extends Controller
         return view('pages.catalog', compact('products', 'categories', 'subcategories', 'category', 'subcategory', 'q', 'pp'));
     }
 
-    public function show(\App\Models\Product $product)
+    public function show(Product $product)
     {
         abort_unless($product->is_active, 404);
 
+        // Load relasi dulu
         $product->load([
             'category:id,name,slug',
             'subcategory:id,name,slug,category_id',
-            'variants' => fn($q) => $q->where('is_active', true)->orderBy('base_price'),
+            'variants' => function ($q) {
+                $q->where('is_active', true)
+                    ->with('digiflazzVariant');   // penting biar base_price accessor bisa baca master
+            },
         ]);
+
+        // Urutkan varian di memory berdasarkan accessor base_price
+        $product->setRelation(
+            'variants',
+            $product->variants
+                ->sortBy(fn($v) => $v->base_price)
+                ->values()
+        );
 
         abort_if($product->variants->isEmpty(), 404);
 

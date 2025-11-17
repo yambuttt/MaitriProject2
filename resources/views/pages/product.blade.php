@@ -30,7 +30,7 @@
           </div>
 
           <div class="mt-4 space-y-3 text-sm leading-relaxed text-slate-300" id="pDescription">
-            {{ $product->description ?? '—' }}
+           {!! nl2br(e($product->description)) !!}
           </div>
         </div>
 

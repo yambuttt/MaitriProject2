@@ -28,6 +28,24 @@
 
 
     </div>
+    @if (session('success'))
+        <div class="mb-3 rounded-xl bg-emerald-500/10 border border-emerald-500/40 px-4 py-3 text-sm text-emerald-200">
+            {{ session('success') }}
+        </div>
+    @endif
+
+    @if (session('warning'))
+        <div class="mb-3 rounded-xl bg-amber-500/10 border border-amber-500/40 px-4 py-3 text-sm text-amber-200">
+            {{ session('warning') }}
+        </div>
+    @endif
+
+    @if (session('error'))
+        <div class="mb-3 rounded-xl bg-rose-500/10 border border-rose-500/40 px-4 py-3 text-sm text-rose-200">
+            {{ session('error') }}
+        </div>
+    @endif
+
 
     {{-- Filter --}}
     <form method="get" class="mt-4 grid md:grid-cols-[1fr_140px] gap-3">
@@ -150,7 +168,7 @@
                             </td>
                             <td class="px-4 py-3 text-slate-400">{{ $v->buyer_sku_code }}</td>
                             <td class="px-4 py-3 font-medium">{{ $v->name }}</td>
-                            <td class="px-4 py-3">Rp {{ number_format($v->base_price, 0, ',', '.') }}</td>
+                            <td class="px-4 py-3">Rp {{ number_format($v->base_price, 0, ',', '.') }}</td>  
                             <td class="px-4 py-3">
                                 @if(is_null($v->markup_rp))
                                     <span class="text-slate-400">— (pakai produk: Rp
@@ -165,7 +183,7 @@
                                     @csrf @method('PATCH')
                                     <button
                                         class="inline-flex items-center px-2 py-1 rounded-lg text-xs
-                                                                            {{ $v->is_active ? 'bg-emerald-500/10 text-emerald-300 border border-emerald-700/40' : 'bg-slate-500/10 text-slate-300 border border-slate-700/40' }}">
+                                                                                                    {{ $v->is_active ? 'bg-emerald-500/10 text-emerald-300 border border-emerald-700/40' : 'bg-slate-500/10 text-slate-300 border border-slate-700/40' }}">
                                         {{ $v->is_active ? 'Aktif' : 'Nonaktif' }}
                                     </button>
                                 </form>
@@ -202,7 +220,7 @@
 
             {{-- container: flex-col + max height + overflow --}}
             <div class="relative mx-auto max-w-5xl mt-16 bg-[#0E1524] border border-slate-800/70 rounded-2xl
-                                  flex flex-col max-h-[85vh] overflow-hidden">
+                                              flex flex-col max-h-[85vh] overflow-hidden">
 
                 {{-- header (non-scroll) --}}
                 <div class="p-4 border-b border-slate-800/70 flex items-center justify-between">
@@ -296,29 +314,54 @@
                         return;
                     }
                     tbody.innerHTML = items.map((it, idx) => `
-                                <tr class="border-t border-slate-800/70">
-                                  <td class="px-3 py-2"><input type="checkbox" class="digiRow" data-idx="${idx}"></td>
-                                  <td class="px-3 py-2 text-slate-400">${it.buyer_sku_code}</td>
-                                  <td class="px-3 py-2">${it.name}</td>
-                                  <td class="px-3 py-2">${it.brand || '-'}</td>
-                                  <td class="px-3 py-2">${it.category || '-'}</td>
-                                  <td class="px-3 py-2">Rp ${Number(it.price).toLocaleString('id-ID')}</td>
-                                  <td class="px-3 py-2 ${it.status === 'Active' ? 'text-emerald-300' : 'text-amber-300'}">${it.status || '-'}</td>
-                                  <input type="hidden" name="items[${idx}][buyer_sku_code]" value="${it.buyer_sku_code}" disabled>
-                                  <input type="hidden" name="items[${idx}][name]" value="${it.name.replaceAll('"', '&quot;')}" disabled>
-                                  <input type="hidden" name="items[${idx}][price]" value="${it.price}" disabled>
-                                </tr>
-                              `).join('');
+              <tr class="border-t border-slate-800/70">
+                <td class="px-3 py-2">
+                  <input type="checkbox" class="digiRow" data-idx="${idx}">
+                </td>
+                <td class="px-3 py-2 text-slate-400">${it.buyer_sku_code}</td>
+                <td class="px-3 py-2">${it.name}</td>
+                <td class="px-3 py-2">${it.brand || '-'}</td>
+                <td class="px-3 py-2">${it.category || '-'}</td>
+                <td class="px-3 py-2">Rp ${Number(it.price).toLocaleString('id-ID')}</td>
+                <td class="px-3 py-2 ${it.status === 'Active' ? 'text-emerald-300' : 'text-amber-300'}">
+                  ${it.status || '-'}
+                </td>
+
+                <!-- INI YANG PENTING -->
+                <input type="hidden"
+                       name="items[${idx}][digiflazz_variant_id]"
+                       value="${it.id}"
+                       disabled>
+
+                <input type="hidden"
+                       name="items[${idx}][buyer_sku_code]"
+                       value="${it.buyer_sku_code}"
+                       disabled>
+
+                <input type="hidden"
+                       name="items[${idx}][name]"
+                       value="${it.name.replaceAll('"', '&quot;')}"
+                       disabled>
+
+                <input type="hidden"
+                       name="items[${idx}][price]"
+                       value="${it.price}"
+                       disabled>
+              </tr>
+            `).join('');
+
                     // check/uncheck
                     const rows = Array.from(document.querySelectorAll('.digiRow'));
                     rows.forEach(row => {
                         row.addEventListener('change', () => {
                             const i = row.getAttribute('data-idx');
+                            form.querySelector(`input[name="items[${i}][digiflazz_variant_id]"]`).disabled = !row.checked;
                             form.querySelector(`input[name="items[${i}][buyer_sku_code]"]`).disabled = !row.checked;
                             form.querySelector(`input[name="items[${i}][name]"]`).disabled = !row.checked;
                             form.querySelector(`input[name="items[${i}][price]"]`).disabled = !row.checked;
                         });
                     });
+
                     checkAll.checked = false;
                 } catch (err) {
                     tbody.innerHTML = '<tr><td colspan="7" class="px-3 py-6 text-center text-red-300">Gagal memuat data.</td></tr>';
@@ -337,65 +380,65 @@
 @endpush
 
 @push('body')
-<script>
-(function(){
-  const checkAll = document.getElementById('checkAll');
-  const rowChecks = () => Array.from(document.querySelectorAll('.rowCheck'));
-  const bulkCount = document.getElementById('bulkCount');
-  const bulkIds = document.getElementById('bulkIds');
-  const bulkForm = document.getElementById('bulkForm');
-  const bulkAction = document.getElementById('bulkAction');
-  const bulkMarkup = document.getElementById('bulkMarkup');
-  const btnSet = document.getElementById('btnBulkSet');
-  const btnClear = document.getElementById('btnBulkClear');
-  const btnActivate = document.getElementById('btnBulkActivate');
+    <script>
+        (function () {
+            const checkAll = document.getElementById('checkAll');
+            const rowChecks = () => Array.from(document.querySelectorAll('.rowCheck'));
+            const bulkCount = document.getElementById('bulkCount');
+            const bulkIds = document.getElementById('bulkIds');
+            const bulkForm = document.getElementById('bulkForm');
+            const bulkAction = document.getElementById('bulkAction');
+            const bulkMarkup = document.getElementById('bulkMarkup');
+            const btnSet = document.getElementById('btnBulkSet');
+            const btnClear = document.getElementById('btnBulkClear');
+            const btnActivate = document.getElementById('btnBulkActivate');
 
-  function refreshCount(){
-    const n = rowChecks().filter(c => c.checked).length;
-    bulkCount.textContent = n;
-    bulkIds.innerHTML = '';
-    rowChecks().filter(c => c.checked).forEach(c=>{
-      const input = document.createElement('input');
-      input.type = 'hidden';
-      input.name = 'variant_ids[]';
-      input.value = c.value;
-      bulkIds.appendChild(input);
-    });
-  }
+            function refreshCount() {
+                const n = rowChecks().filter(c => c.checked).length;
+                bulkCount.textContent = n;
+                bulkIds.innerHTML = '';
+                rowChecks().filter(c => c.checked).forEach(c => {
+                    const input = document.createElement('input');
+                    input.type = 'hidden';
+                    input.name = 'variant_ids[]';
+                    input.value = c.value;
+                    bulkIds.appendChild(input);
+                });
+            }
 
-  checkAll?.addEventListener('change', ()=>{
-    rowChecks().forEach(c => c.checked = checkAll.checked);
-    refreshCount();
-  });
-  rowChecks().forEach(c => c.addEventListener('change', refreshCount));
+            checkAll?.addEventListener('change', () => {
+                rowChecks().forEach(c => c.checked = checkAll.checked);
+                refreshCount();
+            });
+            rowChecks().forEach(c => c.addEventListener('change', refreshCount));
 
-  btnSet?.addEventListener('click', ()=>{
-    if (rowChecks().every(c => !c.checked)) return alert('Pilih minimal satu varian.');
-    const v = parseInt(bulkMarkup.value || '0', 10);
-    if (isNaN(v) || v < 0) return alert('Markup harus angka >= 0.');
-    bulkAction.value = 'set_markup';
-    // pastikan markup terkirim
-    let h = bulkForm.querySelector('input[name="markup_rp"]');
-    if (!h) { h = document.createElement('input'); h.type='hidden'; h.name='markup_rp'; bulkForm.appendChild(h); }
-    h.value = String(v);
-    bulkForm.submit();
-  });
+            btnSet?.addEventListener('click', () => {
+                if (rowChecks().every(c => !c.checked)) return alert('Pilih minimal satu varian.');
+                const v = parseInt(bulkMarkup.value || '0', 10);
+                if (isNaN(v) || v < 0) return alert('Markup harus angka >= 0.');
+                bulkAction.value = 'set_markup';
+                // pastikan markup terkirim
+                let h = bulkForm.querySelector('input[name="markup_rp"]');
+                if (!h) { h = document.createElement('input'); h.type = 'hidden'; h.name = 'markup_rp'; bulkForm.appendChild(h); }
+                h.value = String(v);
+                bulkForm.submit();
+            });
 
-  btnClear?.addEventListener('click', ()=>{
-    if (rowChecks().every(c => !c.checked)) return alert('Pilih minimal satu varian.');
-    bulkAction.value = 'clear_to_product';
-    const h = bulkForm.querySelector('input[name="markup_rp"]');
-    if (h) h.remove();
-    bulkForm.submit();
-  });
+            btnClear?.addEventListener('click', () => {
+                if (rowChecks().every(c => !c.checked)) return alert('Pilih minimal satu varian.');
+                bulkAction.value = 'clear_to_product';
+                const h = bulkForm.querySelector('input[name="markup_rp"]');
+                if (h) h.remove();
+                bulkForm.submit();
+            });
 
-  btnActivate?.addEventListener('click', ()=>{
-    if (rowChecks().every(c => !c.checked)) return alert('Pilih minimal satu varian.');
-    bulkAction.value = 'activate';
-    const h = bulkForm.querySelector('input[name="markup_rp"]');
-    if (h) h.remove();
-    bulkForm.submit();
-  });
-})();
-</script>
+            btnActivate?.addEventListener('click', () => {
+                if (rowChecks().every(c => !c.checked)) return alert('Pilih minimal satu varian.');
+                bulkAction.value = 'activate';
+                const h = bulkForm.querySelector('input[name="markup_rp"]');
+                if (h) h.remove();
+                bulkForm.submit();
+            });
+        })();
+    </script>
 @endpush
