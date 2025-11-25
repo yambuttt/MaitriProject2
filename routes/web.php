@@ -11,6 +11,9 @@ use App\Http\Controllers\AdminProductController;
 use App\Http\Controllers\AdminProductVariantController;
 use App\Http\Controllers\CatalogController;
 use App\Http\Controllers\AdminDigiflazzController;
+use App\Http\Controllers\CheckoutController;
+
+use App\Http\Controllers\UserWalletController;
 
 Route::view('/', 'pages.landing')->name('landing');
 Route::get('/catalog', [CatalogController::class, 'index'])->name('catalog');
@@ -40,7 +43,26 @@ Route::middleware('auth')->group(function () {
         ->middleware('admin')
         ->name('admin.dashboard');
     Route::get('/admin/users', [AdminUserController::class, 'index'])->name('admin.users.index');
+    Route::post('/checkout/saldo', [CheckoutController::class, 'checkoutSaldo'])->name('checkout.saldo');
+
+
+    Route::get('/invoices/{order}', [CheckoutController::class, 'show'])
+        ->name('orders.show');
+    Route::get('/invoices/{code}', [CheckoutController::class, 'showByCode'])
+        ->name('invoices.show');
 });
+
+
+Route::middleware(['auth'])->prefix('dashboard')->name('dashboard.')->group(function () {
+    // ... route dashboard lain
+
+    Route::get('/wallet', [UserWalletController::class, 'index'])->name('wallet');
+    Route::post('/wallet/pin', [UserWalletController::class, 'updatePin'])->name('wallet.pin.update');
+
+    // route topup manual (dev only), nanti bisa kamu batasi ke admin
+    Route::post('/wallet/topup', [UserWalletController::class, 'topup'])->name('wallet.topup');
+});
+
 
 Route::middleware(['auth', 'admin'])
     ->prefix('admin')
@@ -48,7 +70,7 @@ Route::middleware(['auth', 'admin'])
     ->group(function () {
 
         // ...
-
+    
         Route::get('/digiflazz', [AdminDigiflazzController::class, 'index'])
             ->name('digiflazz.index');
 
@@ -114,7 +136,7 @@ Route::middleware(['auth'])->group(function () {
             Route::post('/sync-variant-prices', [AdminDigiflazzController::class, 'syncVariantPrices'])
                 ->name('sync-variant-prices');
         });
-       
+
 
 
     });

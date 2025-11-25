@@ -7,17 +7,24 @@ use Illuminate\Database\Eloquent\Model;
 class WalletTransaction extends Model
 {
     protected $fillable = [
-        'wallet_id','type','amount','status','reason_code',
-        'reference_id','reference_type','idempotency_key','metadata','posted_at'
+        'user_id',
+        'type',
+        'amount',
+        'balance_before',
+        'balance_after',
+        'order_id',
+        'ref',
+        'description',
     ];
 
     protected $casts = [
-        'amount'   => 'integer',
-        'metadata' => 'array',
-        'posted_at'=> 'datetime',
+        'amount'         => 'integer',
+        'balance_before' => 'integer',
+        'balance_after'  => 'integer',
     ];
 
-    public function wallet() {
-        return $this->belongsTo(Wallet::class);
+    public function user()
+    {
+        return $this->belongsTo(User::class);
     }
 }

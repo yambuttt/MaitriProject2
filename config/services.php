@@ -37,8 +37,10 @@ return [
 
     'digiflazz' => [
         'base' => env('DIGIFLAZZ_API_BASE', 'https://api.digiflazz.com/v1'),
+        'endpoint' => env('DIGIFLAZZ_ENDPOINT', 'https://api.digiflazz.com/v1/transaction'),
         'username' => env('DIGIFLAZZ_USERNAME', ''),
         'api_key' => env('DIGIFLAZZ_API_KEY', ''),
     ],
+
 
 ];

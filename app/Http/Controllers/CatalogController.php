@@ -30,7 +30,8 @@ class CatalogController extends Controller
                 'category:id,name,slug',
                 'subcategory:id,name,slug,category_id',
                 'variants' => function ($q) {
-                    $q->where('is_active', true)->orderBy('base_price');
+                    $q->where('is_active', true)
+                        ->with('digiflazzVariant');   // penting biar base_price accessor bisa baca master
                 }
             ])
             ->where('is_active', true)
@@ -75,18 +76,17 @@ class CatalogController extends Controller
 
         return view('pages.catalog', compact('products', 'categories', 'subcategories', 'category', 'subcategory', 'q', 'pp'));
     }
-
-    public function show(Product $product)
+    public function show(Product $product): \Illuminate\Contracts\View\View
     {
         abort_unless($product->is_active, 404);
 
-        // Load relasi dulu
+        // Load relasi
         $product->load([
             'category:id,name,slug',
             'subcategory:id,name,slug,category_id',
             'variants' => function ($q) {
                 $q->where('is_active', true)
-                    ->with('digiflazzVariant');   // penting biar base_price accessor bisa baca master
+                    ->with('digiflazzVariant');
             },
         ]);
 
@@ -100,7 +100,16 @@ class CatalogController extends Controller
 
         abort_if($product->variants->isEmpty(), 404);
 
-        return view('pages.product', compact('product'));
+        $user = auth()->user();
+        $variants = $product->variants; // ⬅️ tambahkan ini
+
+        return view('pages.product', [
+            'product' => $product,
+            'variants' => $variants,
+            'walletBalance' => $user ? $user->maitri_balance : 0,
+            'hasPaymentPin' => $user ? $user->hasPaymentPin() : false,
+        ]);
     }
+
 
 }
