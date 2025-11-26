@@ -158,4 +158,45 @@
         </a>
     </div>
 </div>
+
+<script>
+document.addEventListener('DOMContentLoaded', () => {
+    const orderCode   = @json($order->code);
+    const initialStatus = @json($order->status);
+
+    // Kalau status sudah bukan processing, gak usah polling
+    if (initialStatus !== 'processing') return;
+
+    const POLL_INTERVAL = 5000;     // 5 detik sekali
+    const POLL_TIMEOUT  = 5 * 60e3; // stop setelah 5 menit
+
+    const checkStatus = async () => {
+        try {
+            const res = await fetch(`/api/orders/${encodeURIComponent(orderCode)}/status`, {
+                headers: {
+                    'Accept': 'application/json'
+                }
+            });
+
+            if (!res.ok) return;
+
+            const data = await res.json();
+
+            if (data.status && data.status !== 'processing') {
+                // Cara paling simple: reload halaman supaya semua data ikut update
+                window.location.reload();
+            }
+        } catch (e) {
+            console.error('Error polling order status', e);
+        }
+    };
+
+    const intervalId = setInterval(checkStatus, POLL_INTERVAL);
+
+    // Safety: berhenti polling setelah beberapa menit
+    setTimeout(() => clearInterval(intervalId), POLL_TIMEOUT);
+});
+</script>
+
 @endsection
+

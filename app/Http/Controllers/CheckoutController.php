@@ -13,8 +13,9 @@ use App\Models\User;
 
 class CheckoutController extends Controller
 {
-    public function checkoutSaldo(Request $request)
+    public function checkoutSaldo(Request $request, DigiflazzService $digiflazzService)
     {
+
         $user = Auth::user();
 
         // 1. Validasi data dari form (UI tidak diubah)
@@ -51,7 +52,10 @@ class CheckoutController extends Controller
         // 6. Transaksi database: kurangi saldo + buat order
         $order = null;
 
-        DB::transaction(function () use ($user, $variant, $validated, $amount, $code, &$order) {
+        DB::transaction(function () use ($user, $variant, $validated, $amount, &$order) {
+            // generate kode unik untuk order
+            $code = Order::generateCode();
+
             // refresh user biar saldo terbaru
             $user->refresh();
 
@@ -59,24 +63,21 @@ class CheckoutController extends Controller
                 throw new \RuntimeException('Saldo Maitri tidak mencukupi.');
             }
 
-            // Kurangi saldo Maitri
+            // Kurangi saldo Maitri (sekalian catat mutasi kalau kamu mau)
             $user->maitri_balance -= $amount;
             $user->save();
 
-            // Buat order (SIMPAN ke kolom product_variant_id,
-            // tapi AMBIL dari field form "variant_id" sesuai UI)
+            // Buat order LENGKAP (pakai blok yang tadi)
             $order = Order::create([
                 'user_id' => $user->id,
                 'code' => $code,
 
                 'product_id' => $validated['product_id'],
-                'product_variant_id' => $validated['variant_id'],   // <— penting: cocokkan dengan UI
-
+                'product_variant_id' => $validated['variant_id'],
                 'buyer_sku_code' => $variant->buyer_sku_code,
                 'target' => $validated['target'],
                 'email' => $validated['email'] ?? null,
 
-                // provider belum dihubungkan ke Digiflazz di tahap ini
                 'provider' => 'digiflazz',
                 'provider_ref_id' => null,
                 'provider_status' => null,
@@ -93,11 +94,45 @@ class CheckoutController extends Controller
                 'profit' => $amount - (int) $variant->base_price,
 
                 'method' => 'saldo_maitri',
-                'status' => 'processing',   // nanti bisa di-update setelah hit Digiflazz
+                'status' => 'processing',
             ]);
         });
 
-        // 7. Redirect ke halaman invoice berdasarkan kode (bukan ID)
+
+        // 7. Hit Digiflazz untuk bikin transaksi sebenarnya
+        try {
+            $providerData = $digiflazzService->createTransaction($order, $variant);
+
+            // DEBUG SEMENTARA
+
+
+            $status = strtolower($providerData['status'] ?? '');
+            $mappedStatus = match ($status) {
+                'sukses', 'success' => 'success',
+                'gagal', 'failed' => 'failed',
+                default => 'processing',
+            };
+
+            $order->update([
+                'provider_ref_id' => $providerData['ref_id'] ?? null,
+                'provider_status' => $providerData['status'] ?? null,
+                'provider_message' => $providerData['message'] ?? null,
+                'provider_rc' => $providerData['rc'] ?? null,
+                'provider_sn' => $providerData['sn'] ?? null,
+                'provider_price' => $providerData['selling_price'] ?? ($providerData['price'] ?? null),
+                'provider_raw' => $providerData,
+                'status' => $mappedStatus,
+            ]);
+        } catch (\Throwable $e) {
+
+            $order->update([
+                'status' => 'failed',
+                'provider_status' => 'ERROR',
+                'provider_message' => $e->getMessage(),
+            ]);
+        }
+
+        // 8. Redirect ke halaman invoice berdasarkan kode
         return redirect()
             ->route('invoices.show', $order->code)
             ->with('status', 'success')
@@ -128,5 +163,13 @@ class CheckoutController extends Controller
         }
 
         return view('orders.show', compact('order'));
+    }
+    public function status(string $code)
+    {
+        $order = Order::where('code', $code)->firstOrFail();
+
+        return response()->json([
+            'status' => $order->status,
+        ]);
     }
 }

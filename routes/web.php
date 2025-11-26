@@ -13,6 +13,7 @@ use App\Http\Controllers\CatalogController;
 use App\Http\Controllers\AdminDigiflazzController;
 use App\Http\Controllers\CheckoutController;
 
+
 use App\Http\Controllers\UserWalletController;
 
 Route::view('/', 'pages.landing')->name('landing');
@@ -21,6 +22,11 @@ Route::get('/catalog', [CatalogController::class, 'index'])->name('catalog');
 Route::get('/product/{product:slug}', [CatalogController::class, 'show'])
     ->name('catalog.product.show');
 
+
+Route::get('/test-log', function () {
+    Log::info('Test log endpoint kepanggil');
+    return 'OKE LOG';
+});
 
 
 
