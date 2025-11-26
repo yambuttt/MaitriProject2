@@ -150,7 +150,7 @@ class CheckoutController extends Controller
         }
 
         // Pakai view invoice yang sama seperti sebelumnya
-        return view('orders.show', compact('order'));
+        return view('invoices.show', compact('order'));
     }
     /**
      * Detail order sederhana
@@ -162,7 +162,7 @@ class CheckoutController extends Controller
             abort(403);
         }
 
-        return view('orders.show', compact('order'));
+        return view('invoices.show', compact('order'));
     }
     public function status(string $code)
     {
