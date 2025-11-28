@@ -12,15 +12,18 @@ use App\Http\Controllers\AdminProductVariantController;
 use App\Http\Controllers\CatalogController;
 use App\Http\Controllers\AdminDigiflazzController;
 use App\Http\Controllers\CheckoutController;
-
-
+use App\Http\Controllers\PaydisiniCallbackController;
 use App\Http\Controllers\UserWalletController;
+
+
 
 Route::view('/', 'pages.landing')->name('landing');
 Route::get('/catalog', [CatalogController::class, 'index'])->name('catalog');
 
 Route::get('/product/{product:slug}', [CatalogController::class, 'show'])
     ->name('catalog.product.show');
+Route::post('/paydisini/callback', [PaydisiniCallbackController::class, 'handle'])
+    ->name('paydisini.callback');
 
 
 Route::get('/test-log', function () {
@@ -60,13 +63,27 @@ Route::middleware('auth')->group(function () {
 
 
 Route::middleware(['auth'])->prefix('dashboard')->name('dashboard.')->group(function () {
-    // ... route dashboard lain
+    Route::get('/wallet', [UserWalletController::class, 'index'])->name('wallet');
+    Route::post('/wallet/pin', [UserWalletController::class, 'updatePin'])->name('wallet.pin.update');
+
+    // ganti route topup lama dengan yang pakai Paydisini
+    Route::post('/wallet/topup', [UserWalletController::class, 'topupPaydisini'])
+        ->name('wallet.topup');
+
 
     Route::get('/wallet', [UserWalletController::class, 'index'])->name('wallet');
     Route::post('/wallet/pin', [UserWalletController::class, 'updatePin'])->name('wallet.pin.update');
 
     // route topup manual (dev only), nanti bisa kamu batasi ke admin
-    Route::post('/wallet/topup', [UserWalletController::class, 'topup'])->name('wallet.topup');
+    Route::post('/wallet/topup', [UserWalletController::class, 'topupPaydisini'])->name('wallet.topup');
+    Route::get('/wallet/topup/{topup}', [UserWalletController::class, 'showTopup'])
+        ->name('wallet.topup.show');
+    Route::get('/wallet/topup/{topup}/status', [UserWalletController::class, 'checkTopupStatus'])
+        ->name('wallet.topup.status');
+    Route::post('/wallet/topup/{topup}/expire', [UserWalletController::class, 'expireTopup'])
+        ->name('wallet.topup.expire');
+
+
 });
 
 
