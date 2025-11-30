@@ -20,6 +20,8 @@ class Order extends Model
         'admin_fee',
         'total',
         'profit',
+        'payment_method',
+        'payment_status',
         'status',
         'digiflazz_ref',
         'digiflazz_status',
@@ -42,6 +44,27 @@ class Order extends Model
         'completed_at' => 'datetime',
         'failed_at' => 'datetime',
     ];
+    // relasi ke OrderPayment
+    public function payments()
+    {
+        return $this->hasMany(OrderPayment::class);
+    }
+
+    public function latestPayment()
+    {
+        return $this->hasOne(OrderPayment::class)->latestOfMany();
+    }
+
+    // helper kecil buat label di invoice nanti
+    public function getPaymentMethodLabelAttribute(): string
+    {
+        return match ($this->payment_method) {
+            'wallet' => 'Saldo Maitri',
+            'paydisini' => 'Paydisini',
+            default => ucfirst($this->payment_method),
+        };
+    }
+
 
     public function user()
     {

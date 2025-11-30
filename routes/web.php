@@ -59,6 +59,20 @@ Route::middleware('auth')->group(function () {
         ->name('orders.show');
     Route::get('/invoices/{code}', [CheckoutController::class, 'showByCode'])
         ->name('invoices.show');
+
+    Route::post('/checkout/paydisini', [CheckoutController::class, 'checkoutPaydisini'])
+        ->name('checkout.paydisini');
+
+    // halaman pembayaran order (QR / VA / kode minimarket)
+    Route::get('/orders/{order}/payment/{payment}', [CheckoutController::class, 'showPaydisiniPayment'])
+        ->name('orders.payment.show');
+
+    // AJAX polling status pembayaran ke Paydisini
+    Route::get('/orders/payment/{payment}/status', [CheckoutController::class, 'checkPaymentStatus'])
+        ->name('orders.payment.status');
+        Route::post('/orders/payment/{payment}/expire', [CheckoutController::class, 'expirePayment'])
+    ->name('orders.payment.expire');
+
 });
 
 

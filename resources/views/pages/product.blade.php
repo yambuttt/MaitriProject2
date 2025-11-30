@@ -118,6 +118,9 @@
           {{-- ============================= --}}
           {{-- ====== Step 3: Pembayaran ==== --}}
           {{-- ============================= --}}
+                   {{-- ============================= --}}
+          {{-- ====== Step 3: Pembayaran ==== --}}
+          {{-- ============================= --}}
           <div class="rounded-3xl border border-slate-800/70 bg-[#111826] p-5">
             <div class="flex items-center gap-2 text-slate-300">
               <div class="size-6 grid place-items-center rounded-full border border-slate-700">3</div>
@@ -126,7 +129,6 @@
 
             <div id="payList" class="mt-3 space-y-2">
 
-              {{-- Saldo Maitri --}}
               {{-- Saldo Maitri --}}
               @auth
                 @php
@@ -145,7 +147,7 @@
                   </div>
 
                   <button type="button" id="paySaldoBtn"
-                    class="px-3 py-2 rounded-xl border border-slate-800/70 hover:border-slate-700 text-sm">
+                          class="px-3 py-2 rounded-xl border border-slate-800/70 hover:border-slate-700 text-sm">
                     Pilih
                   </button>
                 </div>
@@ -155,27 +157,53 @@
                 </div>
               @endauth
 
+              {{-- =============================== --}}
+              {{--  Channel Paydisini (Gateway)    --}}
+              {{-- =============================== --}}
 
-              {{-- NON SALDO (Placeholder Future Gateway) --}}
+              {{-- QRIS Paydisini --}}
               <div class="rounded-xl border border-slate-800/70 p-3 flex items-center justify-between">
                 <div class="text-sm">QRIS</div>
-                <button class="pickPay px-3 py-2 rounded-xl border border-slate-800/70 hover:border-slate-700 text-sm"
-                  data-pay="QRIS">Pilih</button>
+                <button type="button"
+                        class="pickPay px-3 py-2 rounded-xl border border-slate-800/70 hover:border-slate-700 text-sm"
+                        data-pay="QRIS">
+                  Pilih
+                </button>
               </div>
 
+              {{-- VA Mandiri Paydisini --}}
               <div class="rounded-xl border border-slate-800/70 p-3 flex items-center justify-between">
-                <div class="text-sm">Virtual Account</div>
-                <button class="pickPay px-3 py-2 rounded-xl border border-slate-800/70 hover:border-slate-700 text-sm"
-                  data-pay="VA">Pilih</button>
+                <div class="text-sm">Virtual Account Mandiri</div>
+                <button type="button"
+                        class="pickPay px-3 py-2 rounded-xl border border-slate-800/70 hover:border-slate-700 text-sm"
+                        data-pay="VA_MANDIRI">
+                  Pilih
+                </button>
               </div>
 
+              {{-- Alfamart Paydisini --}}
               <div class="rounded-xl border border-slate-800/70 p-3 flex items-center justify-between">
-                <div class="text-sm">OVO</div>
-                <button class="pickPay px-3 py-2 rounded-xl border border-slate-800/70 hover:border-slate-700 text-sm"
-                  data-pay="OVO">Pilih</button>
+                <div class="text-sm">Alfamart</div>
+                <button type="button"
+                        class="pickPay px-3 py-2 rounded-xl border border-slate-800/70 hover:border-slate-700 text-sm"
+                        data-pay="ALFAMART">
+                  Pilih
+                </button>
+              </div>
+
+              {{-- Indomaret Paydisini --}}
+              <div class="rounded-xl border border-slate-800/70 p-3 flex items-center justify-between">
+                <div class="text-sm">Indomaret</div>
+                <button type="button"
+                        class="pickPay px-3 py-2 rounded-xl border border-slate-800/70 hover:border-slate-700 text-sm"
+                        data-pay="INDOMARET">
+                  Pilih
+                </button>
               </div>
             </div>
           </div>
+          
+
           {{-- ============================= --}}
           {{-- ====== Step 4: Ringkasan ===== --}}
           {{-- ============================= --}}
@@ -276,6 +304,19 @@
       </div>
     @endauth
 
+        {{-- ===================================================== --}}
+    {{-- =========== FORM HIDDEN CHECKOUT PAYDISINI =========== --}}
+    {{-- ===================================================== --}}
+    <form id="paydisiniForm" method="POST" action="{{ route('checkout.paydisini') }}" class="hidden">
+      @csrf
+      <input type="hidden" name="product_id" value="{{ $product->id }}">
+      <input type="hidden" name="variant_id" id="paydisiniVariantId">
+      <input type="hidden" name="target" id="paydisiniTarget">
+      <input type="hidden" name="email" id="paydisiniEmail">
+      <input type="hidden" name="payment_channel" id="paydisiniChannel">
+    </form>
+
+
   </section>
 @endsection
 @push('body')
@@ -285,23 +326,39 @@
       const rupiah = n => new Intl.NumberFormat('id-ID').format(n);
 
       let selectedVariant = null;
-      let selectedMethod = null;
+      let selectedMethod = null; // 'SALDO', 'QRIS', 'VA_MANDIRI', 'ALFAMART', 'INDOMARET'
 
       // DOM Elements
-      const cards = document.querySelectorAll('.variant-card');
-      const btnCheckout = document.getElementById('btnCheckout');
-      const btnSaldo = document.getElementById('paySaldoBtn');
+      const cards        = document.querySelectorAll('.variant-card');
+      const btnCheckout  = document.getElementById('btnCheckout');
+      const btnSaldo     = document.getElementById('paySaldoBtn');
       const saldoWarning = document.getElementById('saldoWarning');
 
-      const sVar = document.getElementById('sVar');
-      const sPay = document.getElementById('sPay');
-      const sSub = document.getElementById('sSub');
+      const payButtons   = document.querySelectorAll('.pickPay');
+
+      const sVar   = document.getElementById('sVar');
+      const sPay   = document.getElementById('sPay');
+      const sSub   = document.getElementById('sSub');
       const sTotal = document.getElementById('sTotal');
 
       const targetField = document.getElementById('fTarget');
-      const emailField = document.getElementById('fEmail');
+      const emailField  = document.getElementById('fEmail');
 
       const walletBalance = {{ (int) ($walletBalance ?? 0) }};
+
+      // Modal saldo
+      const saldoPinModal  = document.getElementById('saldoPinModal');
+      const btnClosePin    = document.getElementById('btnClosePin');
+      const modalVariantId = document.getElementById('modalVariantId');
+      const modalTarget    = document.getElementById('modalTarget');
+      const modalEmail     = document.getElementById('modalEmail');
+
+      // Form Paydisini
+      const paydisiniForm     = document.getElementById('paydisiniForm');
+      const payVariantIdInput = document.getElementById('paydisiniVariantId');
+      const payTargetInput    = document.getElementById('paydisiniTarget');
+      const payEmailInput     = document.getElementById('paydisiniEmail');
+      const payChannelInput   = document.getElementById('paydisiniChannel');
 
       // ============================
       //  SELECT VARIANT
@@ -321,30 +378,24 @@
       }
 
       cards.forEach(card => {
-        card.addEventListener('click', () => selectVariant(card));
+        card.addEventListener('click', () => {
+          selectVariant(card);
+        });
       });
 
-      // Preselect first variant
-      if (cards.length) {
-        selectVariant(cards[0]);
-      }
-
       // ============================
-      //  SELECT PAYMENT METHOD
+      //  PILIH METODE NON-SALDO
       // ============================
-      document.querySelectorAll('.pickPay').forEach(btn => {
+      payButtons.forEach(btn => {
         btn.addEventListener('click', () => {
+          const payName = btn.dataset.pay; // 'QRIS', 'VA_MANDIRI', 'ALFAMART', 'INDOMARET'
+          selectedMethod = payName;
 
-          // remove highlight
-          document.querySelectorAll('.pickPay').forEach(b => {
-            b.classList.remove('border-violet-600/70');
-          });
-
+          // highlight tombol gateway
+          payButtons.forEach(b => b.classList.remove('border-violet-600/70'));
           btn.classList.add('border-violet-600/70');
 
-          selectedMethod = btn.dataset.pay;
-
-          // unhighlight saldo
+          // hapus highlight saldo
           if (btnSaldo) {
             btnSaldo.classList.remove('border-violet-500', 'bg-violet-500/20');
           }
@@ -353,6 +404,9 @@
         });
       });
 
+      // ============================
+      //  PILIH SALDO MAITRI
+      // ============================
       if (btnSaldo) {
         btnSaldo.addEventListener('click', () => {
           selectedMethod = 'SALDO';
@@ -360,10 +414,8 @@
           // highlight saldo
           btnSaldo.classList.add('border-violet-500', 'bg-violet-500/20');
 
-          // remove highlight gateway
-          document.querySelectorAll('.pickPay').forEach(b => {
-            b.classList.remove('border-violet-600/70');
-          });
+          // hapus highlight gateway
+          payButtons.forEach(b => b.classList.remove('border-violet-600/70'));
 
           updateSummary();
         });
@@ -373,8 +425,18 @@
       //  UPDATE SUMMARY
       // ============================
       function updateSummary() {
-        sVar.textContent = selectedVariant ? selectedVariant.name : '—';
-        sPay.textContent = selectedMethod ?? '—';
+        sVar.textContent   = selectedVariant ? selectedVariant.name : '—';
+
+        let payText = '—';
+        switch (selectedMethod) {
+          case 'SALDO':       payText = 'Saldo Maitri'; break;
+          case 'QRIS':        payText = 'QRIS'; break;
+          case 'VA_MANDIRI':  payText = 'VA Mandiri'; break;
+          case 'ALFAMART':    payText = 'Alfamart'; break;
+          case 'INDOMARET':   payText = 'Indomaret'; break;
+        }
+
+        sPay.textContent = payText;
         sSub.textContent = selectedVariant ? 'Rp ' + rupiah(selectedVariant.price) : 'Rp 0';
         sTotal.textContent = selectedVariant ? 'Rp ' + rupiah(selectedVariant.price) : 'Rp 0';
 
@@ -385,7 +447,7 @@
       //  SALDO VALIDATION
       // ============================
       function validateSaldo() {
-        if (!selectedVariant) return;
+        if (!selectedVariant || !saldoWarning) return;
 
         const insufficient = selectedVariant.price > walletBalance;
         if (insufficient) {
@@ -398,13 +460,6 @@
       // ============================
       //  CHECKOUT BUTTON HANDLING
       // ============================
-      const saldoPinModal = document.getElementById('saldoPinModal');
-      const btnClosePin = document.getElementById('btnClosePin');
-
-      const modalVariantId = document.getElementById('modalVariantId');
-      const modalTarget = document.getElementById('modalTarget');
-      const modalEmail = document.getElementById('modalEmail');
-
       btnCheckout.addEventListener('click', () => {
 
         if (!selectedVariant) {
@@ -418,31 +473,53 @@
           return;
         }
 
-        // Jika metode = Saldo → buka modal PIN
+        // ==================== SALDO ====================
         if (selectedMethod === 'SALDO') {
 
-          if (selectedVariant.price > walletBalance) {
-            alert('Saldo tidak mencukupi');
+          @if(Auth::check())
+            // isi hidden saldo form
+            modalVariantId.value = selectedVariant.id;
+            modalTarget.value    = target;
+            modalEmail.value     = emailField?.value ?? '';
+
+            saldoPinModal.classList.remove('hidden');
+            saldoPinModal.classList.add('flex');
+          @else
+            alert('Silakan login untuk menggunakan Saldo Maitri.');
+          @endif
+
+        // =================== PAYDISINI ==================
+        } else {
+
+          const channelMap = {
+            'QRIS':       'qris',
+            'VA_MANDIRI': 'va_mandiri',
+            'ALFAMART':   'alfamart',
+            'INDOMARET':  'indomaret',
+          };
+
+          const channel = channelMap[selectedMethod];
+          if (!channel) {
+            alert('Metode pembayaran ini belum tersedia.');
             return;
           }
 
-          modalVariantId.value = selectedVariant.id;
-          modalTarget.value = target;
-          modalEmail.value = emailField?.value ?? '';
+          // isi hidden form Paydisini
+          payVariantIdInput.value = selectedVariant.id;
+          payTargetInput.value    = target;
+          payEmailInput.value     = emailField?.value ?? '';
+          payChannelInput.value   = channel;
 
-          saldoPinModal.classList.remove('hidden');
-          saldoPinModal.classList.add('flex');
-        } else {
-
-          // Payment gateway (belum aktif)
-          alert('Untuk saat ini pembayaran selain Saldo Maitri belum tersedia.');
+          paydisiniForm.submit();
         }
       });
 
-      btnClosePin.addEventListener('click', () => {
-        saldoPinModal.classList.add('hidden');
-        saldoPinModal.classList.remove('flex');
-      });
+      if (btnClosePin) {
+        btnClosePin.addEventListener('click', () => {
+          saldoPinModal.classList.add('hidden');
+          saldoPinModal.classList.remove('flex');
+        });
+      }
 
     });
   </script>
