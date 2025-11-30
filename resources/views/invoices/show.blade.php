@@ -104,7 +104,7 @@
                         </div>
                         <div class="flex justify-between gap-4">
                             <dt class="text-slate-400">Metode Pembayaran</dt>
-                            <dd class="text-right">Saldo Maitri</dd>
+                            <dd class="text-right">{{ $paymentLabel }}</dd>
                         </div>
                         @if($order->email)
                             <div class="flex justify-between gap-4">
