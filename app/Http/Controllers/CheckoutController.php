@@ -489,7 +489,7 @@ class CheckoutController extends Controller
      * Dipanggil setelah pembayaran NON-saldo berhasil:
      * kirim order ke Digiflazz dan update status.
      */
-    protected function processOrderAfterPayment(Order $order, DigiflazzService $digiflazzService): void
+    public function processOrderAfterPayment(Order $order, DigiflazzService $digiflazzService): void
     {
         $variant = ProductVariant::find($order->product_variant_id);
 
