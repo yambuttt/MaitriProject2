@@ -466,15 +466,26 @@ class CheckoutController extends Controller
         };
 
         // update payment
+        // update payment
         $payment->update([
             'status' => $newStatus,
             'callback_payload' => $json,
             'paid_at' => $newStatus === 'paid' ? now() : $payment->paid_at,
         ]);
 
-        // kalau pembayaran sukses dan order belum diproses, baru kirim ke Digiflazz
-        if ($newStatus === 'paid' && $order->status === 'waiting_payment') {
-            $this->processOrderAfterPayment($order, $digiflazzService);
+        // kalau pembayaran sukses:
+        if ($newStatus === 'paid') {
+            // tandai order sudah lunas
+            if ($order->payment_status !== 'paid') {
+                $order->update([
+                    'payment_status' => 'paid',
+                ]);
+            }
+
+            // kalau order masih belum pernah diproses, kirim ke Digiflazz
+            if (in_array($order->status, ['pending', 'waiting_payment'], true)) {
+                $this->processOrderAfterPayment($order, $digiflazzService);
+            }
         }
 
         return response()->json([
@@ -483,6 +494,7 @@ class CheckoutController extends Controller
             'order_status' => $order->status,
             'message' => 'Status updated',
         ]);
+
     }
 
     /**
