@@ -73,8 +73,8 @@ Route::middleware('auth')->group(function () {
     // AJAX polling status pembayaran ke Paydisini
     Route::get('/orders/payment/{payment}/status', [CheckoutController::class, 'checkPaymentStatus'])
         ->name('orders.payment.status');
-        Route::post('/orders/payment/{payment}/expire', [CheckoutController::class, 'expirePayment'])
-    ->name('orders.payment.expire');
+    Route::post('/orders/payment/{payment}/expire', [CheckoutController::class, 'expirePayment'])
+        ->name('orders.payment.expire');
 
 });
 
@@ -116,6 +116,54 @@ Route::middleware(['auth', 'admin'])
 
         Route::post('/digiflazz/sync-master', [AdminDigiflazzController::class, 'syncMaster'])
             ->name('digiflazz.sync-master');
+        Route::get('/marketplace/orders', [\App\Http\Controllers\AdminMarketplaceOrderController::class, 'index'])
+            ->name('marketplace.orders.index');
+
+        Route::get('/marketplace/orders/{order}', [\App\Http\Controllers\AdminMarketplaceOrderController::class, 'show'])
+            ->name('marketplace.orders.show');
+
+        Route::post('/marketplace/orders/{order}/status', [\App\Http\Controllers\AdminMarketplaceOrderController::class, 'updateStatus'])
+            ->name('marketplace.orders.update-status');
+        // ============================
+        // Marketplace Catalog (admin)
+        // ============================
+    
+        // Kategori
+        Route::get('/marketplace/categories', [\App\Http\Controllers\AdminMarketplaceCategoryController::class, 'index'])
+            ->name('marketplace.categories.index');
+        Route::get('/marketplace/categories/create', [\App\Http\Controllers\AdminMarketplaceCategoryController::class, 'create'])
+            ->name('marketplace.categories.create');
+        Route::post('/marketplace/categories', [\App\Http\Controllers\AdminMarketplaceCategoryController::class, 'store'])
+            ->name('marketplace.categories.store');
+        Route::get('/marketplace/categories/{category}/edit', [\App\Http\Controllers\AdminMarketplaceCategoryController::class, 'edit'])
+            ->name('marketplace.categories.edit');
+        Route::post('/marketplace/categories/{category}', [\App\Http\Controllers\AdminMarketplaceCategoryController::class, 'update'])
+            ->name('marketplace.categories.update');
+
+        // Produk
+        Route::get('/marketplace/products', [\App\Http\Controllers\AdminMarketplaceProductController::class, 'index'])
+            ->name('marketplace.products.index');
+        Route::get('/marketplace/products/create', [\App\Http\Controllers\AdminMarketplaceProductController::class, 'create'])
+            ->name('marketplace.products.create');
+        Route::post('/marketplace/products', [\App\Http\Controllers\AdminMarketplaceProductController::class, 'store'])
+            ->name('marketplace.products.store');
+        Route::get('/marketplace/products/{product}/edit', [\App\Http\Controllers\AdminMarketplaceProductController::class, 'edit'])
+            ->name('marketplace.products.edit');
+        Route::post('/marketplace/products/{product}', [\App\Http\Controllers\AdminMarketplaceProductController::class, 'update'])
+            ->name('marketplace.products.update');
+
+        // Variants per product
+        Route::get('/marketplace/products/{product}/variants', [\App\Http\Controllers\AdminMarketplaceVariantController::class, 'index'])
+            ->name('marketplace.variants.index');
+        Route::get('/marketplace/products/{product}/variants/create', [\App\Http\Controllers\AdminMarketplaceVariantController::class, 'create'])
+            ->name('marketplace.variants.create');
+        Route::post('/marketplace/products/{product}/variants', [\App\Http\Controllers\AdminMarketplaceVariantController::class, 'store'])
+            ->name('marketplace.variants.store');
+        Route::get('/marketplace/products/{product}/variants/{variant}/edit', [\App\Http\Controllers\AdminMarketplaceVariantController::class, 'edit'])
+            ->name('marketplace.variants.edit');
+        Route::post('/marketplace/products/{product}/variants/{variant}', [\App\Http\Controllers\AdminMarketplaceVariantController::class, 'update'])
+            ->name('marketplace.variants.update');
+
 
     });
 
@@ -219,14 +267,3 @@ Route::prefix('marketplace')->name('marketplace.')->group(function () {
 
 // routes/web.php
 
-
-Route::prefix('admin')->name('admin.')->middleware(['auth', 'is_admin'])->group(function () {
-    Route::get('/marketplace/orders', [AdminMarketplaceOrderController::class, 'index'])
-        ->name('marketplace.orders.index');
-
-    Route::get('/marketplace/orders/{order}', [AdminMarketplaceOrderController::class, 'show'])
-        ->name('marketplace.orders.show');
-
-    Route::post('/marketplace/orders/{order}/status', [AdminMarketplaceOrderController::class, 'updateStatus'])
-        ->name('marketplace.orders.update-status');
-});

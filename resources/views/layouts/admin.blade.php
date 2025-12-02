@@ -104,6 +104,24 @@
                     </svg>
                     <span>Master Variants</span>
                 </a>
+                <a href="{{ route('admin.marketplace.orders.index') }}"
+                    class="group flex items-center gap-3 px-3 py-2.5 rounded-xl border transition {{ $r('admin.marketplace.orders.*') }}">
+                    <svg class="size-5 text-slate-400 group-hover:text-slate-300" viewBox="0 0 24 24" fill="none">
+                        <path d="M4 4h16v4H4V4Zm0 6h10v4H4v-4Zm0 6h7v4H4v-4Zm12 0h4v4h-4v-4Z" stroke="currentColor"
+                            stroke-width="1.5" />
+                    </svg>
+                    <span>Marketplace Orders</span>
+                </a>
+                <a href="{{ route('admin.marketplace.products.index') }}"
+                    class="group flex items-center gap-3 px-3 py-2.5 rounded-xl border transition {{ $r('admin.marketplace.products.*') }}">
+                    <svg class="size-5 text-slate-400 group-hover:text-slate-300" viewBox="0 0 24 24" fill="none">
+                        <path d="M4 5h16v4H4V5Zm0 5h10v4H4v-4Zm0 5h7v4H4v-4Zm12 0h4v4h-4v-4Z" stroke="currentColor"
+                            stroke-width="1.5" />
+                    </svg>
+                    <span>Marketplace Catalog</span>
+                </a>
+
+
 
 
                 <a href="{{ route('admin.users.index') }}"
