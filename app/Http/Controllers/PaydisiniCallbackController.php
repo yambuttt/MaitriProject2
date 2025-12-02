@@ -8,6 +8,8 @@ use Illuminate\Support\Facades\Log;
 
 use App\Models\OrderPayment;
 use App\Services\DigiflazzService;
+use App\Models\MarketplaceOrderPayment;
+use App\Models\MarketplaceOrder;
 
 use Illuminate\Support\Str;
 
@@ -132,6 +134,51 @@ class PaydisiniCallbackController extends Controller
 
             return response()->json(['success' => true]);
         }
+
+        /**
+         * CASE 3: PEMBAYARAN MARKETPLACE (unique_code diawali "MKTPAY")
+         */
+        if (Str::startsWith($unique, 'MKTPAY')) {
+            $payment = MarketplaceOrderPayment::where('paydisini_unique_code', $unique)->first();
+
+            if (!$payment) {
+                Log::warning('Paydisini callback: marketplace payment not found', ['unique_code' => $unique]);
+                return response()->json(['success' => false, 'message' => 'Marketplace payment not found'], 404);
+            }
+
+            if (in_array($payment->status, ['paid', 'canceled', 'expired'], true)) {
+                return response()->json(['success' => true]);
+            }
+
+            $order = $payment->order;
+
+            $payment->callback_payload = $request->all();
+            $payment->paydisini_pay_id = $payId;
+
+            if (strtolower($status) === 'success') {
+                $payment->status = 'paid';
+                $payment->paid_at = now();
+                $payment->save();
+
+                $order->payment_status = 'paid';
+                // kalau baru pertama kali dibayar → PAID & PESANAN DI TERIMA
+                if ($order->status === 'not_paid') {
+                    $order->status = 'paid_received';
+                }
+                $order->paid_at = now();
+                $order->save();
+            } else {
+                $payment->status = 'canceled';
+                $payment->save();
+
+                $order->payment_status = 'canceled';
+                $order->status = 'not_paid'; // atau 'paid_rejected' terserah flow
+                $order->save();
+            }
+
+            return response()->json(['success' => true]);
+        }
+
 
         // Kalau prefix-nya bukan TOPUP atau ORDPAY
         Log::warning('Paydisini callback: unknown unique_code prefix', ['unique_code' => $unique]);

@@ -14,7 +14,10 @@ use App\Http\Controllers\AdminDigiflazzController;
 use App\Http\Controllers\CheckoutController;
 use App\Http\Controllers\PaydisiniCallbackController;
 use App\Http\Controllers\UserWalletController;
-
+use App\Http\Controllers\Marketplace\MarketplaceController;
+use App\Http\Controllers\Marketplace\MarketplaceCheckoutController;
+use App\Http\Controllers\Marketplace\MarketplacePaymentController;
+use App\Http\Controllers\Admin\AdminMarketplaceOrderController;
 
 
 Route::view('/', 'pages.landing')->name('landing');
@@ -177,4 +180,53 @@ Route::middleware(['auth'])->group(function () {
 
 
     });
+});
+
+Route::prefix('marketplace')->name('marketplace.')->group(function () {
+
+    // halaman list produk marketplace
+    Route::get('/', [MarketplaceController::class, 'index'])
+        ->name('index');
+
+    // halaman detail produk marketplace
+    Route::get('/product/{product:slug}', [MarketplaceController::class, 'show'])
+        ->name('product.show');
+
+    // proses submit checkout (post dari halaman detail)
+    Route::post('/product/{product:slug}/checkout', [MarketplaceCheckoutController::class, 'createOrder'])
+        ->name('checkout.create');
+
+    // halaman checkout detail (setelah create order)
+    Route::get('/orders/{order:invoice_number}/checkout', [MarketplaceCheckoutController::class, 'showCheckout'])
+        ->name('checkout.show');
+
+    // submit form checkout (email, phone, metode pembayaran)
+    Route::post('/orders/{order:invoice_number}/checkout', [MarketplaceCheckoutController::class, 'processCheckout'])
+        ->name('checkout.process');
+
+    // halaman pembayaran khusus marketplace
+    Route::get('/payment/{payment}', [MarketplacePaymentController::class, 'showPaymentPage'])
+        ->name('payment.show');
+
+    // endpoint polling status pembayaran (AJAX)
+    Route::get('/payment/{payment}/status', [MarketplacePaymentController::class, 'checkPaymentStatus'])
+        ->name('payment.status');
+
+    // halaman invoice marketplace
+    Route::get('/invoices/{order:invoice_number}', [MarketplaceController::class, 'invoice'])
+        ->name('invoice.show');
+});
+
+// routes/web.php
+
+
+Route::prefix('admin')->name('admin.')->middleware(['auth', 'is_admin'])->group(function () {
+    Route::get('/marketplace/orders', [AdminMarketplaceOrderController::class, 'index'])
+        ->name('marketplace.orders.index');
+
+    Route::get('/marketplace/orders/{order}', [AdminMarketplaceOrderController::class, 'show'])
+        ->name('marketplace.orders.show');
+
+    Route::post('/marketplace/orders/{order}/status', [AdminMarketplaceOrderController::class, 'updateStatus'])
+        ->name('marketplace.orders.update-status');
 });
