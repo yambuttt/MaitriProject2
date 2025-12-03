@@ -93,6 +93,7 @@
             {{-- Grid info --}}
             <div class="grid gap-6 md:grid-cols-2">
                 {{-- Kolom kiri: detail transaksi --}}
+                {{-- Kolom kiri: detail transaksi --}}
                 <div class="space-y-3">
                     <h2 class="text-sm font-semibold text-slate-200">Ringkasan Transaksi</h2>
                     <dl class="space-y-2 text-sm text-slate-200">
@@ -106,18 +107,28 @@
                             <dt class="text-slate-400">Metode Pembayaran</dt>
                             <dd class="text-right">{{ $paymentLabel }}</dd>
                         </div>
+
                         @if($order->email)
                             <div class="flex justify-between gap-4">
                                 <dt class="text-slate-400">Email Bukti</dt>
                                 <dd class="text-right">{{ $order->email }}</dd>
                             </div>
                         @endif
+
+                        @if($order->phone)
+                            <div class="flex justify-between gap-4">
+                                <dt class="text-slate-400">No. HP Pembeli</dt>
+                                <dd class="text-right">{{ $order->phone }}</dd>
+                            </div>
+                        @endif
+
                         <div class="flex justify-between gap-4">
                             <dt class="text-slate-400">Status</dt>
                             <dd class="text-right">{{ $status }}</dd>
                         </div>
                     </dl>
                 </div>
+
 
                 {{-- Kolom kanan: breakdown harga --}}
                 <div class="space-y-3">

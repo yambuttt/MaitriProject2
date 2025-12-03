@@ -25,6 +25,7 @@ class CheckoutController extends Controller
             'variant_id' => ['required', 'exists:product_variants,id'],
             'target' => ['required', 'string'],
             'email' => ['nullable', 'email'],
+            'phone' => ['nullable', 'string', 'max:20'],
             'pin' => ['required', 'string'],
         ]);
 
@@ -74,6 +75,7 @@ class CheckoutController extends Controller
                 'buyer_sku_code' => $variant->buyer_sku_code,
                 'target' => $validated['target'],
                 'email' => $validated['email'] ?? null,
+                'phone' => $validated['phone'] ?? null,
 
                 'provider' => 'digiflazz',
                 'provider_ref_id' => null,
@@ -203,6 +205,7 @@ class CheckoutController extends Controller
             'variant_id' => ['required', 'exists:product_variants,id'],
             'target' => ['required', 'string'],
             'email' => ['nullable', 'email'],
+            'phone' => ['nullable', 'string', 'max:20'],
             'payment_channel' => ['required', 'in:qris,va_mandiri,alfamart,indomaret'],
         ]);
 
@@ -242,6 +245,7 @@ class CheckoutController extends Controller
                 'buyer_sku_code' => $variant->buyer_sku_code,
                 'target' => $validated['target'],
                 'email' => $validated['email'] ?? null,
+                'phone' => $validated['phone'] ?? null,
 
                 'provider' => 'digiflazz',
                 'provider_ref_id' => null,

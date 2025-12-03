@@ -14,6 +14,7 @@ class Order extends Model
         'buyer_sku_code',
         'target',
         'email',
+        'phone',
         'method',
         'base_price',
         'subtotal',
