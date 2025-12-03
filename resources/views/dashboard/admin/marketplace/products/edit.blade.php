@@ -1,57 +1,100 @@
 @extends('layouts.admin')
-@section('title','Edit Marketplace Product — Admin')
+@section('title', 'Edit Marketplace Product — Admin')
 
 @section('content')
-  <div class="flex items-center justify-between gap-3 flex-wrap mb-4">
-    <div>
-      <h1 class="text-2xl md:text-3xl font-semibold">Edit Produk Marketplace</h1>
-      <p class="text-slate-400 text-sm mt-1">Slug: {{ $product->slug }}</p>
+    <div class="flex items-center justify-between gap-3 flex-wrap mb-4">
+        <div>
+            <h1 class="text-2xl md:text-3xl font-semibold">Edit Produk Marketplace</h1>
+            <p class="text-slate-400 text-sm mt-1">Slug: {{ $product->slug }}</p>
+        </div>
+        <a href="{{ route('admin.marketplace.products.index') }}" class="text-sm text-slate-400 hover:text-slate-200">←
+            Kembali</a>
     </div>
-    <a href="{{ route('admin.marketplace.products.index') }}"
-       class="text-sm text-slate-400 hover:text-slate-200">← Kembali</a>
-  </div>
 
-  <div class="rounded-2xl border border-slate-800/70 bg-[#0E1524] p-5 max-w-xl">
-    <form method="POST" action="{{ route('admin.marketplace.products.update', $product) }}" class="space-y-4">
-      @csrf
+    <div class="rounded-2xl border border-slate-800/70 bg-[#0E1524] p-5 max-w-xl">
+        <form method="POST" action="{{ route('admin.marketplace.products.update', $product) }}"
+            enctype="multipart/form-data" class="space-y-4">
 
-      <div class="space-y-1">
-        <label class="text-xs text-slate-400">Kategori</label>
-        <select name="marketplace_category_id"
-                class="w-full h-10 rounded-xl bg-slate-950 border border-slate-800/80 px-3 text-sm text-slate-100">
-          @foreach($categories as $cat)
-            <option value="{{ $cat->id }}" @selected(old('marketplace_category_id', $product->marketplace_category_id) == $cat->id)>
-              {{ $cat->name }}
-            </option>
-          @endforeach
-        </select>
-        @error('marketplace_category_id')
-          <p class="text-xs text-rose-400 mt-1">{{ $message }}</p>
-        @enderror
-      </div>
 
-      <div class="space-y-1">
-        <label class="text-xs text-slate-400">Nama produk</label>
-        <input type="text" name="name" value="{{ old('name', $product->name) }}"
-               class="w-full h-10 rounded-xl bg-slate-950 border border-slate-800/80 px-3 text-sm text-slate-100">
-        @error('name') <p class="text-xs text-rose-400 mt-1">{{ $message }}</p> @enderror
-      </div>
+            @csrf
 
-      <div class="space-y-1">
-        <label class="text-xs text-slate-400">Deskripsi</label>
-        <textarea name="description" rows="4"
-                  class="w-full rounded-xl bg-slate-950 border border-slate-800/80 px-3 py-2 text-sm text-slate-100">{{ old('description', $product->description) }}</textarea>
-      </div>
+            <div class="space-y-1">
+                <label class="text-xs text-slate-400">Kategori</label>
+                <select name="marketplace_category_id"
+                    class="w-full h-10 rounded-xl bg-slate-950 border border-slate-800/80 px-3 text-sm text-slate-100">
+                    @foreach($categories as $cat)
+                        <option value="{{ $cat->id }}" @selected(old('marketplace_category_id', $product->marketplace_category_id) == $cat->id)>
+                            {{ $cat->name }}
+                        </option>
+                    @endforeach
+                </select>
+                @error('marketplace_category_id')
+                    <p class="text-xs text-rose-400 mt-1">{{ $message }}</p>
+                @enderror
+            </div>
 
-      <label class="inline-flex items-center gap-2 text-xs text-slate-300">
-        <input type="checkbox" name="is_active" value="1" {{ old('is_active', $product->is_active) ? 'checked' : '' }}>
-        <span>Produk aktif (muncul di halaman marketplace user)</span>
-      </label>
+            <div class="space-y-1">
+                <label class="text-xs text-slate-400">Nama produk</label>
+                <input type="text" name="name" value="{{ old('name', $product->name) }}"
+                    class="w-full h-10 rounded-xl bg-slate-950 border border-slate-800/80 px-3 text-sm text-slate-100">
+                @error('name') <p class="text-xs text-rose-400 mt-1">{{ $message }}</p> @enderror
+            </div>
+            <div class="space-y-1">
+                <label class="text-xs text-slate-400">Gambar (opsional)</label>
+                <input type="file" name="thumbnail" accept="image/*"
+                    class="w-full rounded-xl bg-slate-950 border border-slate-800/80 px-3 py-2 text-sm text-slate-100
+                              file:bg-slate-800 file:border-0 file:mr-3 file:px-3 file:py-1.5 file:rounded-lg file:text-xs file:text-slate-100">
+                @error('thumbnail')
+                    <p class="text-xs text-rose-400 mt-1">{{ $message }}</p>
+                @enderror
 
-      <button type="submit"
-              class="mt-2 inline-flex items-center h-10 px-4 rounded-xl bg-violet-600 hover:bg-violet-500 text-sm font-medium">
-        Simpan perubahan
-      </button>
-    </form>
-  </div>
+                @if($product->thumbnail)
+                    <div class="mt-2">
+                        <p class="text-[11px] text-slate-500 mb-1">Gambar saat ini:</p>
+                        <img src="{{ asset('storage/' . $product->thumbnail) }}" alt="{{ $product->name }}"
+                            class="h-24 rounded-xl object-cover">
+                    </div>
+                @endif
+            </div>
+
+
+            <div class="space-y-1">
+                <label class="text-xs text-slate-400">Deskripsi</label>
+                <textarea name="description" rows="4"
+                    class="w-full rounded-xl bg-slate-950 border border-slate-800/80 px-3 py-2 text-sm text-slate-100">{{ old('description', $product->description) }}</textarea>
+            </div>
+            <div class="space-y-1">
+                <label class="text-xs text-slate-400">Gambar produk (boleh upload baru, multiple)</label>
+                <input type="file" name="images[]" multiple accept="image/*"
+                    class="w-full rounded-xl bg-slate-950 border border-slate-800/80 px-3 py-2 text-sm text-slate-100
+                          file:bg-slate-800 file:border-0 file:mr-3 file:px-3 file:py-1.5 file:rounded-lg file:text-xs file:text-slate-100">
+                @error('images.*')
+                    <p class="text-xs text-rose-400 mt-1">{{ $message }}</p>
+                @enderror
+
+                @if($product->images && $product->images->count())
+                    <div class="mt-3">
+                        <p class="text-[11px] text-slate-500 mb-1">Gambar yang sudah ada:</p>
+                        <div class="flex flex-wrap gap-2">
+                            @foreach($product->images as $img)
+                                <img src="{{ asset('storage/' . $img->path) }}" alt="{{ $product->name }}"
+                                    class="h-16 w-16 object-cover rounded-xl border border-slate-800/80">
+                            @endforeach
+                        </div>
+                    </div>
+                @endif
+            </div>
+
+
+            <label class="inline-flex items-center gap-2 text-xs text-slate-300">
+                <input type="checkbox" name="is_active" value="1" {{ old('is_active', $product->is_active) ? 'checked' : '' }}>
+                <span>Produk aktif (muncul di halaman marketplace user)</span>
+            </label>
+
+            <button type="submit"
+                class="mt-2 inline-flex items-center h-10 px-4 rounded-xl bg-violet-600 hover:bg-violet-500 text-sm font-medium">
+                Simpan perubahan
+            </button>
+        </form>
+    </div>
 @endsection

@@ -6,7 +6,9 @@
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <title>@yield('title', 'Admin — MaitriProject')</title>
     <meta name="csrf-token" content="{{ csrf_token() }}">
+
     @vite(['resources/css/app.css', 'resources/js/app.js'])
+
     <style>
         .scroll-smooth {
             scroll-behavior: smooth
@@ -30,7 +32,12 @@
 
         {{-- Sidebar --}}
         <aside id="adminSidebar"
-            class="z-40 border-r border-slate-800/70 bg-[#0E1524] lg:static fixed inset-y-0 left-0 w-[260px] translate-x-[-100%] lg:translate-x-0 transition-transform duration-200 will-change-transform">
+            class="z-40 border-r border-slate-800/70 bg-[#0E1524]
+                   lg:static fixed inset-y-0 left-0 w-[260px]
+                   -translate-x-full lg:translate-x-0
+                   transition-transform duration-300 ease-out will-change-transform
+                   shadow-2xl shadow-black/60">
+
             <div class="h-16 flex items-center gap-2 px-4 border-b border-slate-800/70">
                 <a href="{{ route('landing') }}" class="flex items-center gap-2">
                     <svg width="28" height="28" viewBox="0 0 24 24" class="text-violet-400">
@@ -44,6 +51,7 @@
                     </svg>
                     <span class="font-semibold">MaitriProject</span>
                 </a>
+
                 <span class="ml-auto lg:hidden">
                     <button id="btnSidebarClose" class="p-2 rounded-lg border border-slate-800/70">
                         <svg class="size-5" viewBox="0 0 24 24" fill="none">
@@ -54,7 +62,12 @@
             </div>
 
             <nav class="p-3 space-y-2 overflow-y-auto h-[calc(100vh-4rem)] no-scrollbar">
-                @php $r = fn($name) => request()->routeIs($name) ? 'bg-[#121a2b] text-white border-violet-700/60' : 'border-slate-800/70 hover:border-slate-700'; @endphp
+                @php
+                    $r = fn($name) =>
+                        request()->routeIs($name)
+                            ? 'bg-[#121a2b] text-white border-violet-700/60'
+                            : 'border-slate-800/70 hover:border-slate-700';
+                @endphp
 
                 <a href="{{ route('admin.dashboard') }}"
                     class="group flex items-center gap-3 px-3 py-2.5 rounded-xl border transition {{ $r('admin.dashboard') }}">
@@ -73,6 +86,7 @@
                     </svg>
                     <span>Categories</span>
                 </a>
+
                 <a href="{{ route('admin.subcategories.index') }}"
                     class="group flex items-center gap-3 px-3 py-2.5 rounded-xl border transition {{ request()->routeIs('admin.subcategories.*') ? 'bg-[#121a2b] text-white border-violet-700/60' : 'border-slate-800/70 hover:border-slate-700' }}">
                     <svg class="size-5 text-slate-400 group-hover:text-slate-300" viewBox="0 0 24 24" fill="none">
@@ -81,6 +95,7 @@
                     </svg>
                     <span>Subcategories</span>
                 </a>
+
                 <a href="{{ route('admin.products.index') }}"
                     class="group flex items-center gap-3 px-3 py-2.5 rounded-xl border transition {{ request()->routeIs('admin.products.*') ? 'bg-[#121a2b] text-white border-violet-700/60' : 'border-slate-800/70 hover:border-slate-700' }}">
                     <svg class="size-5 text-slate-400 group-hover:text-slate-300" viewBox="0 0 24 24" fill="none">
@@ -89,13 +104,7 @@
                     </svg>
                     <span>Products</span>
                 </a>
-                <!-- <li>
-                    <a href="{{ route('admin.digiflazz.index') }}"
-                        class="flex items-center gap-2 px-3 py-2 rounded-xl text-sm
-              {{ request()->routeIs('admin.digiflazz.*') ? 'bg-slate-800 text-slate-50' : 'text-slate-300 hover:bg-slate-800/70' }}">
-                        <span>Digiflazz</span>
-                    </a>
-                </li> -->
+
                 <a href="{{ route('admin.digiflazz.index') }}"
                     class="group flex items-center gap-3 px-3 py-2.5 rounded-xl border transition {{ request()->routeIs('admin.digiflazz.*') ? 'bg-[#121a2b] text-white border-violet-700/60' : 'border-slate-800/70 hover:border-slate-700' }}">
                     <svg class="size-5 text-slate-400 group-hover:text-slate-300" viewBox="0 0 24 24" fill="none">
@@ -104,6 +113,7 @@
                     </svg>
                     <span>Master Variants</span>
                 </a>
+
                 <a href="{{ route('admin.marketplace.orders.index') }}"
                     class="group flex items-center gap-3 px-3 py-2.5 rounded-xl border transition {{ $r('admin.marketplace.orders.*') }}">
                     <svg class="size-5 text-slate-400 group-hover:text-slate-300" viewBox="0 0 24 24" fill="none">
@@ -112,6 +122,7 @@
                     </svg>
                     <span>Marketplace Orders</span>
                 </a>
+
                 <a href="{{ route('admin.marketplace.products.index') }}"
                     class="group flex items-center gap-3 px-3 py-2.5 rounded-xl border transition {{ $r('admin.marketplace.products.*') }}">
                     <svg class="size-5 text-slate-400 group-hover:text-slate-300" viewBox="0 0 24 24" fill="none">
@@ -120,9 +131,6 @@
                     </svg>
                     <span>Marketplace Catalog</span>
                 </a>
-
-
-
 
                 <a href="{{ route('admin.users.index') }}"
                     class="group flex items-center gap-3 px-3 py-2.5 rounded-xl border transition {{ request()->routeIs('admin.users.*') ? 'bg-[#121a2b] text-white border-violet-700/60' : 'border-slate-800/70 hover:border-slate-700' }}">
@@ -145,6 +153,7 @@
 
         {{-- Main --}}
         <div class="min-h-screen flex flex-col">
+
             {{-- Topbar --}}
             <header
                 class="h-16 flex items-center gap-3 px-4 border-b border-slate-800/70 bg-[#0B1120]/80 backdrop-blur">
@@ -188,23 +197,50 @@
     </div>
 
     {{-- Overlay for mobile sidebar --}}
-    <div id="sidebarBackdrop" class="fixed inset-0 bg-black/40 backdrop-blur-sm hidden lg:hidden"></div>
+    <div id="sidebarBackdrop"
+        class="fixed inset-0 bg-black/50 backdrop-blur-sm
+               opacity-0 hidden lg:hidden
+               transition-opacity duration-300">
+    </div>
 
-    {{-- Minimal JS: open/close sidebar + persist state --}}
+    {{-- Sidebar JS --}}
     <script>
-        (function () {
-            const sb = document.getElementById('adminSidebar');
+        document.addEventListener('DOMContentLoaded', function () {
+            const sidebar = document.getElementById('adminSidebar');
             const openBtn = document.getElementById('btnSidebarOpen');
             const closeBtn = document.getElementById('btnSidebarClose');
             const backdrop = document.getElementById('sidebarBackdrop');
 
-            function open() { sb.style.transform = 'translateX(0)'; backdrop.classList.remove('hidden'); }
-            function close() { sb.style.transform = 'translateX(-100%)'; backdrop.classList.add('hidden'); }
+            if (!sidebar || !openBtn || !backdrop) return;
 
-            openBtn?.addEventListener('click', open);
-            closeBtn?.addEventListener('click', close);
-            backdrop?.addEventListener('click', close);
-        })();
+            const openSidebar = () => {
+                sidebar.classList.remove('-translate-x-full');
+                sidebar.classList.add('translate-x-0');
+
+                backdrop.classList.remove('hidden');
+                // force reflow supaya transition opacity jalan
+                void backdrop.offsetWidth;
+                backdrop.classList.remove('opacity-0');
+                backdrop.classList.add('opacity-100');
+            };
+
+            const closeSidebar = () => {
+                sidebar.classList.add('-translate-x-full');
+                sidebar.classList.remove('translate-x-0');
+
+                backdrop.classList.remove('opacity-100');
+                backdrop.classList.add('opacity-0');
+
+                // sembunyikan setelah animasi selesai
+                setTimeout(() => {
+                    backdrop.classList.add('hidden');
+                }, 300);
+            };
+
+            openBtn.addEventListener('click', openSidebar);
+            closeBtn?.addEventListener('click', closeSidebar);
+            backdrop.addEventListener('click', closeSidebar);
+        });
     </script>
 
     @stack('body')

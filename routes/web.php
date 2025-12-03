@@ -58,26 +58,26 @@ Route::middleware('auth')->group(function () {
     Route::post('/checkout/saldo', [CheckoutController::class, 'checkoutSaldo'])->name('checkout.saldo');
 
 
-    Route::get('/invoices/{order}', [CheckoutController::class, 'show'])
-        ->name('orders.show');
-    Route::get('/invoices/{code}', [CheckoutController::class, 'showByCode'])
-        ->name('invoices.show');
 
-    Route::post('/checkout/paydisini', [CheckoutController::class, 'checkoutPaydisini'])
-        ->name('checkout.paydisini');
-
-    // halaman pembayaran order (QR / VA / kode minimarket)
-    Route::get('/orders/{order}/payment/{payment}', [CheckoutController::class, 'showPaydisiniPayment'])
-        ->name('orders.payment.show');
-
-    // AJAX polling status pembayaran ke Paydisini
-    Route::get('/orders/payment/{payment}/status', [CheckoutController::class, 'checkPaymentStatus'])
-        ->name('orders.payment.status');
-    Route::post('/orders/payment/{payment}/expire', [CheckoutController::class, 'expirePayment'])
-        ->name('orders.payment.expire');
 
 });
+Route::get('/invoices/{order}', [CheckoutController::class, 'show'])
+    ->name('orders.show');
+Route::get('/invoices/{code}', [CheckoutController::class, 'showByCode'])
+    ->name('invoices.show');
 
+Route::post('/checkout/paydisini', [CheckoutController::class, 'checkoutPaydisini'])
+    ->name('checkout.paydisini');
+
+// halaman pembayaran order (QR / VA / kode minimarket)
+Route::get('/orders/{order}/payment/{payment}', [CheckoutController::class, 'showPaydisiniPayment'])
+    ->name('orders.payment.show');
+
+// AJAX polling status pembayaran ke Paydisini
+Route::get('/orders/payment/{payment}/status', [CheckoutController::class, 'checkPaymentStatus'])
+    ->name('orders.payment.status');
+Route::post('/orders/payment/{payment}/expire', [CheckoutController::class, 'expirePayment'])
+    ->name('orders.payment.expire');
 
 Route::middleware(['auth'])->prefix('dashboard')->name('dashboard.')->group(function () {
     Route::get('/wallet', [UserWalletController::class, 'index'])->name('wallet');

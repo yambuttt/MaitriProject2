@@ -195,6 +195,7 @@ class CheckoutController extends Controller
      */
     public function checkoutPaydisini(Request $request)
     {
+        // user boleh null (guest)
         $user = Auth::user();
 
         $validated = $request->validate([
@@ -208,7 +209,6 @@ class CheckoutController extends Controller
         $variant = ProductVariant::findOrFail($validated['variant_id']);
         $amount = (int) $variant->final_price;
 
-        // mapping channel -> service_id Paydisini
         $channel = $validated['payment_channel'];
 
         $serviceId = match ($channel) {
@@ -226,9 +226,8 @@ class CheckoutController extends Controller
 
         $apiKey = env('PAYDISINI_API_KEY');
         $baseUrl = rtrim(env('PAYDISINI_BASE_URL', 'https://api.paydisini.co.id/v1/'), '/');
-        $validTime = (int) env('PAYDISINI_VALID_TIME', ); // detik
+        $validTime = (int) env('PAYDISINI_VALID_TIME', 1800);
 
-        // bikin order + order_payment dalam 1 transaksi DB
         $order = null;
         $payment = null;
 
@@ -236,7 +235,7 @@ class CheckoutController extends Controller
             $code = Order::generateCode();
 
             $order = Order::create([
-                'user_id' => $user->id,
+                'user_id' => $user?->id,     // 👈 boleh null
                 'code' => $code,
                 'product_id' => $validated['product_id'],
                 'product_variant_id' => $validated['variant_id'],
@@ -259,26 +258,17 @@ class CheckoutController extends Controller
                 'total' => $amount,
                 'profit' => $amount - (int) $variant->base_price,
 
-                // pembayaran lewat Paydisini
-                // pembayaran lewat Paydisini
-                // pembayaran lewat Paydisini
-                'payment_method' => 'paydisini_' . $channel, // paydisini_qris, paydisini_va_mandiri, dst
+                'payment_method' => 'paydisini_' . $channel,
                 'payment_status' => 'pending',
-
-                // enum method hanya ['saldo_maitri'] saat ini
-                'method' => 'saldo_maitri',
-
-                // enum status: pending / processing / success / failed / refunded
+                'method' => 'saldo_maitri', // biarkan dulu, nanti kalau mau bisa bikin enum baru
                 'status' => 'pending',
-
             ]);
 
-            // kode unik buat Paydisini (beda dengan kode order)
             $uniqueCode = 'ORDPAY' . $order->id . now()->format('ymdHis');
 
             $payment = OrderPayment::create([
                 'order_id' => $order->id,
-                'user_id' => $user->id,
+                'user_id' => $user?->id,            // 👈 boleh null
                 'method' => 'paydisini_' . $channel,
                 'provider' => 'paydisini',
                 'amount' => $amount,
@@ -288,7 +278,6 @@ class CheckoutController extends Controller
             ]);
         });
 
-        // panggil Paydisini: request=new
         $uniqueCode = $payment->paydisini_unique_code;
 
         $signature = md5($apiKey . $uniqueCode . $serviceId . $amount . $validTime . 'NewTransaction');
@@ -299,9 +288,9 @@ class CheckoutController extends Controller
             'unique_code' => $uniqueCode,
             'service' => $serviceId,
             'amount' => $amount,
-            'note' => 'Pembayaran pesanan ' . $order->code . ' user ' . $user->id,
+            'note' => 'Pembayaran pesanan ' . $order->code . ($user ? (' user ' . $user->id) : ' (guest)'),
             'valid_time' => $validTime,
-            'type_fee' => 1,        // fee ditanggung customer
+            'type_fee' => 1,
             'payment_guide' => false,
             'callback_count' => 0,
             'signature' => $signature,
@@ -363,13 +352,11 @@ class CheckoutController extends Controller
      */
     public function showPaydisiniPayment(Order $order, OrderPayment $payment)
     {
-        $user = Auth::user();
-
-        if (!$user || $order->user_id !== $user->id || $payment->order_id !== $order->id) {
+        // Pastikan payment memang milik order ini
+        if ($payment->order_id !== $order->id) {
             abort(404);
         }
 
-        // payload Paydisini (ini contoh yang tadi)
         $raw = $payment->response_payload;
         if (is_string($raw)) {
             $payload = $raw !== '' ? (json_decode($raw, true) ?: []) : [];
@@ -378,25 +365,20 @@ class CheckoutController extends Controller
         } else {
             $payload = [];
         }
+
         $data = $payload['data'] ?? [];
 
-        // ➜ HITUNG WAKTU EXPIRED
-        // kalau dari Paydisini sudah disimpan di kolom expired_at, pakai itu
+        // hitung expired
         if ($payment->expired_at) {
             $expiresAt = $payment->expired_at->copy();
         } else {
-            // fallback: pakai config PAYDISINI_VALID_TIME (dalam detik)
             $seconds = (int) config('services.paydisini.valid_time', 1800);
             $expiresAt = now()->addSeconds($seconds);
         }
 
-        return view('invoices.payment', [
-            'order' => $order,
-            'payment' => $payment,
-            'data' => $data,
-            'expiresAt' => $expiresAt,   // <— KIRIM KE VIEW
-        ]);
+        return view('invoices.payment', compact('order', 'payment', 'data', 'expiresAt'));
     }
+
 
 
     /**
@@ -404,10 +386,10 @@ class CheckoutController extends Controller
      */
     public function checkPaymentStatus(OrderPayment $payment, DigiflazzService $digiflazzService)
     {
-        $user = Auth::user();
+        $order = $payment->order;
 
-        if ($payment->user_id !== $user->id) {
-            abort(403);
+        if (!$order) {
+            abort(404);
         }
 
         $order = $payment->order;

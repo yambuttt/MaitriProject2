@@ -307,29 +307,7 @@
     </section>
 
     <!-- FAQ -->
-    <section id="bantuan" class="py-14">
-      <div class="mx-auto max-w-[1280px] px-4 md:px-6 lg:px-8">
-        <h2 class="reveal text-2xl md:text-3xl font-semibold">FAQ</h2>
-        <div class="mt-6 space-y-3">
-          @foreach([
-            ['Apakah resmi terhubung ke Digiflazz?','Ya, kami menggunakan API resmi Digiflazz untuk proses top up.'],
-            ['Berapa lama prosesnya?','Umumnya &lt; 2 menit setelah pembayaran terkonfirmasi.'],
-            ['Metode pembayaran apa saja?','VA bank, e-wallet, dan QRIS.'],
-            ['Bagaimana jika gagal?','Dana dikembalikan/di-refund sesuai kebijakan.'],
-          ] as [$q,$a])
-          <details class="reveal group rounded-2xl border border-slate-800/70 bg-[#111826] p-4">
-            <summary class="list-none cursor-pointer flex items-center justify-between">
-              <span class="font-medium">{{ $q }}</span>
-              <svg class="size-5 text-slate-400 group-open:rotate-180 transition" viewBox="0 0 24 24" fill="none">
-                <path d="M6 9l6 6 6-6" stroke="currentColor" stroke-width="1.5"/>
-              </svg>
-            </summary>
-            <p class="mt-2 text-slate-400">{{ $a }}</p>
-          </details>
-          @endforeach
-        </div>
-      </div>
-    </section>
+    
 
     <!-- CTA -->
     <section class="py-16">

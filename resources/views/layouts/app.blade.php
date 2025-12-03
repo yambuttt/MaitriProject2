@@ -169,7 +169,18 @@
     });
   </script>
 @endif
+  <script>
+    document.addEventListener('DOMContentLoaded', function () {
+      const btn = document.getElementById('mobileBtn');
+      const menu = document.getElementById('mobileMenu');
 
+      if (!btn || !menu) return;
+
+      btn.addEventListener('click', function () {
+        menu.classList.toggle('hidden');
+      });
+    });
+  </script>
 
 
 <body class="bg-[#0B0F17] text-slate-200 antialiased" data-page="@yield('page', 'default')">

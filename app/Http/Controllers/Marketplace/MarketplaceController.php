@@ -11,19 +11,26 @@ class MarketplaceController extends Controller
 {
     public function index()
     {
-        $products = MarketplaceProduct::with('category')
+        $products = MarketplaceProduct::with(['category', 'images'])
             ->where('is_active', true)
             ->whereHas('variants', fn($q) => $q->where('is_active', true))
             ->get();
+
 
         return view('marketplace.index', compact('products'));
     }
 
     public function show(MarketplaceProduct $product)
     {
-        $product->load(['category', 'variants' => fn($q) => $q->where('is_active', true)]);
+        $product->load([
+            'category',
+            'variants' => fn($q) => $q->where('is_active', true),
+            'images',
+        ]);
+
         return view('marketplace.show', compact('product'));
     }
+
 
     public function invoice(MarketplaceOrder $order)
     {

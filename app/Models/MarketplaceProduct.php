@@ -25,4 +25,12 @@ class MarketplaceProduct extends Model
     {
         return $this->hasMany(MarketplaceVariant::class);
     }
+
+    public function images()
+    {
+        return $this->hasMany(MarketplaceProductImage::class, 'marketplace_product_id')
+            ->orderBy('sort_order')
+            ->orderBy('id');
+    }
+
 }
