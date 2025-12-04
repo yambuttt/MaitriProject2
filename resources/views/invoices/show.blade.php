@@ -126,6 +126,20 @@
                             <dt class="text-slate-400">Status</dt>
                             <dd class="text-right">{{ $status }}</dd>
                         </div>
+                        @if ($order->provider_sn)
+                            <div class="flex justify-between gap-4">
+                                <dt class="text-slate-400">SN / Token</dt>
+                                <dd class="text-right">
+                                    <span id="snText" class="font-mono text-emerald-200">{{ $order->provider_sn }}</span>
+                                    <button type="button"
+                                        class="ml-2 text-[11px] px-2 py-1 rounded-full border border-emerald-500/40 text-emerald-200"
+                                        onclick="navigator.clipboard.writeText('{{ $order->provider_sn }}')">
+                                        Salin
+                                    </button>
+                                </dd>
+                            </div>
+                        @endif
+
                     </dl>
                 </div>
 

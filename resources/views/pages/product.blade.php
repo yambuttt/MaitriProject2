@@ -58,7 +58,7 @@
                 </p>
               </div>
 
-              {{-- “Badge” kecil seperti referensi --}}
+              {{-- “Badge” kecil --}}
               <div class="flex flex-wrap gap-2 text-[11px] text-slate-200">
                 <span class="inline-flex items-center gap-1 rounded-full bg-slate-800/80 px-3 py-1">
                   ⚡ <span>Proses cepat</span>
@@ -71,10 +71,27 @@
                 </span>
               </div>
 
-              <div id="pDescription" class="text-sm leading-relaxed text-slate-300">
+              {{-- Deskripsi: tampil di hero hanya untuk desktop, mobile pakai tab Keterangan --}}
+              <div id="pDescription" class="text-sm leading-relaxed text-slate-300 hidden md:block">
                 {!! nl2br(e($product->description)) !!}
               </div>
             </div>
+          </div>
+        </div>
+
+        {{-- ============================= --}}
+        {{-- MOBILE TABS Transaksi / Keterangan --}}
+        {{-- ============================= --}}
+        <div class="md:hidden">
+          <div class="flex rounded-2xl bg-slate-900/80 p-1 gap-1">
+            <button id="tabTransaksi" type="button"
+              class="flex-1 px-3 py-2 rounded-xl text-xs font-medium bg-slate-800 text-slate-50">
+              Transaksi
+            </button>
+            <button id="tabKeterangan" type="button"
+              class="flex-1 px-3 py-2 rounded-xl text-xs font-medium text-slate-400">
+              Keterangan
+            </button>
           </div>
         </div>
 
@@ -84,7 +101,10 @@
         <div class="grid gap-6 lg:grid-cols-[minmax(0,7fr)_minmax(0,4fr)] items-start">
 
           {{-- ========== KIRI: STEP ========= --}}
-          <div class="space-y-4">
+          <div class="space-y-4" id="panelTransaksi">
+            {{-- Ringkasan biaya (MOBILE ONLY, di atas tombol sticky) --}}
+
+
 
             {{-- Step 1: Target --}}
             <div class="rounded-3xl border border-slate-800/70 bg-[#111826] p-5">
@@ -98,8 +118,8 @@
                 <div>
                   <label class="text-sm text-slate-400">User ID / Nomor Tujuan</label>
                   <input id="fTarget" name="target" type="text" placeholder="Masukkan User ID atau Nomor" class="mt-1 w-full rounded-xl bg-[#0E1524] border border-slate-800/70
-                                         px-3 py-2 text-sm outline-none
-                                         focus:border-violet-500/60 focus:ring-2 focus:ring-violet-500/30">
+                                                     px-3 py-2 text-sm outline-none
+                                                     focus:border-violet-500/60 focus:ring-2 focus:ring-violet-500/30">
                   <p id="fTargetHelp" class="mt-1 text-xs text-slate-500">
                     Contoh: 081234567890 atau 12345678(1234).
                   </p>
@@ -114,20 +134,13 @@
                 <h2 class="font-medium">Pilih Nominal</h2>
               </div>
 
-              {{-- Tabs (untuk future kategori) --}}
-              <!-- <div id="variantTabs" class="mt-3 flex flex-wrap gap-2">
-                            <button type="button" class="px-3 py-1.5 rounded-full border border-violet-600/70 bg-violet-600/10
-                                       text-violet-300 text-sm cursor-default">
-                              Umum
-                            </button>
-                          </div> -->
-
               {{-- Grid Varian --}}
               <div id="variantGrid" class="mt-4 grid sm:grid-cols-2 xl:grid-cols-3 gap-3">
                 @foreach($product->variants as $v)
                   <button type="button" class="variant-card rounded-2xl border border-slate-800/70 bg-[#0E1524] p-4 text-left
-                                                       hover:border-slate-700 transition" data-variant-id="{{ $v->id }}"
-                    data-variant-name="{{ $v->name }}" data-variant-price="{{ $v->final_price }}">
+                                                                               hover:border-slate-700 transition"
+                    data-variant-id="{{ $v->id }}" data-variant-name="{{ $v->name }}"
+                    data-variant-price="{{ $v->final_price }}">
                     <div class="text-sm font-medium text-slate-100">{{ $v->name }}</div>
                     <div class="text-xs text-slate-400 mt-0.5">{{ $v->buyer_sku_code }}</div>
 
@@ -216,7 +229,6 @@
             </div>
 
             {{-- Step 4: Detail Kontak --}}
-            {{-- Step 4: Detail Kontak --}}
             <div class="rounded-3xl border border-slate-800/70 bg-[#111826] p-5">
               <div class="flex items-center gap-2 text-slate-300">
                 <div class="size-6 grid place-items-center rounded-full border border-slate-700 text-xs">4</div>
@@ -228,8 +240,8 @@
                 <div>
                   <label class="text-sm text-slate-400">Email (untuk bukti pembayaran)</label>
                   <input id="fEmail" name="email" type="email" placeholder="nama@email.com" class="mt-1 w-full rounded-xl bg-[#0E1524] border border-slate-800/70
-                         px-3 py-2 text-sm outline-none
-                         focus:border-violet-500/60 focus:ring-2 focus:ring-violet-500/30">
+                                     px-3 py-2 text-sm outline-none
+                                     focus:border-violet-500/60 focus:ring-2 focus:ring-violet-500/30">
                   <p class="mt-1 text-[11px] text-slate-500">
                     Bukti transaksi dan info pesanan bisa kami kirim ke email ini.
                   </p>
@@ -239,22 +251,28 @@
                 <div>
                   <label class="text-sm text-slate-400">No. WhatsApp / HP</label>
                   <input id="fPhone" name="phone" type="tel" placeholder="08xxxxxxxxxx" class="mt-1 w-full rounded-xl bg-[#0E1524] border border-slate-800/70
-                         px-3 py-2 text-sm outline-none
-                         focus:border-violet-500/60 focus:ring-2 focus:ring-violet-500/30">
+                                     px-3 py-2 text-sm outline-none
+                                     focus:border-violet-500/60 focus:ring-2 focus:ring-violet-500/30">
                   <p class="mt-1 text-[11px] text-slate-500">
                     Nomor ini akan dihubungi jika terjadi masalah pada pesanan.
                   </p>
                 </div>
               </div>
             </div>
-
-
           </div>
 
-          {{-- ========== KANAN: RATING + SUMMARY ========= --}}
-          <aside class="space-y-4">
+          {{-- ========== KANAN: KETERANGAN / RATING / SUMMARY ========= --}}
+          <aside class="space-y-4" id="panelKeterangan">
 
-            {{-- Rating (dummy UI, bisa disambungkan ke data nanti) --}}
+            {{-- Deskripsi (khusus mobile tab Keterangan) --}}
+            <div class="rounded-3xl border border-slate-800/80 bg-slate-900/80 p-5 md:hidden">
+              <h2 class="text-sm font-semibold text-slate-100">Deskripsi {{ $product->name }}</h2>
+              <div class="mt-2 text-sm leading-relaxed text-slate-300">
+                {!! nl2br(e($product->description)) !!}
+              </div>
+            </div>
+
+            {{-- Rating --}}
             <div class="rounded-3xl border border-slate-800/80 bg-slate-900/80 p-5">
               <h2 class="text-sm font-semibold text-slate-100">Ulasan dan rating</h2>
 
@@ -288,7 +306,8 @@
             </div>
 
             {{-- Detail biaya + tombol checkout (muncul hanya jika siap) --}}
-            <div id="summaryWrapper" class="rounded-3xl border border-violet-700/70 bg-[#111826] p-5 space-y-4 hidden">
+            <div id="summaryWrapper"
+              class="hidden md:block rounded-3xl border border-violet-700/70 bg-[#111826] p-5 space-y-4">
 
               <div class="flex items-center justify-between gap-2">
                 <h2 class="text-sm font-semibold text-slate-100">Detail biaya</h2>
@@ -328,7 +347,7 @@
               </dl>
 
               <button id="btnCheckout" class="w-full mt-2 px-5 py-3 rounded-2xl bg-violet-600 hover:bg-violet-500 text-sm font-medium
-                                     text-white disabled:opacity-50 disabled:cursor-not-allowed" disabled>
+               text-white disabled:opacity-50 disabled:cursor-not-allowed" disabled>
                 Lanjutkan Pembayaran
               </button>
 
@@ -341,9 +360,7 @@
       </div>
     </div>
 
-    {{-- ===================================================== --}}
     {{-- =============== MODAL PIN SALDO MAITRI ============== --}}
-    {{-- ===================================================== --}}
     @auth
       <div id="saldoPinModal" class="fixed inset-0 z-40 hidden items-center justify-center bg-black/60">
         <div class="w-full max-w-md rounded-2xl bg-slate-900 border border-violet-500/40 p-5 space-y-4">
@@ -366,7 +383,8 @@
             <div>
               <label class="block text-xs font-medium text-slate-400 mb-1">PIN Pembayaran</label>
               <input type="password" maxlength="6" name="pin" class="h-10 w-full rounded-xl bg-slate-950 border border-slate-700/80
-                                                   px-3 text-sm text-slate-100" placeholder="Masukkan PIN" required>
+                                                                           px-3 text-sm text-slate-100"
+                placeholder="Masukkan PIN" required>
             </div>
 
             <div class="flex justify-end gap-2 pt-1">
@@ -384,9 +402,7 @@
       </div>
     @endauth
 
-    {{-- ===================================================== --}}
     {{-- =========== FORM HIDDEN CHECKOUT PAYDISINI =========== --}}
-    {{-- ===================================================== --}}
     <form id="paydisiniForm" method="POST" action="{{ route('checkout.paydisini') }}" class="hidden">
       @csrf
       <input type="hidden" name="product_id" value="{{ $product->id }}">
@@ -396,6 +412,56 @@
       <input type="hidden" name="phone" id="paydisiniPhone">
       <input type="hidden" name="payment_channel" id="paydisiniChannel">
     </form>
+
+    {{-- STICKY CHECKOUT BAR (MOBILE) --}}
+    {{-- STICKY CHECKOUT BAR (MOBILE) --}}
+    <div id="checkoutBar"
+      class="fixed inset-x-0 bottom-0 z-40 hidden md:hidden bg-slate-950/95 border-t border-slate-800/80 backdrop-blur">
+      <div class="mx-auto max-w-[1280px] px-4 py-2 space-y-2">
+
+        {{-- Ringkasan pesanan MOBILE (nempel di atas tombol) --}}
+        <div id="summaryWrapperMobile"
+          class="rounded-2xl border border-violet-700/70 bg-[#111826] px-3 py-2 text-[11px] text-slate-200 hidden">
+          <div class="flex items-center justify-between gap-2">
+            <div class="min-w-0">
+              <p class="font-semibold truncate">{{ $product->name }}</p>
+              <p id="sHeaderMobile" class="text-[10px] text-slate-400 truncate">
+                Pilih varian &amp; metode pembayaran dulu.
+              </p>
+            </div>
+            <p id="sTotalShortMobile" class="text-xs font-semibold text-slate-50 whitespace-nowrap">
+              Rp 0
+            </p>
+          </div>
+
+          <dl class="mt-1 grid grid-cols-2 gap-x-3 gap-y-0.5">
+            <div class="flex justify-between gap-2">
+              <dt class="text-slate-500">Varian</dt>
+              <dd id="sVarMobile" class="text-right">—</dd>
+            </div>
+            <div class="flex justify-between gap-2">
+              <dt class="text-slate-500">Metode</dt>
+              <dd id="sPayMobile" class="text-right">—</dd>
+            </div>
+            <div class="flex justify-between gap-2">
+              <dt class="text-slate-500">Subtotal</dt>
+              <dd id="sSubMobile" class="text-right">Rp 0</dd>
+            </div>
+            <div class="flex justify-between gap-2">
+              <dt class="text-slate-500">Total</dt>
+              <dd id="sTotalMobile" class="text-right font-semibold text-slate-50">Rp 0</dd>
+            </div>
+          </dl>
+        </div>
+
+        {{-- Tombol sticky --}}
+        <button id="btnCheckoutMobile" class="w-full h-11 rounded-2xl bg-violet-600 hover:bg-violet-500 text-sm font-medium
+                     text-white disabled:opacity-50 disabled:cursor-not-allowed">
+          Pesan Sekarang!
+        </button>
+      </div>
+    </div>
+
 
   </section>
 @endsection
@@ -412,6 +478,9 @@
       // DOM Elements
       const cards = document.querySelectorAll('.variant-card');
       const btnCheckout = document.getElementById('btnCheckout');
+      const btnCheckoutMobile = document.getElementById('btnCheckoutMobile');
+      const checkoutBar = document.getElementById('checkoutBar');
+
       const btnSaldo = document.getElementById('paySaldoBtn');
       const saldoWarning = document.getElementById('saldoWarning');
       const summaryWrapper = document.getElementById('summaryWrapper');
@@ -423,11 +492,27 @@
       const sSub = document.getElementById('sSub');
       const sTotal = document.getElementById('sTotal');
 
+      // Elemen ringkasan MOBILE
+      const summaryWrapperMobile = document.getElementById('summaryWrapperMobile');
+      const sHeaderMobile = document.getElementById('sHeaderMobile');
+      const sVarMobile = document.getElementById('sVarMobile');
+      const sPayMobile = document.getElementById('sPayMobile');
+      const sSubMobile = document.getElementById('sSubMobile');
+      const sTotalMobile = document.getElementById('sTotalMobile');
+      const sTotalShortMobile = document.getElementById('sTotalShortMobile');
+
+
       const targetField = document.getElementById('fTarget');
       const emailField = document.getElementById('fEmail');
       const phoneField = document.getElementById('fPhone');
 
       const walletBalance = {{ (int) ($walletBalance ?? 0) }};
+
+      // Mobile tabs
+      const tabTransaksi = document.getElementById('tabTransaksi');
+      const tabKeterangan = document.getElementById('tabKeterangan');
+      const panelTransaksi = document.getElementById('panelTransaksi');
+      const panelKeterangan = document.getElementById('panelKeterangan');
 
       // Modal saldo
       const saldoPinModal = document.getElementById('saldoPinModal');
@@ -512,8 +597,6 @@
       //  UPDATE SUMMARY
       // ============================
       function updateSummary() {
-        sVar.textContent = selectedVariant ? selectedVariant.name : '—';
-
         let payText = '—';
         switch (selectedMethod) {
           case 'SALDO': payText = 'Saldo Maitri'; break;
@@ -523,21 +606,51 @@
           case 'INDOMARET': payText = 'Indomaret'; break;
         }
 
-        sPay.textContent = payText;
-        sSub.textContent = selectedVariant ? 'Rp ' + rupiah(selectedVariant.price) : 'Rp 0';
-        sTotal.textContent = selectedVariant ? 'Rp ' + rupiah(selectedVariant.price) : 'Rp 0';
-
+        const hasVariant = !!selectedVariant;
         const ready = !!(selectedVariant && selectedMethod);
-        btnCheckout.disabled = !ready;
+        const priceText = hasVariant ? 'Rp ' + rupiah(selectedVariant.price) : 'Rp 0';
 
+        // --- RINGKASAN DESKTOP (kanan) ---
+        if (sVar) sVar.textContent = hasVariant ? selectedVariant.name : '—';
+        if (sPay) sPay.textContent = payText;
+        if (sSub) sSub.textContent = priceText;
+        if (sTotal) sTotal.textContent = priceText;
+
+        // TAMPILKAN summaryWrapper HANYA di desktop (>= 768px)
         if (summaryWrapper) {
-          if (ready) {
+          if (ready && window.innerWidth >= 768) {
             summaryWrapper.classList.remove('hidden');
           } else {
             summaryWrapper.classList.add('hidden');
           }
         }
+
+        // --- RINGKASAN MOBILE (sticky bar) ---
+        if (sVarMobile) sVarMobile.textContent = hasVariant ? selectedVariant.name : '—';
+        if (sPayMobile) sPayMobile.textContent = payText;
+        if (sSubMobile) sSubMobile.textContent = priceText;
+        if (sTotalMobile) sTotalMobile.textContent = priceText;
+        if (sTotalShortMobile) sTotalShortMobile.textContent = priceText;
+        if (sHeaderMobile) {
+          sHeaderMobile.textContent = hasVariant
+            ? `Varian: ${selectedVariant.name}` + (payText !== '—' ? ' • ' + payText : '')
+            : 'Pilih varian & metode pembayaran dulu.';
+        }
+
+        if (summaryWrapperMobile) {
+          summaryWrapperMobile.classList.toggle('hidden', !ready);
+        }
+
+        // --- TOMBOL CHECKOUT (desktop + sticky mobile) ---
+        if (btnCheckout) btnCheckout.disabled = !ready;
+        if (btnCheckoutMobile) btnCheckoutMobile.disabled = !ready;
+
+        if (checkoutBar) {
+          checkoutBar.classList.toggle('hidden', !ready);
+        }
       }
+
+
 
       // ============================
       //  SALDO VALIDATION
@@ -554,9 +667,9 @@
       }
 
       // ============================
-      //  CHECKOUT BUTTON HANDLING
+      //  CHECKOUT HANDLING (dipakai desktop & mobile)
       // ============================
-      btnCheckout.addEventListener('click', () => {
+      function handleCheckout() {
 
         if (!selectedVariant) {
           alert('Pilih nominal terlebih dahulu');
@@ -590,8 +703,8 @@
             alert('Silakan login untuk menggunakan Saldo Maitri.');
           @endif
 
-                      // =================== PAYDISINI ==================
-                      } else {
+                    // =================== PAYDISINI ==================
+                    } else {
 
           const channelMap = {
             'QRIS': 'qris',
@@ -615,12 +728,62 @@
 
           paydisiniForm.submit();
         }
-      });
+      }
 
+      if (btnCheckout) {
+        btnCheckout.addEventListener('click', handleCheckout);
+      }
+      if (btnCheckoutMobile) {
+        btnCheckoutMobile.addEventListener('click', handleCheckout);
+      }
+
+      // ============================
+      //  MODAL PIN CLOSE
+      // ============================
       if (btnClosePin) {
         btnClosePin.addEventListener('click', () => {
           saldoPinModal.classList.add('hidden');
           saldoPinModal.classList.remove('flex');
+        });
+      }
+
+      // ============================
+      //  MOBILE TABS LOGIC
+      // ============================
+      function setTab(which) {
+        if (!tabTransaksi || !tabKeterangan || !panelTransaksi || !panelKeterangan) return;
+        const isMobile = window.innerWidth < 768;
+        if (!isMobile) return;
+
+        const isTransaksi = which === 'transaksi';
+
+        panelTransaksi.classList.toggle('hidden', !isTransaksi);
+        panelKeterangan.classList.toggle('hidden', isTransaksi);
+
+        tabTransaksi.classList.toggle('bg-slate-800', isTransaksi);
+        tabTransaksi.classList.toggle('text-slate-50', isTransaksi);
+        tabTransaksi.classList.toggle('text-slate-400', !isTransaksi);
+
+        tabKeterangan.classList.toggle('bg-slate-800', !isTransaksi);
+        tabKeterangan.classList.toggle('text-slate-50', !isTransaksi);
+        tabKeterangan.classList.toggle('text-slate-400', isTransaksi);
+      }
+
+      if (tabTransaksi && tabKeterangan) {
+        tabTransaksi.addEventListener('click', () => setTab('transaksi'));
+        tabKeterangan.addEventListener('click', () => setTab('keterangan'));
+
+        // initial state mobile
+        setTab('transaksi');
+
+        // kalau resize ke desktop, pastikan dua panel muncul lagi
+        window.addEventListener('resize', () => {
+          if (window.innerWidth >= 768) {
+            panelTransaksi.classList.remove('hidden');
+            panelKeterangan.classList.remove('hidden');
+          } else {
+            setTab('transaksi');
+          }
         });
       }
     });
