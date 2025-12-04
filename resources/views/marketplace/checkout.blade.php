@@ -99,6 +99,7 @@
                             class="w-full rounded-xl bg-slate-950 border border-slate-800 px-3 py-2.5 text-sm text-slate-100 focus:outline-none focus:border-violet-500 focus:ring-1 focus:ring-violet-500/60"
                             placeholder="Contoh: kirim akses ke email lain, jam aktif akun, dsb.">{{ old('user_note', $order->user_note) }}</textarea>
                 </div>
+                
 
                 {{-- Payment method --}}
                 <div class="pt-2 border-t border-slate-800/70 space-y-3">
@@ -147,17 +148,34 @@
                     @enderror
                   </div>
                 </div>
+                @if(auth()->user() && auth()->user()->hasPaymentPin())
+    <div class="space-y-1">
+        <label class="text-xs text-slate-400">PIN Pembayaran</label>
+        <input type="password"
+               name="payment_pin"
+               maxlength="6"
+               class="w-full rounded-xl bg-slate-950 border border-slate-800 px-3 py-2.5 text-sm text-slate-100"
+               placeholder="Masukkan PIN pembayaran">
+        @error('payment_pin')
+            <p class="text-xs text-rose-400 mt-1">{{ $message }}</p>
+        @enderror
+    </div>
+@endif
 
                 {{-- terms + submit --}}
                 <div class="pt-3 space-y-3 border-t border-slate-800/70">
                   <p class="text-[11px] text-slate-500">
                     Dengan menekan tombol di bawah, kamu menyetujui ketentuan penggunaan layanan marketplace Maitri.
                   </p>
-
+                  
+                  @if($order->payment_status !== 'not_paid')
+                    <button disabled class="...opacity-50 cursor-not-allowed">Pesanan sudah diproses</button>
+                    @else
                   <button type="submit"
                           class="w-full h-11 rounded-2xl bg-emerald-500 hover:bg-emerald-400 text-sm font-semibold text-slate-950 shadow-md shadow-emerald-500/30">
                     Buat pesanan
                   </button>
+                  @endif
                 </div>
               </form>
             </div>

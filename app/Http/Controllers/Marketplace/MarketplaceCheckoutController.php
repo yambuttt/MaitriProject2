@@ -35,18 +35,18 @@ class MarketplaceCheckoutController extends Controller
         $user = Auth::user();
 
         $order = MarketplaceOrder::create([
-            'invoice_number'         => $invoiceNumber,
-            'user_id'                => $user?->id,
+            'invoice_number' => $invoiceNumber,
+            'user_id' => $user?->id,
             'marketplace_product_id' => $product->id,
             'marketplace_variant_id' => $variant->id,
-            'customer_email'         => $user?->email ?? '',
-            'customer_phone'         => '',
-            'price'                  => (int) $variant->price,
-            'fee'                    => 0,
-            'total_amount'           => (int) $variant->price,
-            'payment_method'         => 'not_set',
-            'payment_status'         => 'not_paid',
-            'status'                 => 'not_paid',
+            'customer_email' => $user?->email ?? '',
+            'customer_phone' => '',
+            'price' => (int) $variant->price,
+            'fee' => 0,
+            'total_amount' => (int) $variant->price,
+            'payment_method' => 'not_set',
+            'payment_status' => 'not_paid',
+            'status' => 'not_paid',
         ]);
 
         return redirect()->route('marketplace.checkout.show', $order);
@@ -58,6 +58,10 @@ class MarketplaceCheckoutController extends Controller
      */
     public function showCheckout(MarketplaceOrder $order)
     {
+        if ($order->payment_status !== 'not_paid') {
+            return redirect()->route('marketplace.invoice.show', $order);
+        }
+
         $order->load(['product', 'variant']);
         return view('marketplace.checkout', compact('order'));
     }
@@ -71,7 +75,7 @@ class MarketplaceCheckoutController extends Controller
         $data = $request->validate([
             'customer_email' => ['required', 'email'],
             'customer_phone' => ['nullable', 'string'],
-            'user_note'      => ['nullable', 'string'],
+            'user_note' => ['nullable', 'string'],
             'payment_method' => [
                 'required',
                 'in:wallet,paydisini_qris,paydisini_va_mandiri,paydisini_alfamart,paydisini_indomaret',
@@ -82,15 +86,37 @@ class MarketplaceCheckoutController extends Controller
         $order->update([
             'customer_email' => $data['customer_email'],
             'customer_phone' => $data['customer_phone'],
-            'user_note'      => $data['user_note'] ?? null,
+            'user_note' => $data['user_note'] ?? null,
             'payment_method' => $data['payment_method'],
         ]);
+        if (!in_array($order->status, ['not_paid'])) {
+            return redirect()
+                ->route('marketplace.invoice.show', $order)
+                ->with('warning', 'Pesanan sudah diproses, tidak dapat dilakukan checkout ulang.');
+        }
 
         // ==========================
         //  A. Pembayaran pakai WALLET
         // ==========================
         if ($data['payment_method'] === 'wallet') {
             $user = Auth::user();
+            if (!$user->hasPaymentPin()) {
+                return back()->withErrors([
+                    'payment_pin' => 'Kamu belum membuat PIN pembayaran.'
+                ]);
+            }
+
+            // 2. PIN harus dikirim
+            $request->validate([
+                'payment_pin' => ['required', 'digits:6']
+            ]);
+
+            // 3. Verifikasi PIN
+            if (!$user->checkPaymentPin($request->payment_pin)) {
+                return back()->withErrors([
+                    'payment_pin' => 'PIN pembayaran salah.'
+                ]);
+            }
             if (!$user) {
                 return back()
                     ->withErrors(['payment_method' => 'Harus login untuk menggunakan Saldo Maitri.'])
@@ -112,8 +138,8 @@ class MarketplaceCheckoutController extends Controller
             // tandai order sudah dibayar, menunggu diproses admin
             $order->update([
                 'payment_status' => 'paid',
-                'status'         => 'paid_received',
-                'paid_at'        => now(),
+                'status' => 'paid_received',
+                'paid_at' => now(),
             ]);
 
             return redirect()->route('marketplace.invoice.show', $order);
@@ -124,13 +150,13 @@ class MarketplaceCheckoutController extends Controller
         // ======================================
 
         // mapping method -> channel + service_id seperti di CheckoutController
-        $method  = $data['payment_method']; // paydisini_qris, dll
+        $method = $data['payment_method']; // paydisini_qris, dll
         $channel = match ($method) {
-            'paydisini_qris'        => 'qris',
-            'paydisini_va_mandiri'  => 'va_mandiri',
-            'paydisini_alfamart'    => 'alfamart',
-            'paydisini_indomaret'   => 'indomaret',
-            default                 => null,
+            'paydisini_qris' => 'qris',
+            'paydisini_va_mandiri' => 'va_mandiri',
+            'paydisini_alfamart' => 'alfamart',
+            'paydisini_indomaret' => 'indomaret',
+            default => null,
         };
 
         if (!$channel) {
@@ -140,10 +166,10 @@ class MarketplaceCheckoutController extends Controller
         }
 
         $serviceId = match ($channel) {
-            'qris'       => 11,
+            'qris' => 11,
             'va_mandiri' => 5,
-            'alfamart'   => (int) env('PAYDISINI_ALFAMART_SERVICE_ID'),
-            'indomaret'  => (int) env('PAYDISINI_INDOMARET_SERVICE_ID'),
+            'alfamart' => (int) env('PAYDISINI_ALFAMART_SERVICE_ID'),
+            'indomaret' => (int) env('PAYDISINI_INDOMARET_SERVICE_ID'),
         };
 
         if (!$serviceId) {
@@ -152,8 +178,8 @@ class MarketplaceCheckoutController extends Controller
                 ->withInput();
         }
 
-        $apiKey   = env('PAYDISINI_API_KEY');
-        $baseUrl  = rtrim(env('PAYDISINI_BASE_URL', 'https://api.paydisini.co.id/v1/'), '/');
+        $apiKey = env('PAYDISINI_API_KEY');
+        $baseUrl = rtrim(env('PAYDISINI_BASE_URL', 'https://api.paydisini.co.id/v1/'), '/');
         $validTime = (int) env('PAYDISINI_VALID_TIME', 1800); // detik
 
         $amount = (int) $order->total_amount;
@@ -166,10 +192,10 @@ class MarketplaceCheckoutController extends Controller
 
             $payment = MarketplaceOrderPayment::create([
                 'marketplace_order_id' => $order->id,
-                'method'               => $method,
-                'amount'               => $amount,
-                'status'               => 'pending',
-                'paydisini_unique_code'=> $uniqueCode,
+                'method' => $method,
+                'amount' => $amount,
+                'status' => 'pending',
+                'paydisini_unique_code' => $uniqueCode,
                 'paydisini_service_id' => (string) $serviceId,
             ]);
         });
@@ -180,30 +206,30 @@ class MarketplaceCheckoutController extends Controller
         $signature = md5($apiKey . $uniqueCode . $serviceId . $amount . $validTime . 'NewTransaction');
 
         $payload = [
-            'key'          => $apiKey,
-            'request'      => 'new',
-            'unique_code'  => $uniqueCode,
-            'service'      => $serviceId,
-            'amount'       => $amount,
-            'note'         => 'Pembayaran pesanan marketplace ' . $order->invoice_number,
-            'valid_time'   => $validTime,
-            'type_fee'     => 1,        // fee ditanggung customer
-            'payment_guide'=> false,
-            'callback_count'=> 0,
-            'signature'    => $signature,
+            'key' => $apiKey,
+            'request' => 'new',
+            'unique_code' => $uniqueCode,
+            'service' => $serviceId,
+            'amount' => $amount,
+            'note' => 'Pembayaran pesanan marketplace ' . $order->invoice_number,
+            'valid_time' => $validTime,
+            'type_fee' => 1,        // fee ditanggung customer
+            'payment_guide' => false,
+            'callback_count' => 0,
+            'signature' => $signature,
         ];
 
         $response = Http::asForm()->post($baseUrl . '/', $payload);
 
         if (!$response->successful()) {
             $payment->update([
-                'status'           => 'canceled',
+                'status' => 'canceled',
                 'response_payload' => ['http_error' => $response->status()],
             ]);
 
             $order->update([
                 'payment_status' => 'canceled',
-                'status'         => 'not_paid',
+                'status' => 'not_paid',
             ]);
 
             return back()
@@ -215,13 +241,13 @@ class MarketplaceCheckoutController extends Controller
 
         if (!isset($json['success']) || $json['success'] !== true) {
             $payment->update([
-                'status'           => 'canceled',
+                'status' => 'canceled',
                 'response_payload' => $json,
             ]);
 
             $order->update([
                 'payment_status' => 'canceled',
-                'status'         => 'not_paid',
+                'status' => 'not_paid',
             ]);
 
             return back()
@@ -235,13 +261,13 @@ class MarketplaceCheckoutController extends Controller
         $payment->update([
             'paydisini_pay_id' => $dataPay['pay_id'] ?? null,
             'response_payload' => $json,
-            'expired_at'       => now()->addSeconds($validTime),
+            'expired_at' => now()->addSeconds($validTime),
         ]);
 
         // tandai order sedang menunggu pembayaran
         $order->update([
             'payment_status' => 'pending',
-            'status'         => 'not_paid',
+            'status' => 'not_paid',
         ]);
 
         return redirect()->route('marketplace.payment.show', $payment);
