@@ -16,18 +16,36 @@ class Order extends Model
         'email',
         'phone',
         'method',
+
+        // harga
         'base_price',
         'subtotal',
         'admin_fee',
         'total',
         'profit',
+
+        // pembayaran
         'payment_method',
         'payment_status',
         'status',
+
+        // legacy digiflazz (masih boleh dipakai webhook lama)
         'digiflazz_ref',
         'digiflazz_status',
         'request_payload',
         'response_payload',
+
+        // kolom provider baru (Digiflazz v2)
+        'provider',
+        'provider_ref_id',
+        'provider_status',
+        'provider_message',
+        'provider_rc',
+        'provider_sn',
+        'provider_price',
+        'provider_raw',
+
+        // timestamps status
         'paid_at',
         'completed_at',
         'failed_at',
@@ -41,6 +59,8 @@ class Order extends Model
         'profit' => 'integer',
         'request_payload' => 'array',
         'response_payload' => 'array',
+        'provider_price' => 'integer',
+        'provider_raw' => 'array',
         'paid_at' => 'datetime',
         'completed_at' => 'datetime',
         'failed_at' => 'datetime',
