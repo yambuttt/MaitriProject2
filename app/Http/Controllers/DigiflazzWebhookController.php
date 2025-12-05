@@ -27,8 +27,9 @@ class DigiflazzWebhookController extends Controller
         $status = strtolower($data['status'] ?? '');
         $rc = $data['rc'] ?? null;
 
-        // Cari order berdasarkan KODE (code = MP-00015), bukan id
-        $order = Order::where('code', $refId)->first();
+        // Cari order berdasarkan provider_ref_id (ref_id Digiflazz)
+        $order = Order::where('provider_ref_id', $refId)->first();
+
 
         if (!$order) {
             Log::warning('Digiflazz webhook: order tidak ditemukan', ['ref_id' => $refId]);
@@ -53,10 +54,7 @@ class DigiflazzWebhookController extends Controller
             $completedAt = $order->completed_at;
             $failedAt = now();
         }
-        $refId = $data['ref_id'];
-        $status = strtolower($data['status'] ?? '');
-        $rc = $data['rc'] ?? null;
-        $order = Order::where('code', $refId)->first();
+        
 
         $sn = $data['sn'] ?? $data['sn_customer'] ?? null;
 

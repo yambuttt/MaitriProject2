@@ -118,6 +118,13 @@ class CheckoutController extends Controller
         // 6. Hit Digiflazz untuk bikin transaksi sebenarnya
         try {
             $providerData = $digiflazzService->createTransaction($order, $variant);
+            if (
+                ($providerData['customer_no'] ?? null) !== $order->target ||
+                ($providerData['buyer_sku_code'] ?? null) !== $variant->buyer_sku_code
+            ) {
+                throw new \RuntimeException('Response Digiflazz tidak cocok dengan order (kemungkinan kena transaksi lama).');
+            }
+
 
             $status = strtolower($providerData['status'] ?? '');
             $mappedStatus = match ($status) {
@@ -502,6 +509,14 @@ class CheckoutController extends Controller
 
         try {
             $providerData = $digiflazzService->createTransaction($order, $variant);
+            // sanity check: response harus cocok dengan order yang baru dibuat
+            if (
+                ($providerData['customer_no'] ?? null) !== $order->target ||
+                ($providerData['buyer_sku_code'] ?? null) !== $variant->buyer_sku_code
+            ) {
+                throw new \RuntimeException('Response Digiflazz tidak cocok dengan order (kemungkinan kena transaksi lama).');
+            }
+
 
             $status = strtolower($providerData['status'] ?? '');
             $mappedStatus = match ($status) {

@@ -16,22 +16,25 @@ class DigiflazzService
     public function createTransaction(Order $order, ProductVariant $variant): array
     {
         $username = config('services.digiflazz.username');
-        $apiKey   = config('services.digiflazz.api_key');   // <- pakai api_key (bukan apikey)
+        $apiKey = config('services.digiflazz.api_key');   // <- pakai api_key (bukan apikey)
         $endpoint = config('services.digiflazz.endpoint');
 
         // Ref ID kita pakai kode invoice internal, misal "MP-00011"
-        $refId = $order->code;
+        // Ref ID khusus untuk Digiflazz, dibuat unik supaya tidak nabrak transaksi lama
+// Contoh: MP2-MP-00011
+        $refId = 'MP2-' . $order->code;
+
 
         // Sign sesuai docs: md5(username + apiKey + ref_id)
         $sign = md5($username . $apiKey . $refId);
 
         // Payload sesuai dokumentasi Digiflazz
         $payload = [
-            'username'       => $username,
+            'username' => $username,
             'buyer_sku_code' => $variant->buyer_sku_code,
-            'customer_no'    => $order->target,  // nomor tujuan disimpan di kolom "target"
-            'ref_id'         => $refId,
-            'sign'           => $sign,
+            'customer_no' => $order->target,  // nomor tujuan disimpan di kolom "target"
+            'ref_id' => $refId,
+            'sign' => $sign,
             // opsional: 'testing' => true, // kalau mau pakai mode testing Digiflazz
         ];
 
