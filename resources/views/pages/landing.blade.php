@@ -16,7 +16,7 @@
             Top Up & Digital Goods <span class="text-transparent bg-clip-text bg-gradient-to-r from-violet-400 to-violet-200">secepat kilat</span>
           </h1>
           <p class="mt-4 text-slate-400 max-w-prose">
-            Pulsa, data, game, dan e-wallet resmi. Bayar aman. Masuk instan. Terhubung langsung ke Digiflazz.
+            Pulsa, data, game, dan e-wallet resmi. Bayar aman. Masuk instan.
           </p>
           <div class="mt-6 flex items-center gap-3">
             <a href="{{ route('catalog') }}" class="px-5 py-3 rounded-2xl bg-violet-600 hover:bg-violet-500 transition shadow-lg shadow-violet-900/30">Mulai Top Up</a>
@@ -71,7 +71,7 @@
   <section class="py-10">
     <div class="mx-auto max-w-[1280px] px-4 md:px-6 lg:px-8">
       <div class="grid grid-cols-2 md:grid-cols-4 gap-3">
-        @foreach([['Terhubung Digiflazz','link'],['Transaksi Aman','shield-check'],['&lt; 2 Menit','bolt'],['Layanan 24/7','clock']] as [$label,$icon])
+        @foreach([['Transaksi Aman','shield-check'],['Transaksi Cepat; 2 Menit','bolt'],['Layanan 24/7','clock']] as [$label,$icon])
         <div class="reveal flex items-center gap-3 p-4 rounded-2xl bg-[#111826] border border-slate-800/70 hover:border-slate-700 transition">
           <div class="size-10 grid place-items-center rounded-xl bg-slate-800/60">
             @if($icon==='link')

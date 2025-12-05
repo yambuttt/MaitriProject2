@@ -57,18 +57,7 @@
             class="mt-1 h-11 w-full rounded-xl bg-[#0E1524] border border-slate-700/60 px-3 outline-none focus:border-violet-500/70 focus:ring-2 focus:ring-violet-500/30">
         </div>
       </div>
-      <div class="grid md:grid-cols-2 gap-4">
-        <div>
-          <label class="text-sm text-slate-300">Provider (opsional)</label>
-          <input name="provider" placeholder="cth: Telkomsel / MLBB"
-            class="mt-1 h-11 w-full rounded-xl bg-[#0E1524] border border-slate-700/60 px-3 outline-none focus:border-violet-500/70 focus:ring-2 focus:ring-violet-500/30">
-        </div>
-        <div>
-          <label class="text-sm text-slate-300">Markup Produk (Rp)</label>
-          <input name="markup_rp" type="number" min="0" step="1" value="0" required
-            class="mt-1 h-11 w-full rounded-xl bg-[#0E1524] border border-slate-700/60 px-3 outline-none focus:border-violet-500/70 focus:ring-2 focus:ring-violet-500/30">
-        </div>
-      </div>
+      
 
       {{-- THUMBNAIL --}}
       <div>
