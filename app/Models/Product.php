@@ -17,13 +17,29 @@ class Product extends Model
         'markup_rp' => 'integer',
     ];
 
+    // === RELASI ===
     public function category(){ return $this->belongsTo(Category::class); }
     public function subcategory(){ return $this->belongsTo(Subcategory::class); }
-
     public function variants(){ return $this->hasMany(\App\Models\ProductVariant::class); }
-    
 
+    // === NORMALISASI THUMBNAIL DARI DB LAMA & BARU ===
+    public function getThumbnailAttribute($value)
+    {
+        if (!$value) {
+            return $value;
+        }
 
+        // hilangkan slash depan kalau ada
+        $path = ltrim($value, '/');
+
+        // samakan folder: products/thumbnails/* atau products/thumbnail/* → products/*
+        $path = str_replace('products/thumbnails/', 'products/', $path);
+        $path = str_replace('products/thumbnail/', 'products/', $path);
+
+        return $path;
+    }
+
+    // === BOOT ===
     protected static function booted(): void
     {
         static::creating(function (Product $p) {

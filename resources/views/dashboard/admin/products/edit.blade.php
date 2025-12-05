@@ -25,7 +25,7 @@
         </div>
         <div>
           <label class="text-sm text-slate-300">Subkategori</label>
-          <select id="subSel" name="subcategory_id" required
+          <select id="subSel" name="subcategory_id"
             class="mt-1 h-11 w-full rounded-xl bg-[#0E1524] border border-slate-700/60 px-3 outline-none focus:border-violet-500/70 focus:ring-2 focus:ring-violet-500/30">
             @foreach($subcategories as $s)
               <option value="{{ $s->id }}" @selected($product->subcategory_id == $s->id)>{{ $s->name }}</option>

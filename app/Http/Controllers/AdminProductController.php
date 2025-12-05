@@ -52,11 +52,12 @@ class AdminProductController extends Controller
         $data = $request->validate([
             'category_id' => ['required', 'exists:categories,id'],
             'subcategory_id' => [
-                'required',
+                'nullable',
                 Rule::exists('subcategories', 'id')->where(
                     fn($q) => $q->where('category_id', $request->input('category_id'))
                 ),
             ],
+
             'name' => ['required', 'string', 'max:160'],
             'slug' => ['nullable', 'string', 'max:180', 'unique:products,slug'],
             'provider' => ['nullable', 'string', 'max:120'],
@@ -92,11 +93,12 @@ class AdminProductController extends Controller
         $data = $request->validate([
             'category_id' => ['required', 'exists:categories,id'],
             'subcategory_id' => [
-                'required',
+                'nullable',
                 Rule::exists('subcategories', 'id')->where(
                     fn($q) => $q->where('category_id', $request->input('category_id'))
                 ),
             ],
+
             'name' => ['required', 'string', 'max:160'],
             'slug' => ['nullable', 'string', 'max:180', Rule::unique('products', 'slug')->ignore($product->id)],
             'provider' => ['nullable', 'string', 'max:120'],
