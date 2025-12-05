@@ -123,4 +123,6 @@ class Order extends Model
         // hasil: MP-00001, MP-00002, dst
         return sprintf('%s%05d', $prefix, $number);
     }
+
+    
 }

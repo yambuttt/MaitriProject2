@@ -99,6 +99,11 @@ Route::middleware(['auth'])->prefix('dashboard')->name('dashboard.')->group(func
         ->name('wallet.topup.status');
     Route::post('/wallet/topup/{topup}/expire', [UserWalletController::class, 'expireTopup'])
         ->name('wallet.topup.expire');
+    // baru — riwayat pembelian produk topup
+    Route::get('/orders', [DashboardController::class, 'orders'])->name('orders');
+
+    // baru — riwayat marketplace
+    Route::get('/marketplace-orders', [DashboardController::class, 'marketplaceOrders'])->name('marketplace.orders');
 
 
 });
