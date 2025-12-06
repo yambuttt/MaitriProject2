@@ -169,9 +169,9 @@ class CheckoutController extends Controller
         $order = Order::where('code', $code)->firstOrFail();
 
         // Pastikan hanya pemilik order yang boleh lihat
-        if (auth()->id() !== $order->user_id) {
-            abort(403);
-        }
+        // if (auth()->id() !== $order->user_id) {
+        //     abort(403);
+        // }
 
         // Pakai view invoice yang sama seperti sebelumnya
         return view('invoices.show', compact('order'));
@@ -181,10 +181,10 @@ class CheckoutController extends Controller
      */
     public function show(Order $order)
     {
-        // Pastikan hanya pemilik order yang boleh lihat
-        if (auth()->id() !== $order->user_id) {
-            abort(403);
-        }
+        // // Pastikan hanya pemilik order yang boleh lihat
+        // if (auth()->id() !== $order->user_id) {
+        //     abort(403);
+        // }
 
         return view('invoices.show', compact('order'));
     }

@@ -45,7 +45,7 @@
                     </div>
                     <div class="flex items-start justify-between">
                         <span>
-                            Biaya admin Paydisini
+                            Biaya admin
                             <span class="block text-[11px] text-slate-500">
                                 ({{ $adminLabel }})
                             </span>

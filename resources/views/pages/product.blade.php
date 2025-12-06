@@ -117,9 +117,10 @@
                 {{-- Target --}}
                 <div>
                   <label class="text-sm text-slate-400">User ID / Nomor Tujuan</label>
-                  <input id="fTarget" name="target" type="text" placeholder="Masukkan User ID atau Nomor" class="mt-1 w-full rounded-xl bg-[#0E1524] border border-slate-800/70
-                                                     px-3 py-2 text-sm outline-none
-                                                     focus:border-violet-500/60 focus:ring-2 focus:ring-violet-500/30">
+                  <input id="fTarget" name="target" type="text" placeholder="Masukkan User ID atau Nomor"
+                    class="mt-1 w-full rounded-xl bg-[#0E1524] border border-slate-800/70
+                                                         px-3 py-2 text-sm outline-none
+                                                         focus:border-violet-500/60 focus:ring-2 focus:ring-violet-500/30">
                   <p id="fTargetHelp" class="mt-1 text-xs text-slate-500">
                     Contoh: 081234567890 atau 12345678(1234).
                   </p>
@@ -138,7 +139,7 @@
               <div id="variantGrid" class="mt-4 grid sm:grid-cols-2 xl:grid-cols-3 gap-3">
                 @foreach($product->variants as $v)
                   <button type="button" class="variant-card rounded-2xl border border-slate-800/70 bg-[#0E1524] p-4 text-left
-                                                                               hover:border-slate-700 transition"
+                                                                                       hover:border-slate-700 transition"
                     data-variant-id="{{ $v->id }}" data-variant-name="{{ $v->name }}"
                     data-variant-price="{{ $v->final_price }}">
                     <div class="text-sm font-medium text-slate-100">{{ $v->name }}</div>
@@ -240,8 +241,8 @@
                 <div>
                   <label class="text-sm text-slate-400">Email (untuk bukti pembayaran)</label>
                   <input id="fEmail" name="email" type="email" placeholder="nama@email.com" class="mt-1 w-full rounded-xl bg-[#0E1524] border border-slate-800/70
-                                     px-3 py-2 text-sm outline-none
-                                     focus:border-violet-500/60 focus:ring-2 focus:ring-violet-500/30">
+                                         px-3 py-2 text-sm outline-none
+                                         focus:border-violet-500/60 focus:ring-2 focus:ring-violet-500/30">
                   <p class="mt-1 text-[11px] text-slate-500">
                     Bukti transaksi dan info pesanan bisa kami kirim ke email ini.
                   </p>
@@ -251,8 +252,8 @@
                 <div>
                   <label class="text-sm text-slate-400">No. WhatsApp / HP</label>
                   <input id="fPhone" name="phone" type="tel" placeholder="08xxxxxxxxxx" class="mt-1 w-full rounded-xl bg-[#0E1524] border border-slate-800/70
-                                     px-3 py-2 text-sm outline-none
-                                     focus:border-violet-500/60 focus:ring-2 focus:ring-violet-500/30">
+                                         px-3 py-2 text-sm outline-none
+                                         focus:border-violet-500/60 focus:ring-2 focus:ring-violet-500/30">
                   <p class="mt-1 text-[11px] text-slate-500">
                     Nomor ini akan dihubungi jika terjadi masalah pada pesanan.
                   </p>
@@ -347,7 +348,7 @@
               </dl>
 
               <button id="btnCheckout" class="w-full mt-2 px-5 py-3 rounded-2xl bg-violet-600 hover:bg-violet-500 text-sm font-medium
-               text-white disabled:opacity-50 disabled:cursor-not-allowed" disabled>
+                   text-white disabled:opacity-50 disabled:cursor-not-allowed" disabled>
                 Lanjutkan Pembayaran
               </button>
 
@@ -383,7 +384,7 @@
             <div>
               <label class="block text-xs font-medium text-slate-400 mb-1">PIN Pembayaran</label>
               <input type="password" maxlength="6" name="pin" class="h-10 w-full rounded-xl bg-slate-950 border border-slate-700/80
-                                                                           px-3 text-sm text-slate-100"
+                                                                                   px-3 text-sm text-slate-100"
                 placeholder="Masukkan PIN" required>
             </div>
 
@@ -456,7 +457,7 @@
 
         {{-- Tombol sticky --}}
         <button id="btnCheckoutMobile" class="w-full h-11 rounded-2xl bg-violet-600 hover:bg-violet-500 text-sm font-medium
-                     text-white disabled:opacity-50 disabled:cursor-not-allowed">
+                         text-white disabled:opacity-50 disabled:cursor-not-allowed">
           Pesan Sekarang!
         </button>
       </div>
@@ -490,6 +491,7 @@
       const sVar = document.getElementById('sVar');
       const sPay = document.getElementById('sPay');
       const sSub = document.getElementById('sSub');
+      const sFee = document.getElementById('sFee');   // 👈 baru
       const sTotal = document.getElementById('sTotal');
 
       // Elemen ringkasan MOBILE
@@ -593,6 +595,22 @@
         });
       }
 
+      function calculateAdminFee(method, subtotal) {
+        if (!subtotal || subtotal <= 0) return 0;
+
+        switch (method) {
+          case 'QRIS':
+            // 0.7% dibulatkan ke atas (supaya minimal sama dengan yg dibebankan gateway)
+            return Math.ceil(subtotal * 0.007);
+          case 'VA_MANDIRI':
+          case 'ALFAMART':
+          case 'INDOMARET':
+            return 2500;
+          default:
+            return 0;
+        }
+      }
+
       // ============================
       //  UPDATE SUMMARY
       // ============================
@@ -608,13 +626,26 @@
 
         const hasVariant = !!selectedVariant;
         const ready = !!(selectedVariant && selectedMethod);
-        const priceText = hasVariant ? 'Rp ' + rupiah(selectedVariant.price) : 'Rp 0';
+
+        const subtotal = hasVariant ? selectedVariant.price : 0;
+
+        // Biaya admin hanya untuk gateway Paydisini (QRIS/VA/Alfa/Indo), saldo = 0
+        let adminFee = 0;
+        if (ready && selectedMethod && selectedMethod !== 'SALDO') {
+          adminFee = calculateAdminFee(selectedMethod, subtotal);
+        }
+
+        const total = subtotal + adminFee;
+
+        const subText = 'Rp ' + rupiah(subtotal);
+        const totalText = 'Rp ' + rupiah(total);
 
         // --- RINGKASAN DESKTOP (kanan) ---
         if (sVar) sVar.textContent = hasVariant ? selectedVariant.name : '—';
         if (sPay) sPay.textContent = payText;
-        if (sSub) sSub.textContent = priceText;
-        if (sTotal) sTotal.textContent = priceText;
+        if (sSub) sSub.textContent = subText;
+        if (sFee) sFee.textContent = 'Rp ' + rupiah(adminFee);
+        if (sTotal) sTotal.textContent = totalText;
 
         // TAMPILKAN summaryWrapper HANYA di desktop (>= 768px)
         if (summaryWrapper) {
@@ -628,9 +659,9 @@
         // --- RINGKASAN MOBILE (sticky bar) ---
         if (sVarMobile) sVarMobile.textContent = hasVariant ? selectedVariant.name : '—';
         if (sPayMobile) sPayMobile.textContent = payText;
-        if (sSubMobile) sSubMobile.textContent = priceText;
-        if (sTotalMobile) sTotalMobile.textContent = priceText;
-        if (sTotalShortMobile) sTotalShortMobile.textContent = priceText;
+        if (sSubMobile) sSubMobile.textContent = subText;
+        if (sTotalMobile) sTotalMobile.textContent = totalText;
+        if (sTotalShortMobile) sTotalShortMobile.textContent = totalText;
         if (sHeaderMobile) {
           sHeaderMobile.textContent = hasVariant
             ? `Varian: ${selectedVariant.name}` + (payText !== '—' ? ' • ' + payText : '')
@@ -703,8 +734,8 @@
             alert('Silakan login untuk menggunakan Saldo Maitri.');
           @endif
 
-                    // =================== PAYDISINI ==================
-                    } else {
+                        // =================== PAYDISINI ==================
+                        } else {
 
           const channelMap = {
             'QRIS': 'qris',

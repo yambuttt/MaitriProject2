@@ -28,17 +28,17 @@
                     <p class="text-xs text-slate-400">Status pembayaran</p>
                     @php
                         $status = $payment->status;
-                        $statusLabel = match($status) {
-                            'paid'     => 'Berhasil',
+                        $statusLabel = match ($status) {
+                            'paid' => 'Berhasil',
                             'canceled' => 'Dibatalkan',
-                            'expired'  => 'Kedaluwarsa',
-                            default    => 'Menunggu pembayaran',
+                            'expired' => 'Kedaluwarsa',
+                            default => 'Menunggu pembayaran',
                         };
-                        $statusClass = match($status) {
-                            'paid'     => 'text-emerald-400 bg-emerald-500/10',
+                        $statusClass = match ($status) {
+                            'paid' => 'text-emerald-400 bg-emerald-500/10',
                             'canceled' => 'text-rose-400 bg-rose-500/10',
-                            'expired'  => 'text-rose-400 bg-rose-500/10',
-                            default    => 'text-amber-400 bg-amber-500/10',
+                            'expired' => 'text-rose-400 bg-rose-500/10',
+                            default => 'text-amber-400 bg-amber-500/10',
                         };
                     @endphp
                     <span class="inline-flex items-center rounded-full px-3 py-1 text-xs font-medium {{ $statusClass }}">
@@ -52,17 +52,58 @@
             </div>
 
             <div class="rounded-2xl bg-slate-900/80 border border-slate-800 p-4 space-y-3">
+                @php
+                    $baseAmount = (int) $payment->amount;
+                    $adminFee = 0;
+                    $feeNote = 'Tidak ada biaya admin tambahan.';
+
+                    switch ($payment->method) {
+                        case 'paydisini_qris':
+                            // 0.7% dibulatkan ke atas
+                            $adminFee = (int) ceil($baseAmount * 0.007);
+                            $feeNote = 'Biaya admin 0,7% dibebankan oleh gateway Paydisini.';
+                            break;
+
+                        case 'paydisini_va_mandiri':
+                        case 'paydisini_alfamart':
+                        case 'paydisini_indomaret':
+                            $adminFee = 2500;
+                            $feeNote = 'Biaya admin tetap dibebankan oleh gateway Paydisini.';
+                            break;
+                    }
+
+                    $totalToPay = $baseAmount + $adminFee;
+                @endphp
+
                 <p class="text-sm text-slate-300">
                     Total yang harus dibayar:
                 </p>
                 <p class="text-2xl font-semibold text-slate-50">
-                    Rp {{ number_format($payment->amount, 0, ',', '.') }}
+                    Rp {{ number_format($totalToPay, 0, ',', '.') }}
                 </p>
 
+                {{-- Breakdown subtotal + biaya admin --}}
+                <div class="mt-2 space-y-1 text-sm text-slate-200">
+                    <div class="flex items-center justify-between">
+                        <span>Subtotal</span>
+                        <span>Rp {{ number_format($baseAmount, 0, ',', '.') }}</span>
+                    </div>
+                    <div class="flex items-start justify-between">
+                        <span>
+                            Biaya admin Paydisini
+                            <span class="block text-[11px] text-slate-500">
+                                {{ $feeNote }}
+                            </span>
+                        </span>
+                        <span>Rp {{ number_format($adminFee, 0, ',', '.') }}</span>
+                    </div>
+                </div>
+
+
                 <p id="payment-status-text" class="text-sm mt-2
-                    @if($payment->status === 'paid') text-emerald-400
-                    @elseif(in_array($payment->status, ['canceled','expired'])) text-rose-400
-                    @else text-amber-400 @endif">
+                        @if($payment->status === 'paid') text-emerald-400
+                        @elseif(in_array($payment->status, ['canceled', 'expired'])) text-rose-400
+                        @else text-amber-400 @endif">
                     @if($payment->status === 'paid')
                         Status: Pembayaran berhasil.
                     @elseif($payment->status === 'canceled')
@@ -83,7 +124,7 @@
                 @endphp
 
                 <div id="payment-body" class="mt-4 space-y-4
-                    @if(in_array($payment->status, ['canceled','expired'])) opacity-40 pointer-events-none @endif">
+                        @if(in_array($payment->status, ['canceled', 'expired'])) opacity-40 pointer-events-none @endif">
 
                     {{-- QRIS --}}
                     @if($channel === 'paydisini_qris')
@@ -103,7 +144,7 @@
                                 </p>
                             @endif
                         </div>
-                    {{-- VA Mandiri --}}
+                        {{-- VA Mandiri --}}
                     @elseif($channel === 'paydisini_va_mandiri')
                         <div class="space-y-3">
                             <p class="text-sm text-slate-400">
@@ -111,11 +152,11 @@
                             </p>
                             <div class="flex items-center gap-2">
                                 <code id="va-number"
-                                      class="px-3 py-2 rounded-xl bg-slate-950 border border-slate-700 text-lg font-mono">
-                                    {{ $virtualAccount ?? '000000000000' }}
-                                </code>
+                                    class="px-3 py-2 rounded-xl bg-slate-950 border border-slate-700 text-lg font-mono">
+                                            {{ $virtualAccount ?? '000000000000' }}
+                                        </code>
                                 <button type="button" onclick="copyVA()"
-                                        class="h-10 px-3 rounded-xl bg-slate-700 hover:bg-slate-600 text-xs font-medium">
+                                    class="h-10 px-3 rounded-xl bg-slate-700 hover:bg-slate-600 text-xs font-medium">
                                     Salin
                                 </button>
                             </div>
@@ -123,8 +164,8 @@
                                 Silakan lakukan pembayaran melalui ATM / mobile banking sebelum waktu kedaluwarsa.
                             </p>
                         </div>
-                    {{-- Alfamart / Indomaret --}}
-                    @elseif(in_array($channel, ['paydisini_alfamart','paydisini_indomaret']))
+                        {{-- Alfamart / Indomaret --}}
+                    @elseif(in_array($channel, ['paydisini_alfamart', 'paydisini_indomaret']))
                         <div class="space-y-3">
                             <p class="text-sm text-slate-400">
                                 Tunjukkan kode pembayaran berikut ke kasir
@@ -132,11 +173,11 @@
                             </p>
                             <div class="flex items-center gap-2">
                                 <code id="store-code"
-                                      class="px-3 py-2 rounded-xl bg-slate-950 border border-slate-700 text-lg font-mono">
-                                    {{ $paymentCode ?? '-' }}
-                                </code>
+                                    class="px-3 py-2 rounded-xl bg-slate-950 border border-slate-700 text-lg font-mono">
+                                            {{ $paymentCode ?? '-' }}
+                                        </code>
                                 <button type="button" onclick="copyStoreCode()"
-                                        class="h-10 px-3 rounded-xl bg-slate-700 hover:bg-slate-600 text-xs font-medium">
+                                    class="h-10 px-3 rounded-xl bg-slate-700 hover:bg-slate-600 text-xs font-medium">
                                     Salin
                                 </button>
                             </div>
@@ -159,7 +200,7 @@
 
             <div class="flex items-center justify-between gap-3">
                 <a href="{{ route('invoices.show', $order->code) }}"
-                   class="inline-flex h-10 items-center justify-center rounded-xl border border-slate-700 px-4 text-sm text-slate-200 hover:bg-slate-800">
+                    class="inline-flex h-10 items-center justify-center rounded-xl border border-slate-700 px-4 text-sm text-slate-200 hover:bg-slate-800">
                     Kembali ke detail pesanan
                 </a>
             </div>
@@ -189,16 +230,16 @@
 
         (function () {
             const countdownEl = document.getElementById('countdown');
-            const statusEl    = document.getElementById('payment-status-text');
+            const statusEl = document.getElementById('payment-status-text');
             const paymentBody = document.getElementById('payment-body');
 
-            const pollUrl   = "{{ route('orders.payment.status', $payment) }}";
+            const pollUrl = "{{ route('orders.payment.status', $payment) }}";
             const expireUrl = "{{ route('orders.payment.expire', $payment) }}";
             const csrfToken = "{{ csrf_token() }}";
 
             const expiresAt = {{ $expiresAt->getTimestamp() }} * 1000; // ms
 
-            let stopAll       = false;
+            let stopAll = false;
             let expiredNotified = false;
 
             function setStatusLabel(status) {
@@ -256,7 +297,7 @@
             function tickCountdown() {
                 if (stopAll) return;
 
-                const now  = Date.now();
+                const now = Date.now();
                 const diff = Math.floor((expiresAt - now) / 1000);
 
                 if (diff <= 0) {

@@ -84,7 +84,7 @@
             <div class="rounded-2xl border border-slate-800/70 bg-slate-900/60 p-4 md:p-5 space-y-4">
                 <div class="text-sm font-semibold text-slate-100">Topup Saldo</div>
                 <p class="text-xs text-slate-400">
-                    Isi nominal saldo yang ingin ditambahkan, lalu pilih metode pembayaran Paydisini.
+                    Isi nominal saldo yang ingin ditambahkan, lalu pilih metode pembayaran.
                 </p>
 
                 <form method="post" action="{{ route('dashboard.wallet.topup') }}" class="space-y-3">
@@ -120,7 +120,7 @@
 
                     <button type="submit"
                             class="h-10 w-full md:w-auto px-4 rounded-xl bg-violet-500 hover:bg-violet-600 text-sm font-medium text-white">
-                        Topup via Paydisini
+                        Topup 
                     </button>
                 </form>
             </div>
