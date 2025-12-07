@@ -46,7 +46,7 @@
             <div class="space-y-4">
               <div>
                 <p class="text-[11px] font-medium tracking-[.15em] uppercase text-slate-500">
-                  Produk Digiflazz
+                  
                 </p>
                 <h1 id="pName" class="mt-1 text-2xl sm:text-3xl font-semibold text-slate-50">
                   {{ $product->name }}

@@ -6,8 +6,10 @@ namespace App\Services;
 use App\Services\DigiflazzClient;
 
 use App\Models\DigiflazzVariant;
+use App\Models\ProductVariant;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Cache;
+
 
 class DigiflazzMasterSyncService
 {
@@ -52,26 +54,39 @@ class DigiflazzMasterSyncService
                 DigiflazzVariant::updateOrCreate(
                     ['buyer_sku_code' => $sku],
                     [
-                        'product_name'    => $item['product_name'] ?? '',
-                        'brand'           => $item['brand'] ?? null,
-                        'category'        => $item['category'] ?? null,
-                        'base_price'      => $item['price'] ?? 0,
-                        'status'          => $item['status'] ?? null,
-                        'last_synced_at'  => $now,
-                        'raw'             => $item,
+                        'product_name' => $item['product_name'] ?? '',
+                        'brand' => $item['brand'] ?? null,
+                        'category' => $item['category'] ?? null,
+                        'base_price' => $item['price'] ?? 0,
+                        'status' => $item['status'] ?? null,
+                        'last_synced_at' => $now,
+                        'raw' => $item,
                     ]
                 );
             }
 
             // optional: tandai yang tidak lagi muncul sebagai nonaktif
-            DigiflazzVariant::whereNotIn('buyer_sku_code', $seenSku)
-                ->update(['status' => 'nonaktif']);
+            // optional: tandai yang tidak lagi muncul sebagai nonaktif
+// dan nonaktifkan semua product_variants yang terhubung ke master tsb
+            $removedIds = DigiflazzVariant::whereNotIn('buyer_sku_code', $seenSku)
+                ->pluck('id');
+
+            if ($removedIds->isNotEmpty()) {
+                // 1) ubah status master jadi nonaktif
+                DigiflazzVariant::whereIn('id', $removedIds)
+                    ->update(['status' => 'nonaktif']);
+
+                // 2) nonaktifkan semua product_variant yang terhubung
+                ProductVariant::whereIn('digiflazz_variant_id', $removedIds)
+                    ->update(['is_active' => false]);
+            }
+
         });
 
         Cache::put(self::LAST_SYNC_CACHE_KEY, $now, 60 * 24); // simpan 1 hari
 
         return [
-            'count'        => count($pricelist),
+            'count' => count($pricelist),
             'last_sync_at' => $now,
         ];
     }
