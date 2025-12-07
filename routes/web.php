@@ -34,7 +34,14 @@ Route::get('/test-log', function () {
     return 'OKE LOG';
 });
 
+Route::get('/test-email', function () {
+    \Illuminate\Support\Facades\Mail::raw('Email test dari server berhasil!', function ($m) {
+        $m->to('adrian.arifin777@gmail.com')
+          ->subject('Test SMTP MaitriProject');
+    });
 
+    return 'OK';
+});
 
 // Route::get('/catalog',                [CatalogController::class,'index'])->name('catalog.index');
 // Route::get('/product/{product:slug}', [CatalogController::class,'show'])->name('catalog.product.show');

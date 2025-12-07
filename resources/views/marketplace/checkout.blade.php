@@ -205,24 +205,30 @@
               </div>
             </div>
 
-            <div class="border-t border-slate-800/70 pt-3 space-y-1 text-sm">
+                        <div class="border-t border-slate-800/70 pt-3 space-y-1 text-sm">
               <div class="flex justify-between">
                 <span class="text-slate-400">Harga</span>
-                <span class="text-slate-100">
+                <span id="mpPrice"
+                      class="text-slate-100"
+                      data-base-price="{{ (int) $order->price }}">
                   Rp {{ number_format($order->price, 0, ',', '.') }}
                 </span>
               </div>
               <div class="flex justify-between">
                 <span class="text-slate-400">Biaya admin</span>
-                <span class="text-emerald-400">Gratis</span>
+                <span id="mpAdminFee" class="text-emerald-400">
+                  Gratis
+                </span>
               </div>
               <div class="flex justify-between pt-2 border-t border-slate-800/70 mt-1">
                 <span class="text-slate-300 font-medium">Total bayar</span>
-                <span class="text-slate-50 font-semibold">
-                  Rp {{ number_format($order->total_amount, 0, ',', '.') }}
+                <span id="mpTotal" class="text-slate-50 font-semibold">
+                  {{-- default = harga, nanti di-update JS sesuai metode bayar --}}
+                  Rp {{ number_format($order->price, 0, ',', '.') }}
                 </span>
               </div>
             </div>
+
 
             <p class="text-[11px] text-slate-500">
               Setelah pembayaran berhasil, detail akun / produk akan dikirim manual oleh admin ke email atau WhatsApp yang kamu isi.
@@ -233,3 +239,73 @@
     </div>
   </section>
 @endsection
+
+
+<script>
+    document.addEventListener('DOMContentLoaded', function () {
+        const basePriceEl = document.getElementById('mpPrice');
+        const adminFeeEl  = document.getElementById('mpAdminFee');
+        const totalEl     = document.getElementById('mpTotal');
+        const radios      = document.querySelectorAll('input[name="payment_method"]');
+
+        if (!basePriceEl || !adminFeeEl || !totalEl || radios.length === 0) {
+            return;
+        }
+
+        const baseAmount = Number(basePriceEl.dataset.basePrice || 0);
+
+        function calcAdminFee(method) {
+            if (method === 'paydisini_qris') {
+                // 0.7% dibulatkan ke atas
+                return Math.ceil(baseAmount * 0.007);
+            }
+
+            if (
+                method === 'paydisini_va_mandiri' ||
+                method === 'paydisini_alfamart' ||
+                method === 'paydisini_indomaret'
+            ) {
+                // VA Mandiri / Alfamart / Indomaret: Rp 2.500
+                return 2500;
+            }
+
+            // Saldo Maitri / lainnya: tanpa admin gateway
+            return 0;
+        }
+
+        function formatIdr(value) {
+            return 'Rp ' + Number(value).toLocaleString('id-ID');
+        }
+
+        function updateSummary() {
+            let selectedMethod = null;
+            radios.forEach(radio => {
+                if (radio.checked) {
+                    selectedMethod = radio.value;
+                }
+            });
+
+            const fee   = calcAdminFee(selectedMethod);
+            const total = baseAmount + fee;
+
+            if (fee > 0) {
+                adminFeeEl.textContent = formatIdr(fee);
+                adminFeeEl.classList.remove('text-emerald-400');
+                adminFeeEl.classList.add('text-slate-100');
+            } else {
+                adminFeeEl.textContent = 'Gratis';
+                adminFeeEl.classList.remove('text-slate-100');
+                adminFeeEl.classList.add('text-emerald-400');
+            }
+
+            totalEl.textContent = formatIdr(total);
+        }
+
+        radios.forEach(radio => {
+            radio.addEventListener('change', updateSummary);
+        });
+
+        // Inisialisasi saat halaman pertama kali dibuka
+        updateSummary();
+    });
+</script>

@@ -17,9 +17,9 @@
                 <div class="text-right">
                     <p class="text-xs text-slate-400">Status</p>
                     <p id="payment-status-text" class="text-sm mt-1
-                  @if($payment->status === 'paid') text-emerald-400
-                  @elseif(in_array($payment->status, ['canceled', 'expired'])) text-rose-400
-                  @else text-amber-400 @endif">
+                      @if($payment->status === 'paid') text-emerald-400
+                      @elseif(in_array($payment->status, ['canceled', 'expired'])) text-rose-400
+                      @else text-amber-400 @endif">
                         @if($payment->status === 'paid')
                             Pembayaran berhasil.
                         @elseif($payment->status === 'canceled')
@@ -32,6 +32,51 @@
                     </p>
                 </div>
             </div>
+            @php
+                $baseAmount = (int) $payment->amount; // nominal dasar yang kita kirim ke Paydisini
+                $adminFee = 0;
+                $feeNote = 'Tidak ada biaya admin tambahan.';
+
+                switch ($payment->method) {
+                    case 'paydisini_qris':
+                        $adminFee = (int) ceil($baseAmount * 0.007);
+                        $feeNote = 'Biaya admin 0,7% dibebankan oleh gateway Paydisini.';
+                        break;
+
+                    case 'paydisini_va_mandiri':
+                    case 'paydisini_alfamart':
+                    case 'paydisini_indomaret':
+                        $adminFee = 2500;
+                        $feeNote = 'Biaya admin tetap Rp 2.500 dibebankan oleh gateway Paydisini.';
+                        break;
+                }
+
+                $totalToPay = $baseAmount + $adminFee;
+            @endphp
+
+            <div class="mt-3 rounded-2xl border border-slate-800/80 bg-slate-950/80 p-4 space-y-2">
+                <p class="text-sm text-slate-300">Total yang harus dibayar:</p>
+                <p class="text-2xl font-semibold text-slate-50">
+                    Rp {{ number_format($totalToPay, 0, ',', '.') }}
+                </p>
+
+                <div class="mt-2 space-y-1 text-sm text-slate-200">
+                    <div class="flex items-center justify-between">
+                        <span>Subtotal</span>
+                        <span>Rp {{ number_format($baseAmount, 0, ',', '.') }}</span>
+                    </div>
+                    <div class="flex items-start justify-between">
+                        <span>
+                            Biaya admin Paydisini
+                            <span class="block text-[11px] text-slate-500">
+                                {{ $feeNote }}
+                            </span>
+                        </span>
+                        <span>Rp {{ number_format($adminFee, 0, ',', '.') }}</span>
+                    </div>
+                </div>
+            </div>
+
 
             @php
                 $channel = $payment->method;
@@ -41,7 +86,7 @@
               @endphp
 
             <div id="payment-body" class="mt-4 space-y-4
-            @if(in_array($payment->status, ['canceled', 'expired'])) opacity-40 pointer-events-none @endif">
+                @if(in_array($payment->status, ['canceled', 'expired'])) opacity-40 pointer-events-none @endif">
 
                 {{-- QRIS --}}
                 @if($channel === 'paydisini_qris')
@@ -66,8 +111,8 @@
                     <div class="flex items-center gap-2">
                         <code id="va-number"
                             class="px-3 py-2 rounded-xl bg-slate-950 border border-slate-700 text-lg font-mono">
-                      {{ $virtualAccount ?? '-' }}
-                    </code>
+                              {{ $virtualAccount ?? '-' }}
+                            </code>
                     </div>
 
                     {{-- Alfamart / Indomaret --}}
@@ -77,8 +122,8 @@
                     </p>
                     <div class="flex items-center gap-2">
                         <code class="px-3 py-2 rounded-xl bg-slate-950 border border-slate-700 text-lg font-mono">
-                      {{ $paymentCode ?? '-' }}
-                    </code>
+                              {{ $paymentCode ?? '-' }}
+                            </code>
                     </div>
                 @else
                     <p class="text-sm text-rose-400">

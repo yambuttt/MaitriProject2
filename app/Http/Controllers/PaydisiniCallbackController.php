@@ -10,6 +10,9 @@ use App\Models\OrderPayment;
 use App\Services\DigiflazzService;
 use App\Models\MarketplaceOrderPayment;
 use App\Models\MarketplaceOrder;
+use Illuminate\Support\Facades\Mail;
+use App\Mail\MarketplaceOrderPaidMail;
+use App\Services\MarketplaceOrderService;
 
 use Illuminate\Support\Str;
 
@@ -160,13 +163,19 @@ class PaydisiniCallbackController extends Controller
                 $payment->paid_at = now();
                 $payment->save();
 
-                $order->payment_status = 'paid';
-                // kalau baru pertama kali dibayar → PAID & PESANAN DI TERIMA
-                if ($order->status === 'not_paid') {
-                    $order->status = 'paid_received';
-                }
-                $order->paid_at = now();
-                $order->save();
+                // $order->payment_status = 'paid';
+                // // kalau baru pertama kali dibayar → PAID & PESANAN DI TERIMA
+                // if ($order->status === 'not_paid') {
+                //     $order->status = 'paid_received';
+                // }
+                // $order->paid_at = now();
+                // $order->save();
+                // // kirim email notifikasi
+                // if ($order->customer_email) {
+                //     Mail::to($order->customer_email)->send(new MarketplaceOrderPaidMail($order));
+                // }
+                app(MarketplaceOrderService::class)->markAsPaid($order);
+
             } else {
                 $payment->status = 'canceled';
                 $payment->save();

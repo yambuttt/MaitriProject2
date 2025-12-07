@@ -11,6 +11,11 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Http;
+use Illuminate\Support\Facades\Mail;
+use App\Mail\MarketplaceOrderPaidMail;
+use App\Services\MarketplaceOrderService;
+
+
 
 class MarketplaceCheckoutController extends Controller
 {
@@ -83,17 +88,53 @@ class MarketplaceCheckoutController extends Controller
         ]);
 
         // update data order
+        // update data order
         $order->update([
             'customer_email' => $data['customer_email'],
             'customer_phone' => $data['customer_phone'],
             'user_note' => $data['user_note'] ?? null,
             'payment_method' => $data['payment_method'],
         ]);
+
+        // Hitung biaya admin gateway + total yang harus dibayar customer.
+        // Catatan:
+        // - amount yang dikirim ke Paydisini tetap nominal dasar (price)
+        // - fee hanya untuk informasi ke user & invoice
+        $baseAmount = (int) $order->price;
+        $adminFee = 0;
+
+        switch ($data['payment_method']) {
+            case 'paydisini_qris':
+                // QRIS Paydisini: fee 0.7% (dibulatkan ke atas)
+                $adminFee = (int) ceil($baseAmount * 0.007);
+                break;
+
+            case 'paydisini_va_mandiri':
+            case 'paydisini_alfamart':
+            case 'paydisini_indomaret':
+                // VA Mandiri / Alfamart / Indomaret: fee flat Rp 2.500
+                $adminFee = 2500;
+                break;
+
+            case 'wallet':
+            default:
+                // Saldo Maitri atau metode lain: tanpa biaya admin gateway
+                $adminFee = 0;
+                break;
+        }
+
+        $order->update([
+            'fee' => $adminFee,
+            // total_amount = harga produk + fee gateway (total yang dibayar customer)
+            'total_amount' => $baseAmount + $adminFee,
+        ]);
+
         if (!in_array($order->status, ['not_paid'])) {
             return redirect()
                 ->route('marketplace.invoice.show', $order)
                 ->with('warning', 'Pesanan sudah diproses, tidak dapat dilakukan checkout ulang.');
         }
+
 
         // ==========================
         //  A. Pembayaran pakai WALLET
@@ -136,11 +177,16 @@ class MarketplaceCheckoutController extends Controller
             $user->save();
 
             // tandai order sudah dibayar, menunggu diproses admin
-            $order->update([
-                'payment_status' => 'paid',
-                'status' => 'paid_received',
-                'paid_at' => now(),
-            ]);
+            // $order->update([
+            //     'payment_status' => 'paid',
+            //     'status' => 'paid_received',
+            //     'paid_at' => now(),
+            // ]);
+            // if ($order->customer_email) {
+            //     Mail::to($order->customer_email)->send(new MarketplaceOrderPaidMail($order));
+            // }
+            app(MarketplaceOrderService::class)->markAsPaid($order);
+
 
             return redirect()->route('marketplace.invoice.show', $order);
         }
@@ -182,7 +228,7 @@ class MarketplaceCheckoutController extends Controller
         $baseUrl = rtrim(env('PAYDISINI_BASE_URL', 'https://api.paydisini.co.id/v1/'), '/');
         $validTime = (int) env('PAYDISINI_VALID_TIME', 1800); // detik
 
-        $amount = (int) $order->total_amount;
+        $amount = (int) $order->price;
 
         $payment = null;
 
