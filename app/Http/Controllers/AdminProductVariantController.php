@@ -9,6 +9,7 @@ use Illuminate\Validation\Rule;
 use App\Services\DigiflazzClient;
 use Illuminate\Support\Arr;
 use App\Models\DigiflazzVariant;
+use Illuminate\Support\Str;
 
 
 
@@ -86,7 +87,7 @@ class AdminProductVariantController extends Controller
                     ->ignore($variant->id)
             ],
             'name' => ['required', 'string', 'max:180'],
-            
+
             'markup_rp' => ['nullable', 'integer', 'min:0'],
             'is_active' => ['nullable', 'boolean'],
         ]);
@@ -210,18 +211,13 @@ class AdminProductVariantController extends Controller
         $rows = $client->pricelist();
         // index by buyer_sku_code untuk cepat
         $bySku = [];
-        foreach ($rows as $r) {
-            if (!empty($r['buyer_sku_code'])) {
-                $bySku[$r['buyer_sku_code']] = $r;
-            }
-        }
-
-        $updated = 0;
-        $disabled = 0;
         foreach ($product->variants as $v) {
             $remote = $bySku[$v->buyer_sku_code] ?? null;
+
+            // =====================================================================
+            // 1. SKU TIDAK ADA LAGI DI PRICELIST  → nonaktifkan varian
+            // =====================================================================
             if (!$remote) {
-                // SKU tidak ada → nonaktifkan varian
                 if ($v->is_active) {
                     $v->is_active = false;
                     $v->save();
@@ -230,24 +226,69 @@ class AdminProductVariantController extends Controller
                 continue;
             }
 
-            // update base_price & status (gangguan → nonaktifkan)
+            // =====================================================================
+            // 2. BACA INFO STATUS DARI DIGIFLAZZ
+            // =====================================================================
             $newBase = (int) ($remote['price'] ?? $v->base_price);
-            $newActive = (($remote['status'] ?? '') === 'Active');
+
+            // Bisa jadi key-nya beda sedikit, tapi dari dokumentasi contoh:
+            // - buyer_product_status (bool)
+            // - seller_product_status (bool)
+            $buyerActive = (bool) ($remote['buyer_product_status'] ?? true);
+            $sellerActive = (bool) ($remote['seller_product_status'] ?? true);
+            $statusText = strtolower((string) ($remote['status'] ?? ''));
+
+            // =====================================================================
+            // 3. INVALID SELLER → hapus varian dari product_variants
+            // =====================================================================
+            // Biasanya akan terdeteksi dari:
+            //  - seller_product_status = false
+            //  - dan teks status mengandung kata "invalid"
+            if (!$sellerActive && Str::contains($statusText, 'invalid')) {
+                $v->delete();
+                $disabled++;  // kita hitung sebagai "dinonaktifkan"
+                continue;
+            }
+
+            // =====================================================================
+            // 4. PRODUK SELLER NONAKTIF / HARGA MAX < HARGA SELLER
+            //    → varian tetap disimpan tapi dibuat tidak aktif
+            // =====================================================================
+            // Aturan: varian dianggap benar-benar aktif HANYA jika:
+            //  - status = 'active'
+            //  - buyer_product_status = true
+            //  - seller_product_status = true
+            $shouldBeActive = (
+                $statusText === 'active'
+                && $buyerActive
+                && $sellerActive
+            );
 
             $changed = false;
+
+            // update base price kalau berubah
             if ($newBase !== (int) $v->base_price) {
                 $v->base_price = $newBase;
                 $changed = true;
             }
-            if ((bool) $newActive !== (bool) $v->is_active) {
-                $v->is_active = $newActive;
+
+            // kalau seharusnya aktif tapi sekarang tidak (atau sebaliknya) → update
+            if ((bool) $shouldBeActive !== (bool) $v->is_active) {
+                $v->is_active = $shouldBeActive;
                 $changed = true;
             }
+
             if ($changed) {
                 $v->save();
-                $updated++;
+
+                if ($shouldBeActive) {
+                    $updated++;
+                } else {
+                    $disabled++;
+                }
             }
         }
+
 
         return redirect()->route('admin.products.variants.index', $product)
             ->with('ok', "Sinkron: {$updated} diperbarui, {$disabled} dinonaktifkan.");
