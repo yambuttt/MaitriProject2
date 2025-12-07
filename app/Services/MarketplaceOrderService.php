@@ -52,7 +52,7 @@ class MarketplaceOrderService
         if ($order->customer_phone) {
             $phone = $this->normalizePhone($order->customer_phone);
 
-            Http::post('http://167.172.66.220:3000/send', [
+            Http::post('http://167.172.66.220:31500/send', [
                 'to'   => $phone,
                 'text' => $baseText,
             ]);
@@ -92,7 +92,7 @@ class MarketplaceOrderService
         //     . "\n\n👤 *Pemesan*: {$who}"
         //     . "\n🕒 *Waktu pesan*: {$when}";
 
-        Http::post('http://167.172.66.220:3000/send-group', [
+        Http::post('http://167.172.66.220:31500/send-group', [
             'groupJid' => '120363420542063843@g.us',
             'text'     => $adminText,
         ]);
