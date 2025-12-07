@@ -68,18 +68,19 @@ class DigiflazzMasterSyncService
             // optional: tandai yang tidak lagi muncul sebagai nonaktif
             // optional: tandai yang tidak lagi muncul sebagai nonaktif
 // dan nonaktifkan semua product_variants yang terhubung ke master tsb
+            // cari master yang sudah tidak muncul lagi di pricelist terbaru
             $removedIds = DigiflazzVariant::whereNotIn('buyer_sku_code', $seenSku)
                 ->pluck('id');
 
             if ($removedIds->isNotEmpty()) {
-                // 1) ubah status master jadi nonaktif
-                DigiflazzVariant::whereIn('id', $removedIds)
-                    ->update(['status' => 'nonaktif']);
-
-                // 2) nonaktifkan semua product_variant yang terhubung
+                // 1) nonaktifkan dulu semua product_variants yang pakai master ini
                 ProductVariant::whereIn('digiflazz_variant_id', $removedIds)
                     ->update(['is_active' => false]);
+
+                // 2) hapus master-nya
+                DigiflazzVariant::whereIn('id', $removedIds)->delete();
             }
+
 
         });
 
