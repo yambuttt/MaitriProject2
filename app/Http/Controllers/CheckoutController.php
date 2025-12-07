@@ -148,12 +148,30 @@ class CheckoutController extends Controller
                 'failed_at' => $mappedStatus === 'failed' ? now() : null,
             ]);
         } catch (\Throwable $e) {
+            // fallback ref_id yang pasti sama dengan yang dipakai Digiflazz
+            $fallbackRefId = 'MP2-' . $order->code;
+
             $order->update([
                 'status' => 'failed',
+
+                // pastikan provider terisi
+                'provider' => $order->provider ?: 'digiflazz',
+
+                // simpan ref_id walaupun gagal, supaya tidak pernah dipakai order lain
+                'provider_ref_id' => $order->provider_ref_id ?: $fallbackRefId,
+
                 'provider_status' => 'ERROR',
                 'provider_message' => $e->getMessage(),
+                'provider_raw' => [
+                    'exception' => get_class($e),
+                    'message' => $e->getMessage(),
+                ],
+
+                // tandai kapan gagal
+                'failed_at' => $order->failed_at ?? now(),
             ]);
         }
+
 
         // 7. Redirect ke halaman invoice berdasarkan kode
         return redirect()
@@ -540,12 +558,25 @@ class CheckoutController extends Controller
                 'failed_at' => $mappedStatus === 'failed' ? now() : $order->failed_at,
             ]);
         } catch (\Throwable $e) {
+            $fallbackRefId = 'MP2-' . $order->code;
+
             $order->update([
                 'status' => 'failed',
+
+                'provider' => $order->provider ?: 'digiflazz',
+                'provider_ref_id' => $order->provider_ref_id ?: $fallbackRefId,
+
                 'provider_status' => 'ERROR',
                 'provider_message' => $e->getMessage(),
+                'provider_raw' => [
+                    'exception' => get_class($e),
+                    'message' => $e->getMessage(),
+                ],
+
+                'failed_at' => $order->failed_at ?? now(),
             ]);
         }
+
     }
 
     public function expirePayment(OrderPayment $payment)
