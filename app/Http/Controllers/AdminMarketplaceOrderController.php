@@ -4,6 +4,8 @@ namespace App\Http\Controllers;
 
 use App\Models\MarketplaceOrder;
 use Illuminate\Http\Request;
+use App\Services\MarketplaceOrderService;
+
 
 class AdminMarketplaceOrderController extends Controller
 {
@@ -13,7 +15,7 @@ class AdminMarketplaceOrderController extends Controller
     public function index(Request $request)
     {
         $status = $request->query('status'); // not_paid, paid_received, dll
-        $q      = trim((string) $request->query('q', ''));
+        $q = trim((string) $request->query('q', ''));
 
         $orders = MarketplaceOrder::with(['product', 'variant', 'user', 'payment'])
             ->when($status, function ($query) use ($status) {
@@ -33,7 +35,7 @@ class AdminMarketplaceOrderController extends Controller
         return view('dashboard.admin.marketplace.orders.index', [
             'orders' => $orders,
             'status' => $status,
-            'q'      => $q,
+            'q' => $q,
         ]);
     }
 
@@ -52,10 +54,13 @@ class AdminMarketplaceOrderController extends Controller
     /**
      * Update status pesanan + catatan admin.
      */
-    public function updateStatus(Request $request, MarketplaceOrder $order)
-    {
+    public function updateStatus(
+        Request $request,
+        MarketplaceOrder $order,
+        MarketplaceOrderService $orderService
+    ) {
         $data = $request->validate([
-            'status'     => ['required', 'in:paid_received,paid_processing,paid_rejected,paid_finished'],
+            'status' => ['required', 'in:paid_received,paid_processing,paid_rejected,paid_finished'],
             'admin_note' => ['nullable', 'string'],
         ]);
 
@@ -71,6 +76,10 @@ class AdminMarketplaceOrderController extends Controller
 
         $order->save();
 
+        // 🔔 Kirim WhatsApp ke pembeli kalau status tertentu
+        $orderService->notifyAdminStatusUpdate($order);
+
         return back()->with('ok', 'Status pesanan berhasil diperbarui.');
     }
+
 }
