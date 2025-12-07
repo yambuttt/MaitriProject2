@@ -206,17 +206,28 @@ class AdminProductVariantController extends Controller
 
 
     // Sinkronkan base_price & status varian terhadap pricelist terbaru
+    // Sinkronkan base_price & status varian terhadap pricelist terbaru
     public function syncFromDigiflazz(Product $product, DigiflazzClient $client)
     {
         $rows = $client->pricelist();
+
         // index by buyer_sku_code untuk cepat
         $bySku = [];
+        foreach ($rows as $r) {
+            if (!empty($r['buyer_sku_code'])) {
+                $bySku[$r['buyer_sku_code']] = $r;
+            }
+        }
+
+        $updated = 0;
+        $disabled = 0;
+
         foreach ($product->variants as $v) {
             $remote = $bySku[$v->buyer_sku_code] ?? null;
 
-            // =====================================================================
+            // =================================================================
             // 1. SKU TIDAK ADA LAGI DI PRICELIST  → nonaktifkan varian
-            // =====================================================================
+            // =================================================================
             if (!$remote) {
                 if ($v->is_active) {
                     $v->is_active = false;
@@ -226,38 +237,35 @@ class AdminProductVariantController extends Controller
                 continue;
             }
 
-            // =====================================================================
-            // 2. BACA INFO STATUS DARI DIGIFLAZZ
-            // =====================================================================
+            // =================================================================
+            // 2. BACA INFO STATUS & HARGA DARI DIGIFLAZZ
+            // =================================================================
             $newBase = (int) ($remote['price'] ?? $v->base_price);
 
-            // Bisa jadi key-nya beda sedikit, tapi dari dokumentasi contoh:
-            // - buyer_product_status (bool)
-            // - seller_product_status (bool)
+            // dari dokumentasi: buyer_product_status, seller_product_status
             $buyerActive = (bool) ($remote['buyer_product_status'] ?? true);
             $sellerActive = (bool) ($remote['seller_product_status'] ?? true);
+
+            // beberapa integrasi punya field 'status', kalau tidak ada pakai string kosong
             $statusText = strtolower((string) ($remote['status'] ?? ''));
 
-            // =====================================================================
+            // =================================================================
             // 3. INVALID SELLER → hapus varian dari product_variants
-            // =====================================================================
-            // Biasanya akan terdeteksi dari:
-            //  - seller_product_status = false
-            //  - dan teks status mengandung kata "invalid"
+            // =================================================================
             if (!$sellerActive && Str::contains($statusText, 'invalid')) {
                 $v->delete();
-                $disabled++;  // kita hitung sebagai "dinonaktifkan"
+                $disabled++; // kita hitung sebagai dinonaktifkan/hilang
                 continue;
             }
 
-            // =====================================================================
-            // 4. PRODUK SELLER NONAKTIF / HARGA MAX < HARGA SELLER
+            // =================================================================
+            // 4. PRODUK SELLER NONAKTIF / HARGA MAX < HARGA SELLER / GANGGUAN
             //    → varian tetap disimpan tapi dibuat tidak aktif
-            // =====================================================================
-            // Aturan: varian dianggap benar-benar aktif HANYA jika:
-            //  - status = 'active'
-            //  - buyer_product_status = true
-            //  - seller_product_status = true
+            // =================================================================
+            // Varian dianggap aktif HANYA kalau:
+            //   - statusText === 'active'
+            //   - buyer_product_status = true
+            //   - seller_product_status = true
             $shouldBeActive = (
                 $statusText === 'active'
                 && $buyerActive
@@ -272,7 +280,7 @@ class AdminProductVariantController extends Controller
                 $changed = true;
             }
 
-            // kalau seharusnya aktif tapi sekarang tidak (atau sebaliknya) → update
+            // update flag aktif/nonaktif
             if ((bool) $shouldBeActive !== (bool) $v->is_active) {
                 $v->is_active = $shouldBeActive;
                 $changed = true;
@@ -289,10 +297,11 @@ class AdminProductVariantController extends Controller
             }
         }
 
-
-        return redirect()->route('admin.products.variants.index', $product)
-            ->with('ok', "Sinkron: {$updated} diperbarui, {$disabled} dinonaktifkan.");
+        return redirect()
+            ->route('admin.products.variants.index', $product)
+            ->with('ok', "Sinkron: {$updated} diperbarui, {$disabled} dinonaktifkan/dihapus.");
     }
+
 
     public function bulkUpdate(Product $product, Request $request)
     {
