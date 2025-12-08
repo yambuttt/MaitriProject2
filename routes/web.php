@@ -128,6 +128,10 @@ Route::middleware(['auth', 'admin'])
 
         Route::post('/digiflazz/sync-master', [AdminDigiflazzController::class, 'syncMaster'])
             ->name('digiflazz.sync-master');
+
+              Route::get('/digiflazz/debug-pricelist', [AdminDigiflazzController::class, 'debugPricelist'])
+            ->name('digiflazz.debug-pricelist');
+            
         Route::get('/marketplace/orders', [\App\Http\Controllers\AdminMarketplaceOrderController::class, 'index'])
             ->name('marketplace.orders.index');
 

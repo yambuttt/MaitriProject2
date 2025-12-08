@@ -6,6 +6,7 @@ use App\Models\DigiflazzVariant;
 use App\Models\DigiflazzSyncLog;
 use App\Services\DigiflazzMasterSyncService;
 use Illuminate\Support\Facades\Artisan;
+use App\Services\DigiflazzClient; // <— tambahkan ini
 
 
 use Illuminate\Http\Request;
@@ -110,6 +111,25 @@ class AdminDigiflazzController extends Controller
             return back()->with('error', 'Gagal sinkron master Digiflazz: ' . $e->getMessage());
         }
     }
+
+    public function debugPricelist(Request $request, DigiflazzClient $client)
+{
+    // Ambil semua data pricelist langsung dari Digiflazz
+    $rows = $client->pricelist(); // sama persis dengan yang dipakai saat sync master :contentReference[oaicite:1]{index=1}  
+
+    // Kalau kamu kasih ?sku=ML5 atau ?sku=CEKML di URL, kita filter 1 SKU saja
+    $sku = trim($request->query('sku', ''));
+
+    if ($sku !== '') {
+        $rows = array_values(array_filter($rows, function ($row) use ($sku) {
+            return isset($row['buyer_sku_code']) && $row['buyer_sku_code'] === $sku;
+        }));
+    }
+
+    // Tampilkan JSON apa adanya
+    return response()->json($rows);
+}
+
 
 
 
