@@ -59,6 +59,8 @@ class DigiflazzMasterSyncService
                         'category' => $item['category'] ?? null,
                         'base_price' => $item['price'] ?? 0,
                         'status' => $item['status'] ?? null,
+                        'buyer_product_status' => (bool) ($item['buyer_product_status'] ?? true),
+                        'seller_product_status' => (bool) ($item['seller_product_status'] ?? true),
                         'last_synced_at' => $now,
                         'raw' => $item,
                     ]

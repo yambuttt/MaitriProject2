@@ -39,6 +39,17 @@ class CheckoutController extends Controller
         // 3. Ambil varian produk & nominal yang harus dibayar
         $variant = ProductVariant::findOrFail($validated['variant_id']);
         $amount = (int) $variant->final_price; // nominal yang diambil dari varian (sudah + markup)
+        $master = $variant->digiflazzVariant;
+        if (
+            $master && (
+                $master->seller_product_status === false ||
+                str_contains(strtolower((string) $master->status), 'gangguan')
+            )
+        ) {
+            return back()
+                ->withErrors(['variant' => 'Varian yang kamu pilih sedang gangguan / nonaktif dari penyedia. Silakan pilih nominal lain.'])
+                ->withInput();
+        }
 
         // 4. Cek saldo Maitri cukup
         if ($user->maitri_balance < $amount) {
@@ -234,8 +245,21 @@ class CheckoutController extends Controller
             'payment_channel' => ['required', 'in:qris,va_mandiri,alfamart,indomaret'],
         ]);
 
-        $variant = ProductVariant::findOrFail($validated['variant_id']);
+        $variant = ProductVariant::with('digiflazzVariant')->findOrFail($validated['variant_id']);
         $amount = (int) $variant->final_price;
+
+        $master = $variant->digiflazzVariant;
+        if (
+            $master && (
+                $master->seller_product_status === false ||
+                str_contains(strtolower((string) $master->status), 'gangguan')
+            )
+        ) {
+            return back()
+                ->withErrors(['variant' => 'Varian yang kamu pilih sedang gangguan / nonaktif dari penyedia. Silakan pilih nominal lain.'])
+                ->withInput();
+        }
+
 
         $channel = $validated['payment_channel'];
 

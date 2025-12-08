@@ -107,54 +107,69 @@
                                     <th class="px-3 py-2 text-left w-[14%] hidden sm:table-cell">Brand</th>
                                     <th class="px-3 py-2 text-left w-[12%] hidden md:table-cell">Kategori</th>
                                     <th class="px-3 py-2 text-right w-[14%]">Modal (Rp)</th>
-                                    <th class="px-3 py-2 text-left w-[10%]">Status</th>
+                                    <th class="px-3 py-2 text-left w-[14%]">Status Buyer/Seller</th>
                                     <th class="px-3 py-2 text-left hidden md:table-cell w-[20%]">Last Sync</th>
                                 </tr>
                             </thead>
                             <tbody class="divide-y divide-slate-800/80">
                                 @forelse ($variants as $v)
-                                    <tr class="text-slate-100 align-top">
-                                        {{-- SKU --}}
-                                        <td class="px-3 py-2 text-slate-300 break-words">
-                                            {{ $v->buyer_sku_code }}
-                                        </td>
+                                                        <tr class="text-slate-100 align-top">
+                                                            {{-- SKU --}}
+                                                            <td class="px-3 py-2 text-slate-300 break-words">
+                                                                {{ $v->buyer_sku_code }}
+                                                            </td>
 
-                                        {{-- Nama --}}
-                                        <td class="px-3 py-2 break-words">
-                                            {{ $v->product_name }}
-                                        </td>
+                                                            {{-- Nama --}}
+                                                            <td class="px-3 py-2 break-words">
+                                                                {{ $v->product_name }}
+                                                            </td>
 
-                                        {{-- Brand (sembunyi di layar sangat kecil) --}}
-                                        <td class="px-3 py-2 text-slate-300 break-words hidden sm:table-cell">
-                                            {{ $v->brand }}
-                                        </td>
+                                                            {{-- Brand (sembunyi di layar sangat kecil) --}}
+                                                            <td class="px-3 py-2 text-slate-300 break-words hidden sm:table-cell">
+                                                                {{ $v->brand }}
+                                                            </td>
 
-                                        {{-- Kategori (sembunyi di < md) --}}
-                                        <td class="px-3 py-2 text-slate-300 break-words hidden md:table-cell">
-                                            {{ $v->category }}
-                                        </td>
+                                                            {{-- Kategori (sembunyi di < md) --}} <td
+                                                                class="px-3 py-2 text-slate-300 break-words hidden md:table-cell">
+                                                                {{ $v->category }}
+                                                                </td>
 
-                                        {{-- Modal --}}
-                                        <td class="px-3 py-2 text-right whitespace-nowrap">
-                                            Rp {{ number_format($v->base_price, 0, ',', '.') }}
-                                        </td>
+                                                                {{-- Modal --}}
+                                                                <td class="px-3 py-2 text-right whitespace-nowrap">
+                                                                    Rp {{ number_format($v->base_price, 0, ',', '.') }}
+                                                                </td>
 
-                                        {{-- Status --}}
-                                        <td class="px-3 py-2">
-                                            <span
-                                                class="inline-flex items-center rounded-full px-2.5 py-0.5 text-[11px] sm:text-xs
-                                                {{ $v->status === 'Active'
-                                                    ? 'bg-emerald-500/10 text-emerald-300 border border-emerald-500/40'
-                                                    : 'bg-amber-500/10 text-amber-300 border border-amber-500/40' }}">
-                                                {{ $v->status ?? '-' }}
-                                            </span>
-                                        </td>
+                                                                {{-- Status --}}
+                                                                {{-- Status Buyer/Seller --}}
+                                                                <td class="px-3 py-2">
+                                                                    <div class="flex flex-col gap-1">
+                                                                        {{-- Buyer --}}
+                                                                        <span class="inline-flex items-center rounded-full px-2.5 py-0.5 text-[11px] sm:text-xs
+                                        {{ $v->buyer_product_status
+                                    ? 'bg-emerald-500/10 text-emerald-300 border border-emerald-500/40'
+                                    : 'bg-rose-500/10 text-rose-300 border border-rose-500/40' }}">
+                                                                            Buyer:
+                                                                            {{ $v->buyer_product_status ? 'AKTIF' : 'NONAKTIF' }}
+                                                                        </span>
 
-                                        {{-- Last sync (sembunyi di mobile kecil) --}}
-                                        <td class="px-3 py-2 text-slate-400 text-[11px] sm:text-xs hidden md:table-cell whitespace-nowrap">
-                                            {{ optional($v->last_synced_at)->format('d M Y H:i') ?? '-' }}
-                                        </td>
-                                    </tr>
+                                                                        {{-- Seller --}}
+                                                                        <span class="inline-flex items-center rounded-full px-2.5 py-0.5 text-[11px] sm:text-xs
+                                        {{ $v->seller_product_status
+                                    ? 'bg-emerald-500/10 text-emerald-300 border border-emerald-500/40'
+                                    : 'bg-rose-500/10 text-rose-300 border border-rose-500/40' }}">
+                                                                            Seller:
+                                                                            {{ $v->seller_product_status ? 'AKTIF' : 'NONAKTIF' }}
+                                                                        </span>
+                                                                    </div>
+                                                                </td>
+
+
+                                                                {{-- Last sync (sembunyi di mobile kecil) --}}
+                                                                <td
+                                                                    class="px-3 py-2 text-slate-400 text-[11px] sm:text-xs hidden md:table-cell whitespace-nowrap">
+                                                                    {{ optional($v->last_synced_at)->format('d M Y H:i') ?? '-' }}
+                                                                </td>
+                                                        </tr>
                                 @empty
                                     <tr>
                                         <td colspan="7" class="px-3 py-6 text-center text-slate-400 text-sm">
@@ -193,29 +208,28 @@
                                 </thead>
                                 <tbody class="divide-y divide-slate-800/80">
                                     @foreach ($logs as $log)
-                                        <tr class="text-slate-100">
-                                            <td class="px-3 py-2 text-slate-400 whitespace-nowrap">
-                                                {{ $log->created_at->format('d M Y H:i:s') }}
-                                            </td>
-                                            <td class="px-3 py-2">
-                                                {{ $log->type === 'master' ? 'Master Digiflazz' : $log->type }}
-                                            </td>
-                                            <td class="px-3 py-2">
-                                                <span
-                                                    class="inline-flex items-center rounded-full px-2.5 py-0.5 text-[11px]
-                                                    {{ $log->status === 'success'
-                                                        ? 'bg-emerald-500/10 text-emerald-300 border border-emerald-500/40'
-                                                        : 'bg-rose-500/10 text-rose-300 border border-rose-500/40' }}">
-                                                    {{ strtoupper($log->status) }}
-                                                </span>
-                                            </td>
-                                            <td class="px-3 py-2 text-right">
-                                                {{ $log->synced_count }}
-                                            </td>
-                                            <td class="px-3 py-2 text-slate-300">
-                                                {{ $log->message }}
-                                            </td>
-                                        </tr>
+                                                        <tr class="text-slate-100">
+                                                            <td class="px-3 py-2 text-slate-400 whitespace-nowrap">
+                                                                {{ $log->created_at->format('d M Y H:i:s') }}
+                                                            </td>
+                                                            <td class="px-3 py-2">
+                                                                {{ $log->type === 'master' ? 'Master Digiflazz' : $log->type }}
+                                                            </td>
+                                                            <td class="px-3 py-2">
+                                                                <span class="inline-flex items-center rounded-full px-2.5 py-0.5 text-[11px]
+                                                                                                            {{ $log->status === 'success'
+                                        ? 'bg-emerald-500/10 text-emerald-300 border border-emerald-500/40'
+                                        : 'bg-rose-500/10 text-rose-300 border border-rose-500/40' }}">
+                                                                    {{ strtoupper($log->status) }}
+                                                                </span>
+                                                            </td>
+                                                            <td class="px-3 py-2 text-right">
+                                                                {{ $log->synced_count }}
+                                                            </td>
+                                                            <td class="px-3 py-2 text-slate-300">
+                                                                {{ $log->message }}
+                                                            </td>
+                                                        </tr>
                                     @endforeach
                                 </tbody>
                             </table>

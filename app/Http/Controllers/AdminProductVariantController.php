@@ -280,20 +280,15 @@ class AdminProductVariantController extends Controller
                 $changed = true;
             }
 
-            // update flag aktif/nonaktif
-            if ((bool) $shouldBeActive !== (bool) $v->is_active) {
-                $v->is_active = $shouldBeActive;
-                $changed = true;
-            }
+            // // update flag aktif/nonaktif
+            // if ((bool) $shouldBeActive !== (bool) $v->is_active) {
+            //     $v->is_active = $shouldBeActive;
+            //     $changed = true;
+            // }
 
             if ($changed) {
                 $v->save();
-
-                if ($shouldBeActive) {
-                    $updated++;
-                } else {
-                    $disabled++;
-                }
+                $updated++;   // anggap sebagai varian yang ter-update
             }
         }
 

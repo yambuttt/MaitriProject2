@@ -15,14 +15,18 @@ class DigiflazzVariant extends Model
         'category',
         'base_price',
         'status',
+        'buyer_product_status',   // <— tambah
+        'seller_product_status',  // <— tambah
         'last_synced_at',
         'raw',
     ];
 
     protected $casts = [
-        'base_price'     => 'integer',
+        'base_price' => 'integer',
         'last_synced_at' => 'datetime',
-        'raw'            => 'array',
+        'raw' => 'array',
+        'buyer_product_status' => 'boolean',   // <— tambah
+        'seller_product_status' => 'boolean',   // <— tambah
     ];
 
     public function productVariants()
