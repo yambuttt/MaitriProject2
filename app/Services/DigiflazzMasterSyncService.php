@@ -38,6 +38,12 @@ class DigiflazzMasterSyncService
     {
         // call ini DI SINI saja, jangan di tempat lain
         $pricelist = $this->client->pricelist();
+        // SAFETY: kalau entah kenapa daftar produk kosong, jangan berani-berani sync.
+        if (empty($pricelist)) {
+            throw new \RuntimeException(
+                'Pricelist dari Digiflazz kosong. Sync dibatalkan supaya tidak menghapus data master.'
+            );
+        }
 
         $now = now();
         $seenSku = [];
@@ -74,14 +80,19 @@ class DigiflazzMasterSyncService
             $removedIds = DigiflazzVariant::whereNotIn('buyer_sku_code', $seenSku)
                 ->pluck('id');
 
-            if ($removedIds->isNotEmpty()) {
-                // 1) nonaktifkan dulu semua product_variants yang pakai master ini
-                ProductVariant::whereIn('digiflazz_variant_id', $removedIds)
-                    ->update(['is_active' => false]);
+            // Hanya jalankan logika hapus kalau benar-benar ada SKU yang terlihat saat sync.
+            if (!empty($seenSku)) {
+                $removedIds = DigiflazzVariant::whereNotIn('buyer_sku_code', $seenSku)
+                    ->pluck('id');
 
-                // 2) hapus master-nya
-                DigiflazzVariant::whereIn('id', $removedIds)->delete();
+                if ($removedIds->isNotEmpty()) {
+                    ProductVariant::whereIn('digiflazz_variant_id', $removedIds)
+                        ->update(['is_active' => false]);
+
+                    DigiflazzVariant::whereIn('id', $removedIds)->delete();
+                }
             }
+
 
 
         });
