@@ -119,8 +119,8 @@
                   <label class="text-sm text-slate-400">User ID / Nomor Tujuan</label>
                   <input id="fTarget" name="target" type="text" placeholder="Masukkan User ID atau Nomor"
                     class="mt-1 w-full rounded-xl bg-[#0E1524] border border-slate-800/70
-                                                             px-3 py-2 text-sm outline-none
-                                                             focus:border-violet-500/60 focus:ring-2 focus:ring-violet-500/30">
+                                                                 px-3 py-2 text-sm outline-none
+                                                                 focus:border-violet-500/60 focus:ring-2 focus:ring-violet-500/30">
                   <p id="fTargetHelp" class="mt-1 text-xs text-slate-500">
                     Contoh: 081234567890 atau 12345678(1234).
                   </p>
@@ -141,14 +141,51 @@
                 @foreach($product->variants as $v)
                   @php
                     $master = $v->digiflazzVariant;
+
+                    // --- status seller / gangguan ---
                     $sellerActive = $master?->seller_product_status ?? true;
                     $statusText = strtolower($master->status ?? '');
-                    // Anggap gangguan kalau seller nonaktif atau status mengandung kata "gangguan"
-                    $isGangguan = !$sellerActive || str_contains($statusText, 'gangguan');
+
+                    // --- data cutoff dari raw JSON Digiflazz ---
+                    $startCut = $master->raw['start_cut_off'] ?? null; // ex: "23:30"
+                    $endCut = $master->raw['end_cut_off'] ?? null;   // ex: "0:15"
+
+                    // waktu sekarang pakai timezone Laravel (yang tadi sudah kita set ke Asia/Jakarta)
+                    $now = \Carbon\Carbon::now(config('app.timezone'));
+                    $nowMinutes = $now->hour * 60 + $now->minute;
+
+                    $isInCutoff = false;
+
+                    if ($startCut && $endCut) {
+                      try {
+                        [$sh, $sm] = array_map('intval', explode(':', $startCut));
+                        [$eh, $em] = array_map('intval', explode(':', $endCut));
+
+                        $startMinutes = $sh * 60 + $sm;
+                        $endMinutes = $eh * 60 + $em;
+
+                        if ($startMinutes <= $endMinutes) {
+                          // tidak lewat tengah malam
+                          $isInCutoff = $nowMinutes >= $startMinutes && $nowMinutes <= $endMinutes;
+                        } else {
+                          // lewat tengah malam (contoh 23:30 - 00:15)
+                          $isInCutoff = $nowMinutes >= $startMinutes || $nowMinutes <= $endMinutes;
+                        }
+                      } catch (\Throwable $e) {
+                        $isInCutoff = false; // kalau ada format aneh, abaikan saja, jangan bikin error
+                      }
+                    }
+
+                    // varian dianggap "gangguan" jika:
+                    // - seller nonaktif, ATAU
+                    // - status mengandung kata "gangguan", ATAU
+                    // - sekarang lagi di jam cut off
+                    $isGangguan = !$sellerActive
+                      || str_contains($statusText, 'gangguan')
+                      || $isInCutoff;
                   @endphp
 
-                  <button type="button" class="variant-card rounded-2xl border border-slate-800/70 p-4 text-left
-                       bg-[#0E1524]
+                  <button type="button" class="variant-card rounded-2xl border border-slate-800/70 p-4 text-left bg-[#0E1524]
                        {{ $isGangguan ? 'opacity-60 cursor-not-allowed' : 'hover:border-slate-700 transition' }}"
                     data-variant-id="{{ $v->id }}" data-variant-name="{{ $v->name }}"
                     data-variant-price="{{ $v->final_price }}" @if($isGangguan) data-disabled="1" disabled @endif>
@@ -159,13 +196,23 @@
                       Rp {{ number_format($v->final_price, 0, ',', '.') }}
                     </div>
 
-                    @if($isGangguan)
+                    @if(!$sellerActive)
+                      <div class="mt-2 text-[11px] text-rose-300">
+                        Sedang nonaktif dari provider. Tidak dapat dipesan.
+                      </div>
+                    @elseif($isInCutoff)
                       <div class="mt-2 text-[11px] text-amber-300">
-                        Sedang gangguan / nonaktif dari provider. Tidak dapat dipesan.
+                        Sedang maintenance (cut off)
+                        {{ $startCut }} – {{ $endCut }}. Tidak dapat dipesan saat ini.
+                      </div>
+                    @elseif(str_contains($statusText, 'gangguan'))
+                      <div class="mt-2 text-[11px] text-amber-300">
+                        Sedang gangguan dari provider. Tidak dapat dipesan.
                       </div>
                     @endif
                   </button>
                 @endforeach
+
               </div>
 
             </div>
@@ -258,8 +305,8 @@
                 <div>
                   <label class="text-sm text-slate-400">Email (untuk bukti pembayaran)</label>
                   <input id="fEmail" name="email" type="email" placeholder="nama@email.com" class="mt-1 w-full rounded-xl bg-[#0E1524] border border-slate-800/70
-                                             px-3 py-2 text-sm outline-none
-                                             focus:border-violet-500/60 focus:ring-2 focus:ring-violet-500/30">
+                                                 px-3 py-2 text-sm outline-none
+                                                 focus:border-violet-500/60 focus:ring-2 focus:ring-violet-500/30">
                   <p class="mt-1 text-[11px] text-slate-500">
                     Bukti transaksi dan info pesanan bisa kami kirim ke email ini.
                   </p>
@@ -269,8 +316,8 @@
                 <div>
                   <label class="text-sm text-slate-400">No. WhatsApp / HP</label>
                   <input id="fPhone" name="phone" type="tel" placeholder="08xxxxxxxxxx" class="mt-1 w-full rounded-xl bg-[#0E1524] border border-slate-800/70
-                                             px-3 py-2 text-sm outline-none
-                                             focus:border-violet-500/60 focus:ring-2 focus:ring-violet-500/30">
+                                                 px-3 py-2 text-sm outline-none
+                                                 focus:border-violet-500/60 focus:ring-2 focus:ring-violet-500/30">
                   <p class="mt-1 text-[11px] text-slate-500">
                     Nomor ini akan dihubungi jika terjadi masalah pada pesanan.
                   </p>
@@ -365,7 +412,7 @@
               </dl>
 
               <button id="btnCheckout" class="w-full mt-2 px-5 py-3 rounded-2xl bg-violet-600 hover:bg-violet-500 text-sm font-medium
-                       text-white disabled:opacity-50 disabled:cursor-not-allowed" disabled>
+                           text-white disabled:opacity-50 disabled:cursor-not-allowed" disabled>
                 Lanjutkan Pembayaran
               </button>
 
@@ -400,9 +447,9 @@
             {{-- PIN --}}
             <div>
               <label class="block text-xs font-medium text-slate-400 mb-1">PIN Pembayaran</label>
-              <input type="password" maxlength="6" name="pin" class="h-10 w-full rounded-xl bg-slate-950 border border-slate-700/80
-                                                                                           px-3 text-sm text-slate-100"
-                placeholder="Masukkan PIN" required>
+              <input type="password" maxlength="6" name="pin"
+                class="h-10 w-full rounded-xl bg-slate-950 border border-slate-700/80
+                                                                                                   px-3 text-sm text-slate-100" placeholder="Masukkan PIN" required>
             </div>
 
             <div class="flex justify-end gap-2 pt-1">
@@ -474,7 +521,7 @@
 
         {{-- Tombol sticky --}}
         <button id="btnCheckoutMobile" class="w-full h-11 rounded-2xl bg-violet-600 hover:bg-violet-500 text-sm font-medium
-                             text-white disabled:opacity-50 disabled:cursor-not-allowed">
+                                 text-white disabled:opacity-50 disabled:cursor-not-allowed">
           Pesan Sekarang!
         </button>
       </div>
@@ -570,15 +617,15 @@
 
       cards.forEach(card => {
         card.addEventListener('click', () => {
-          // kalau ditandai disabled, jangan boleh pilih
           if (card.dataset.disabled === '1') {
-            alert('Varian ini sedang gangguan / nonaktif dari penyedia. Silakan pilih nominal lain.');
+            alert('Varian ini sedang gangguan / nonaktif / maintenance. Silakan pilih nominal lain.');
             return;
           }
 
           selectVariant(card);
         });
       });
+
 
 
       // ============================
@@ -758,8 +805,8 @@
             alert('Silakan login untuk menggunakan Saldo Maitri.');
           @endif
 
-                            // =================== PAYDISINI ==================
-                            } else {
+                                // =================== PAYDISINI ==================
+                                } else {
 
           const channelMap = {
             'QRIS': 'qris',
