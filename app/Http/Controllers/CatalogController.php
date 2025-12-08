@@ -94,9 +94,20 @@ class CatalogController extends Controller
         $product->setRelation(
             'variants',
             $product->variants
-                ->sortBy(fn($v) => $v->base_price)
+                ->sortBy(function ($v) {
+                    // group 0 = punya sort_order → ditaruh paling atas
+                    // group 1 = tidak punya sort_order → di bawahnya
+                    $group = is_null($v->sort_order) ? 1 : 0;
+
+                    return [
+                        $group,
+                        (int) ($v->sort_order ?? 0),
+                        (int) $v->final_price, // tetap dari murah ke mahal
+                    ];
+                })
                 ->values()
         );
+
 
         abort_if($product->variants->isEmpty(), 404);
 

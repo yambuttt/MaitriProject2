@@ -37,7 +37,7 @@ Route::get('/test-log', function () {
 Route::get('/test-email', function () {
     \Illuminate\Support\Facades\Mail::raw('Email test dari server berhasil!', function ($m) {
         $m->to('adrian.arifin777@gmail.com')
-          ->subject('Test SMTP MaitriProject');
+            ->subject('Test SMTP MaitriProject');
     });
 
     return 'OK';
@@ -129,9 +129,9 @@ Route::middleware(['auth', 'admin'])
         Route::post('/digiflazz/sync-master', [AdminDigiflazzController::class, 'syncMaster'])
             ->name('digiflazz.sync-master');
 
-              Route::get('/digiflazz/debug-pricelist', [AdminDigiflazzController::class, 'debugPricelist'])
+        Route::get('/digiflazz/debug-pricelist', [AdminDigiflazzController::class, 'debugPricelist'])
             ->name('digiflazz.debug-pricelist');
-            
+
         Route::get('/marketplace/orders', [\App\Http\Controllers\AdminMarketplaceOrderController::class, 'index'])
             ->name('marketplace.orders.index');
 
@@ -223,6 +223,8 @@ Route::middleware(['auth'])->group(function () {
         Route::put('/admin/catalog/products/{product}/variants/{variant}', [AdminProductVariantController::class, 'update'])->name('admin.products.variants.update');
         Route::patch('/admin/catalog/products/{product}/variants/{variant}/toggle', [AdminProductVariantController::class, 'toggle'])->name('admin.products.variants.toggle');
         Route::delete('/admin/catalog/products/{product}/variants/{variant}', [AdminProductVariantController::class, 'destroy'])->name('admin.products.variants.destroy');
+        Route::patch('/admin/catalog/products/{product}/variants/{variant}/sort', [AdminProductVariantController::class, 'updateSort'])->name('admin.products.variants.sort');
+        Route::patch('/admin/catalog/products/{product}/variants/{variant}/pin', [AdminProductVariantController::class, 'pinToTop'])->name('admin.products.variants.pin');
 
         // Digiflazz tools
         Route::get('/admin/catalog/products/{product}/variants/digiflazz/search', [AdminProductVariantController::class, 'searchDigiflazz'])->name('admin.products.variants.digiflazz.search');

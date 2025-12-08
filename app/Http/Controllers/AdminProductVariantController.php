@@ -10,6 +10,7 @@ use App\Services\DigiflazzClient;
 use Illuminate\Support\Arr;
 use App\Models\DigiflazzVariant;
 use Illuminate\Support\Str;
+use Illuminate\Support\Facades\DB;
 
 
 
@@ -17,13 +18,18 @@ use Illuminate\Support\Str;
 class AdminProductVariantController extends Controller
 {
     // List varian per produk + form tambah cepat
+
+
     public function index(Product $product, Request $request)
     {
         $pp = (int) $request->input('per_page', 20);
         $q = trim($request->input('q', ''));
 
         $variantsQuery = $product->variants()
-            ->with(['product', 'digiflazzVariant'])   // <— penting
+            ->with(['product', 'digiflazzVariant'])
+            // urutkan: yang punya sort_order dulu, lalu berdasarkan sort_order, baru SKU
+            ->orderByRaw('CASE WHEN sort_order IS NULL THEN 1 ELSE 0 END')
+            ->orderBy('sort_order')
             ->orderBy('buyer_sku_code');
 
         if ($q !== '') {
@@ -44,28 +50,40 @@ class AdminProductVariantController extends Controller
         ]);
     }
 
-
-    public function store(Product $product, Request $request)
+    public function updateSort(Product $product, ProductVariant $variant, Request $request)
     {
+        abort_unless($variant->product_id === $product->id, 404);
+
         $data = $request->validate([
-            'buyer_sku_code' => [
-                'required',
-                'string',
-                'max:120',
-                Rule::unique('product_variants', 'buyer_sku_code')->where(fn($q) => $q->where('product_id', $product->id))
-            ],
-            'name' => ['required', 'string', 'max:180'],
-            'base_price' => ['required', 'integer', 'min:0'],
-            'markup_rp' => ['nullable', 'integer', 'min:0'],
-            'is_active' => ['nullable', 'boolean'],
+            'sort_order' => ['nullable', 'integer', 'min:1'],
         ]);
-        $data['product_id'] = $product->id;
-        $data['is_active'] = (bool) ($data['is_active'] ?? true);
 
-        ProductVariant::create($data);
+        $variant->sort_order = $data['sort_order'] ?? null;
+        $variant->save();
 
-        return redirect()->route('admin.products.variants.index', $product)->with('ok', 'Varian ditambahkan.');
+        return back()->with('ok', 'Urutan varian diperbarui.');
     }
+
+    public function pinToTop(Product $product, ProductVariant $variant)
+    {
+        abort_unless($variant->product_id === $product->id, 404);
+
+        DB::transaction(function () use ($product, $variant) {
+            // geser semua yang sudah punya sort_order ke bawah
+            ProductVariant::where('product_id', $product->id)
+                ->whereNotNull('sort_order')
+                ->update([
+                    'sort_order' => DB::raw('sort_order + 1'),
+                ]);
+
+            // jadikan varian ini urutan 1
+            $variant->sort_order = 1;
+            $variant->save();
+        });
+
+        return back()->with('ok', 'Varian dipindah ke urutan paling atas.');
+    }
+
 
     public function edit(Product $product, ProductVariant $variant)
     {

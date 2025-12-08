@@ -156,6 +156,7 @@
                         <th class="text-left px-4 py-3">Markup (Rp)</th>
                         <th class="text-left px-4 py-3">Harga Jual</th>
                         <th class="text-left px-4 py-3">Status</th>
+                        <th class="text-left px-4 py-3">Urutan</th>
                         <th class="text-left px-4 py-3 w-44">Aksi</th>
                     </tr>
                 </thead>
@@ -168,7 +169,7 @@
                             </td>
                             <td class="px-4 py-3 text-slate-400">{{ $v->buyer_sku_code }}</td>
                             <td class="px-4 py-3 font-medium">{{ $v->name }}</td>
-                            <td class="px-4 py-3">Rp {{ number_format($v->base_price, 0, ',', '.') }}</td>  
+                            <td class="px-4 py-3">Rp {{ number_format($v->base_price, 0, ',', '.') }}</td>
                             <td class="px-4 py-3">
                                 @if(is_null($v->markup_rp))
                                     <span class="text-slate-400">— (pakai produk: Rp
@@ -183,23 +184,50 @@
                                     @csrf @method('PATCH')
                                     <button
                                         class="inline-flex items-center px-2 py-1 rounded-lg text-xs
-                                                                                                    {{ $v->is_active ? 'bg-emerald-500/10 text-emerald-300 border border-emerald-700/40' : 'bg-slate-500/10 text-slate-300 border border-slate-700/40' }}">
+                                                                                                                    {{ $v->is_active ? 'bg-emerald-500/10 text-emerald-300 border border-emerald-700/40' : 'bg-slate-500/10 text-slate-300 border border-slate-700/40' }}">
                                         {{ $v->is_active ? 'Aktif' : 'Nonaktif' }}
                                     </button>
                                 </form>
                             </td>
-                            <td class="px-4 py-3">
-                                <div class="flex items-center gap-2">
-                                    <a href="{{ route('admin.products.variants.edit', [$product, $v]) }}"
-                                        class="px-3 py-1.5 rounded-lg border border-slate-800/70 hover:border-slate-700">Edit</a>
-                                    <form method="post" action="{{ route('admin.products.variants.destroy', [$product, $v]) }}"
-                                        onsubmit="return confirm('Hapus varian ini?')">
-                                        @csrf @method('DELETE')
-                                        <button
-                                            class="px-3 py-1.5 rounded-lg border border-red-900/40 text-red-300 hover:bg-red-950/30">Hapus</button>
-                                    </form>
-                                </div>
-                            </td>
+
+                            < <td class="px-4 py-3">
+                                <form method="post" action="{{ route('admin.products.variants.sort', [$product, $v]) }}"
+                                    class="flex items-center gap-2">
+                                    @csrf
+                                    @method('PATCH')
+                                    <input type="number" name="sort_order" value="{{ $v->sort_order }}" min="1"
+                                        class="h-9 w-16 rounded-lg bg-[#0E1524] border border-slate-700/60 px-2 text-sm text-slate-100">
+                                    <button
+                                        class="text-xs px-2 py-1 rounded-lg border border-slate-700/60 hover:border-violet-500">
+                                        Simpan
+                                    </button>
+                                </form>
+                                </td>
+
+                                <td class="px-4 py-3">
+                                    <div class="flex flex-wrap items-center gap-2">
+                                        {{-- tombol baru: jadikan paling atas --}}
+                                        <form method="post" action="{{ route('admin.products.variants.pin', [$product, $v]) }}">
+                                            @csrf @method('PATCH')
+                                            <button
+                                                class="px-3 py-1.5 rounded-lg border border-amber-600/70 text-amber-200 text-xs hover:bg-amber-900/20">
+                                                Top
+                                            </button>
+                                        </form>
+
+                                        <a href="{{ route('admin.products.variants.edit', [$product, $v]) }}"
+                                            class="px-3 py-1.5 rounded-lg border border-slate-800/70 hover:border-slate-700">Edit</a>
+
+                                        <form method="post"
+                                            action="{{ route('admin.products.variants.destroy', [$product, $v]) }}"
+                                            onsubmit="return confirm('Hapus varian ini?')">
+                                            @csrf @method('DELETE')
+                                            <button
+                                                class="px-3 py-1.5 rounded-lg border border-red-900/40 text-red-300 hover:bg-red-950/30">Hapus
+                                            </button>
+                                        </form>
+                                    </div>
+                                </td>
                         </tr>
                     @empty
                         <tr>
@@ -220,7 +248,7 @@
 
             {{-- container: flex-col + max height + overflow --}}
             <div class="relative mx-auto max-w-5xl mt-16 bg-[#0E1524] border border-slate-800/70 rounded-2xl
-                                              flex flex-col max-h-[85vh] overflow-hidden">
+                                                      flex flex-col max-h-[85vh] overflow-hidden">
 
                 {{-- header (non-scroll) --}}
                 <div class="p-4 border-b border-slate-800/70 flex items-center justify-between">
@@ -314,41 +342,41 @@
                         return;
                     }
                     tbody.innerHTML = items.map((it, idx) => `
-              <tr class="border-t border-slate-800/70">
-                <td class="px-3 py-2">
-                  <input type="checkbox" class="digiRow" data-idx="${idx}">
-                </td>
-                <td class="px-3 py-2 text-slate-400">${it.buyer_sku_code}</td>
-                <td class="px-3 py-2">${it.name}</td>
-                <td class="px-3 py-2">${it.brand || '-'}</td>
-                <td class="px-3 py-2">${it.category || '-'}</td>
-                <td class="px-3 py-2">Rp ${Number(it.price).toLocaleString('id-ID')}</td>
-                <td class="px-3 py-2 ${it.status === 'Active' ? 'text-emerald-300' : 'text-amber-300'}">
-                  ${it.status || '-'}
-                </td>
+                      <tr class="border-t border-slate-800/70">
+                        <td class="px-3 py-2">
+                          <input type="checkbox" class="digiRow" data-idx="${idx}">
+                        </td>
+                        <td class="px-3 py-2 text-slate-400">${it.buyer_sku_code}</td>
+                        <td class="px-3 py-2">${it.name}</td>
+                        <td class="px-3 py-2">${it.brand || '-'}</td>
+                        <td class="px-3 py-2">${it.category || '-'}</td>
+                        <td class="px-3 py-2">Rp ${Number(it.price).toLocaleString('id-ID')}</td>
+                        <td class="px-3 py-2 ${it.status === 'Active' ? 'text-emerald-300' : 'text-amber-300'}">
+                          ${it.status || '-'}
+                        </td>
 
-                <!-- INI YANG PENTING -->
-                <input type="hidden"
-                       name="items[${idx}][digiflazz_variant_id]"
-                       value="${it.id}"
-                       disabled>
+                        <!-- INI YANG PENTING -->
+                        <input type="hidden"
+                               name="items[${idx}][digiflazz_variant_id]"
+                               value="${it.id}"
+                               disabled>
 
-                <input type="hidden"
-                       name="items[${idx}][buyer_sku_code]"
-                       value="${it.buyer_sku_code}"
-                       disabled>
+                        <input type="hidden"
+                               name="items[${idx}][buyer_sku_code]"
+                               value="${it.buyer_sku_code}"
+                               disabled>
 
-                <input type="hidden"
-                       name="items[${idx}][name]"
-                       value="${it.name.replaceAll('"', '&quot;')}"
-                       disabled>
+                        <input type="hidden"
+                               name="items[${idx}][name]"
+                               value="${it.name.replaceAll('"', '&quot;')}"
+                               disabled>
 
-                <input type="hidden"
-                       name="items[${idx}][price]"
-                       value="${it.price}"
-                       disabled>
-              </tr>
-            `).join('');
+                        <input type="hidden"
+                               name="items[${idx}][price]"
+                               value="${it.price}"
+                               disabled>
+                      </tr>
+                    `).join('');
 
                     // check/uncheck
                     const rows = Array.from(document.querySelectorAll('.digiRow'));

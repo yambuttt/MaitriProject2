@@ -17,6 +17,8 @@ class ProductVariant extends Model
         // 'base_price' DIHILANGKAN dari fillable
         'markup_rp',
         'is_active',
+        'sort_order',
+        'sort_order' => 'integer',
     ];
 
     protected $casts = [
