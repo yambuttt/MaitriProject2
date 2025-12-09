@@ -144,7 +144,7 @@ class CheckoutController extends Controller
                 default => 'processing',
             };
 
-            $order->update([
+            $updateData = [
                 'provider_ref_id' => $providerData['ref_id'] ?? null,
                 'provider_status' => $providerData['status'] ?? null,
                 'provider_message' => $providerData['message'] ?? null,
@@ -157,7 +157,14 @@ class CheckoutController extends Controller
                 'paid_at' => $mappedStatus === 'success' ? now() : null,
                 'completed_at' => $mappedStatus === 'success' ? now() : null,
                 'failed_at' => $mappedStatus === 'failed' ? now() : null,
-            ]);
+            ];
+
+            // 🔴 DI SINI: kalau Digiflazz bilang gagal → profit harus 0
+            if ($mappedStatus === 'failed') {
+                $updateData['profit'] = 0;
+            }
+
+            $order->update($updateData);
         } catch (\Throwable $e) {
             // fallback ref_id yang pasti sama dengan yang dipakai Digiflazz
             $fallbackRefId = 'MP2-' . $order->code;
@@ -638,6 +645,7 @@ class CheckoutController extends Controller
         $order->update([
             'payment_status' => 'expired',
             'status' => 'failed', // atau 'canceled' sesuai kebijakanmu
+            'profit' => 0,
         ]);
 
         return response()->json(['ok' => true, 'status' => 'expired']);
