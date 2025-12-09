@@ -132,6 +132,7 @@ class PaydisiniCallbackController extends Controller
                 $order->payment_status = 'canceled';
                 $order->status = 'failed';
                 $order->failed_at = now();
+                $order->profit = 0;
                 $order->save();
             }
 

@@ -180,6 +180,7 @@ class CheckoutController extends Controller
 
                 // tandai kapan gagal
                 'failed_at' => $order->failed_at ?? now(),
+                'profit' => 0,
             ]);
         }
 
@@ -361,6 +362,7 @@ class CheckoutController extends Controller
             $order->update([
                 'payment_status' => 'canceled',
                 'status' => 'failed',
+                'profit' => 0,
             ]);
 
             return back()
@@ -379,6 +381,7 @@ class CheckoutController extends Controller
             $order->update([
                 'payment_status' => 'canceled',
                 'status' => 'failed',
+                'profit' => 0,
             ]);
 
             return back()
@@ -567,7 +570,7 @@ class CheckoutController extends Controller
                 default => 'processing',
             };
 
-            $order->update([
+            $updateData = [
                 'provider_ref_id' => $providerData['ref_id'] ?? null,
                 'provider_status' => $providerData['status'] ?? null,
                 'provider_message' => $providerData['message'] ?? null,
@@ -580,7 +583,14 @@ class CheckoutController extends Controller
                 'paid_at' => $mappedStatus === 'success' ? now() : $order->paid_at,
                 'completed_at' => $mappedStatus === 'success' ? now() : $order->completed_at,
                 'failed_at' => $mappedStatus === 'failed' ? now() : $order->failed_at,
-            ]);
+            ];
+
+            // kalau transaksi akhirnya gagal → profit 0
+            if ($mappedStatus === 'failed') {
+                $updateData['profit'] = 0;
+            }
+
+            $order->update($updateData);
         } catch (\Throwable $e) {
             $fallbackRefId = 'MP2-' . $order->code;
 
@@ -598,6 +608,7 @@ class CheckoutController extends Controller
                 ],
 
                 'failed_at' => $order->failed_at ?? now(),
+                'profit' => 0,
             ]);
         }
 
