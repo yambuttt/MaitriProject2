@@ -5,7 +5,7 @@ namespace App\Http\Controllers;
 use App\Models\Order;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Log;
-
+use App\Services\OrderNotificationService;
 class DigiflazzWebhookController extends Controller
 {
     public function handle(Request $request)
@@ -54,7 +54,7 @@ class DigiflazzWebhookController extends Controller
             $completedAt = $order->completed_at;
             $failedAt = now();
         }
-        
+
 
         $sn = $data['sn'] ?? $data['sn_customer'] ?? null;
 
@@ -81,6 +81,9 @@ class DigiflazzWebhookController extends Controller
             'completed_at' => $completedAt,
             'failed_at' => $failedAt,
         ]);
+        if ($mappedStatus === 'success') {
+            app(OrderNotificationService::class)->notifySuccess($order);
+        }
 
         Log::info('Digiflazz webhook: order updated', [
             'code' => $order->code,

@@ -18,6 +18,12 @@ class OrderNotificationService
         if ($order->status !== 'success') {
             return;
         }
+        \Log::info('OrderNotificationService::notifySuccess dipanggil', [
+            'order_id' => $order->id,
+            'code' => $order->code,
+            'email' => $order->email,
+            'phone' => $order->phone,
+        ]);
 
         // Load relasi supaya nama produk/varian bisa dipakai
         $order->loadMissing(['product', 'variant']);
@@ -29,7 +35,7 @@ class OrderNotificationService
             } catch (\Throwable $e) {
                 \Log::warning('Gagal kirim email sukses order', [
                     'order_id' => $order->id,
-                    'error'    => $e->getMessage(),
+                    'error' => $e->getMessage(),
                 ]);
             }
         }
@@ -54,13 +60,13 @@ class OrderNotificationService
 
             try {
                 Http::timeout(5)->post('http://167.172.66.220:31500/send', [
-                    'to'   => $phone,
+                    'to' => $phone,
                     'text' => $text,
                 ]);
             } catch (\Throwable $e) {
                 \Log::warning('Gagal kirim WA sukses order', [
                     'order_id' => $order->id,
-                    'error'    => $e->getMessage(),
+                    'error' => $e->getMessage(),
                 ]);
             }
         }
