@@ -165,6 +165,12 @@ class CheckoutController extends Controller
             }
 
             $order->update($updateData);
+            // kirim notifikasi jika sukses
+            if ($mappedStatus === 'success') {
+                app(\App\Services\OrderNotificationService::class)
+                    ->notifySuccess($order);
+            }
+
         } catch (\Throwable $e) {
             // fallback ref_id yang pasti sama dengan yang dipakai Digiflazz
             $fallbackRefId = 'MP2-' . $order->code;
@@ -598,6 +604,12 @@ class CheckoutController extends Controller
             }
 
             $order->update($updateData);
+            // kirim notifikasi jika sukses
+            if ($mappedStatus === 'success') {
+                app(\App\Services\OrderNotificationService::class)
+                    ->notifySuccess($order);
+            }
+
         } catch (\Throwable $e) {
             $fallbackRefId = 'MP2-' . $order->code;
 
