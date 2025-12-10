@@ -18,9 +18,9 @@ use App\Http\Controllers\Marketplace\MarketplaceController;
 use App\Http\Controllers\Marketplace\MarketplaceCheckoutController;
 use App\Http\Controllers\Marketplace\MarketplacePaymentController;
 use App\Http\Controllers\Admin\AdminMarketplaceOrderController;
+use App\Http\Controllers\LandingController;
 
-
-Route::view('/', 'pages.landing')->name('landing');
+Route::get('/', [LandingController::class, 'index'])->name('landing');
 Route::get('/catalog', [CatalogController::class, 'index'])->name('catalog');
 
 Route::get('/product/{product:slug}', [CatalogController::class, 'show'])

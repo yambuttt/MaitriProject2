@@ -1,14 +1,5 @@
 {{-- Kategori --}}
-<section id="kategori" class="py-14">
-  <div class="mx-auto max-w-[1280px] px-4 md:px-6 lg:px-8">
-    <h2 class="reveal text-2xl md:text-3xl font-semibold">Pilih Kategori</h2>
-    <div class="mt-6 flex gap-2 overflow-x-auto no-scrollbar">
-      @foreach(['Game','Pulsa','Data','PLN','e-Wallet'] as $i=>$k)
-        <a href="{{ route('catalog') }}" class="reveal px-4 py-2 rounded-2xl border border-slate-800/70 bg-[#111826] text-sm hover:border-violet-700/60 {{ $i===0?'ring-2 ring-violet-500/30 border-violet-700/60':'' }}">{{ $k }}</a>
-      @endforeach
-    </div>
-  </div>
-</section>
+
 
 {{-- Produk Populer --}}
 <section id="produk" class="py-14">

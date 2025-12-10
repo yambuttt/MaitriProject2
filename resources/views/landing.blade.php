@@ -167,46 +167,7 @@
     </section>
 
     <!-- Kategori -->
-    <section id="kategori" class="py-14">
-      <div class="mx-auto max-w-[1280px] px-4 md:px-6 lg:px-8">
-        <h2 class="reveal text-2xl md:text-3xl font-semibold">Pilih Kategori</h2>
-        <div class="mt-6 flex gap-2 overflow-x-auto no-scrollbar">
-          @foreach(['Game','Pulsa','Data','PLN','e-Wallet'] as $i=>$k)
-            <button class="reveal px-4 py-2 rounded-2xl border border-slate-800/70 bg-[#111826] text-sm hover:border-violet-700/60 {{ $i===0?'ring-2 ring-violet-500/30 border-violet-700/60':'' }}">
-              {{ $k }}
-            </button>
-          @endforeach
-        </div>
 
-        <!-- Kartu kategori -->
-        <div class="mt-6 grid sm:grid-cols-2 lg:grid-cols-3 gap-4">
-          @foreach([
-            ['Game','Diamond & voucher resmi.'],
-            ['Pulsa','Semua operator, harga bersahabat.'],
-            ['Data','Kuota termurah, langsung aktif.'],
-            ['PLN','Token & tagihan mudah.'],
-            ['e-Wallet','Isi saldo cepat.'],
-            ['Voucher','Belanja & hiburan.'],
-          ] as [$title,$desc])
-          <article class="reveal p-5 rounded-3xl bg-[#111826] border border-slate-800/70 hover:border-violet-700/60 transition group">
-            <div class="flex items-center gap-3">
-              <div class="size-10 rounded-xl bg-slate-800/60"></div>
-              <div class="min-w-0">
-                <h3 class="font-medium">{{ $title }}</h3>
-                <p class="text-sm text-slate-400 line-clamp-2">{{ $desc }}</p>
-              </div>
-            </div>
-            <div class="mt-4">
-              <a href="#produk" class="inline-flex items-center gap-2 text-violet-300 group-hover:text-violet-200">
-                Jelajahi
-                <svg class="size-4" viewBox="0 0 24 24" fill="none"><path d="M9 5l7 7-7 7" stroke="currentColor" stroke-width="1.5" fill="none"/></svg>
-              </a>
-            </div>
-          </article>
-          @endforeach
-        </div>
-      </div>
-    </section>
 
     <!-- Produk Populer -->
     <section id="produk" class="py-14">
