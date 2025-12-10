@@ -13,8 +13,17 @@ class DashboardController extends Controller
 
     public function admin()
     {
-        return view('dashboard.admin.index');  // ← path barumu
+        // Riwayat transaksi marketplace terbaru (semua status)
+        $latestMarketplaceOrders = MarketplaceOrder::with(['product', 'variant', 'user'])
+            ->latest()          // order by created_at DESC
+            ->limit(6)          // tampilkan 6 baris di dashboard
+            ->get();
+
+        return view('dashboard.admin.index', [
+            'latestMarketplaceOrders' => $latestMarketplaceOrders,
+        ]);
     }
+
 
     public function orders()
     {

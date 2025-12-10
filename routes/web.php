@@ -20,6 +20,7 @@ use App\Http\Controllers\Marketplace\MarketplacePaymentController;
 use App\Http\Controllers\Admin\AdminMarketplaceOrderController;
 use App\Http\Controllers\LandingController;
 
+
 Route::get('/', [LandingController::class, 'index'])->name('landing');
 Route::get('/catalog', [CatalogController::class, 'index'])->name('catalog');
 
