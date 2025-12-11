@@ -31,11 +31,18 @@
 
   {{-- Table Placeholder --}}
   <section class="mt-6 rounded-2xl border border-slate-800/70 bg-[#0E1524] overflow-hidden">
-    <div class="p-4 border-b border-slate-800/70 flex items-center justify-between">
+    <div class="p-4 border-b border-slate-800/70 flex flex-col md:flex-row md:items-center md:justify-between gap-3">
       <h2 class="font-medium">Order Terbaru</h2>
-      <a href="{{ route('admin.marketplace.orders.index') }}" class="text-sm text-violet-300 hover:text-violet-200">Lihat
-        semua</a>
 
+      {{-- Form cari order by kode MP / MPM --}}
+      <form action="{{ route('admin.orders.search') }}" method="GET" class="flex items-center gap-2">
+        <input type="text" name="code" placeholder="Cari kode MP / MPM..."
+          class="bg-slate-900/60 border border-slate-700/70 rounded-lg px-3 py-1.5 text-xs text-slate-100 focus:outline-none focus:border-violet-400"
+          required>
+        <button type="submit" class="text-sm text-violet-300 hover:text-violet-200">
+          Cari
+        </button>
+      </form>
     </div>
     <div class="overflow-x-auto">
       <table class="min-w-full text-sm">
@@ -47,85 +54,155 @@
             <th class="text-left px-4 py-3">Total</th>
             <th class="text-left px-4 py-3">Status</th>
             <th class="text-left px-4 py-3">Waktu</th>
+            <th class="text-left px-4 py-3 text-right">Detail</th>
           </tr>
         </thead>
-        <tbody>
-          @forelse($latestMarketplaceOrders as $order)
-            @php
-              $label = match ($order->status) {
-                'not_paid' => 'NOT PAID',
-                'paid_received' => 'PAID & PESANAN DITERIMA',
-                'paid_processing' => 'PAID & PESANAN DIPROSES',
-                'paid_rejected' => 'PAID & PESANAN DITOLAK',
-                'paid_finished' => 'PAID & PESANAN SELESAI',
-                default => strtoupper($order->status),
-              };
-            @endphp
-
-            <tr class="border-t border-slate-800/70">
-              {{-- Order ID / Invoice --}}
-              <td class="px-4 py-3 font-mono text-xs text-slate-300">
-                {{ $order->invoice_number }}
-              </td>
-
-              {{-- Produk & varian --}}
-              <td class="px-4 py-3">
-                <div class="text-slate-100">
-                  {{ $order->product->name ?? '-' }}
-                </div>
-                <div class="text-xs text-slate-400">
-                  Varian: {{ $order->variant->name ?? '-' }}
-                </div>
-              </td>
-
-              {{-- User / email --}}
-              <td class="px-4 py-3 text-xs text-slate-300">
-                @if($order->customer_email)
-                  {{ $order->customer_email }}
-                @elseif($order->user)
-                  {{ $order->user->email }}
-                @else
-                  -
-                @endif
-              </td>
-
-              {{-- Total --}}
-              <td class="px-4 py-3">
-                Rp {{ number_format($order->total_amount, 0, ',', '.') }}
-              </td>
-
-              {{-- Status (sukses / gagal / not paid, dll) --}}
-              <td class="px-4 py-3">
-                <span class="inline-flex items-center px-2 py-1 rounded-lg text-[11px] font-medium border
-                        @if($order->status === 'paid_finished')
-                          bg-emerald-500/15 text-emerald-300 border-emerald-600/40
-                        @elseif($order->status === 'paid_rejected')
-                          bg-rose-500/15 text-rose-300 border-rose-600/40
-                        @elseif($order->status === 'not_paid')
-                          bg-amber-500/15 text-amber-300 border-amber-600/40
-                        @else
-                          bg-sky-500/15 text-sky-300 border-sky-600/40
-                        @endif
-                    ">
-                  {{ $label }}
-                </span>
-              </td>
-
-              {{-- Waktu --}}
-              <td class="px-4 py-3 text-xs text-slate-400">
-                {{ $order->created_at?->diffForHumans() ?? '-' }}
-              </td>
-            </tr>
-          @empty
-            <tr>
-              <td colspan="6" class="px-4 py-6 text-center text-sm text-slate-400">
-                Belum ada transaksi marketplace.
-              </td>
-            </tr>
-          @endforelse
+        <tbody id="latest-orders-body">
+          @include('dashboard.admin.partials.latest-orders-rows', ['orders' => $orders])
         </tbody>
-
       </table>
     </div>
+
+    {{-- Tombol Next (AJAX) --}}
+    @if($orders->hasMorePages())
+      <div class="p-4 border-t border-slate-800/70 flex justify-end">
+        <button id="latest-orders-next" data-next-url="{{ $orders->nextPageUrl() }}"
+          class="px-3 py-1.5 text-xs rounded-lg border border-slate-700/70 text-slate-200 hover:border-violet-400 hover:text-violet-200">
+          Next
+        </button>
+      </div>
+    @endif
   </section>
+  {{-- Modal Detail Order --}}
+  <div id="order-detail-modal" class="fixed inset-0 z-40 hidden items-center justify-center bg-black/60 backdrop-blur-sm">
+    <div class="relative w-full max-w-2xl mx-4 bg-[#080F1D] border border-slate-800/80 rounded-2xl shadow-xl">
+      <button type="button" id="order-detail-close"
+        class="absolute top-3 right-3 text-slate-400 hover:text-slate-200 text-sm">
+        ✕
+      </button>
+
+      <div class="p-4 border-b border-slate-800/70">
+        <h2 class="text-sm font-semibold text-slate-100">
+          Detail Pesanan
+        </h2>
+      </div>
+
+      <div id="order-detail-body" class="p-4 text-sm text-slate-100">
+        <div class="text-center text-slate-400 text-xs py-6">
+          Memuat detail pesanan...
+        </div>
+      </div>
+    </div>
+  </div>
+
+
+  @push('scripts')
+    <script>
+      document.addEventListener('DOMContentLoaded', () => {
+        // === NEXT BUTTON (sudah ada) ===
+        const btnNext = document.getElementById('latest-orders-next');
+        const tbody = document.getElementById('latest-orders-body');
+
+        if (btnNext && tbody) {
+          btnNext.addEventListener('click', async () => {
+            const url = btnNext.dataset.nextUrl;
+            if (!url) return;
+
+            btnNext.disabled = true;
+            btnNext.textContent = 'Loading...';
+
+            try {
+              const sep = url.includes('?') ? '&' : '?';
+              const res = await fetch(url + sep + 'ajax=1', {
+                headers: {
+                  'X-Requested-With': 'XMLHttpRequest',
+                  'Accept': 'application/json',
+                },
+              });
+              const data = await res.json();
+
+              if (data.html) {
+                tbody.insertAdjacentHTML('beforeend', data.html);
+              }
+
+              if (data.next_page_url) {
+                btnNext.dataset.nextUrl = data.next_page_url;
+                btnNext.disabled = false;
+                btnNext.textContent = 'Next';
+              } else {
+                btnNext.remove();
+              }
+            } catch (e) {
+              console.error(e);
+              btnNext.disabled = false;
+              btnNext.textContent = 'Next';
+            }
+          });
+        }
+
+        // === MODAL DETAIL ORDER ===
+        const modal = document.getElementById('order-detail-modal');
+        const modalBody = document.getElementById('order-detail-body');
+        const btnClose = document.getElementById('order-detail-close');
+
+        const openModal = () => {
+          modal.classList.remove('hidden');
+          modal.classList.add('flex');
+        };
+
+        const closeModal = () => {
+          modal.classList.add('hidden');
+          modal.classList.remove('flex');
+          modalBody.innerHTML = '<div class="text-center text-slate-400 text-xs py-6">Memuat detail pesanan...</div>';
+        };
+
+        if (btnClose) {
+          btnClose.addEventListener('click', closeModal);
+        }
+
+        if (modal) {
+          modal.addEventListener('click', (e) => {
+            if (e.target === modal) {
+              closeModal();
+            }
+          });
+        }
+
+        // Delegasi: dengerin klik tombol detail di tbody
+        if (tbody && modal && modalBody) {
+          tbody.addEventListener('click', async (e) => {
+            const btn = e.target.closest('[data-order-detail-btn]');
+            if (!btn) return;
+
+            const code = btn.dataset.orderCode;
+            if (!code) return;
+
+            openModal();
+            modalBody.innerHTML = '<div class="text-center text-slate-400 text-xs py-6">Memuat detail pesanan...</div>';
+
+            try {
+              // template URL dari route, kita ganti placeholder-nya
+              const templateUrl = "{{ route('admin.orders.detail', ['code' => 'CODE_PLACEHOLDER']) }}";
+              const url = templateUrl.replace('CODE_PLACEHOLDER', encodeURIComponent(code));
+
+              const res = await fetch(url, {
+                headers: {
+                  'X-Requested-With': 'XMLHttpRequest',
+                  'Accept': 'text/html',
+                },
+              });
+
+              const html = await res.text();
+              modalBody.innerHTML = html;
+            } catch (e) {
+              console.error(e);
+              modalBody.innerHTML = '<div class="text-center text-rose-400 text-xs py-6">Gagal memuat detail pesanan.</div>';
+            }
+          });
+        }
+      });
+    </script>
+  @endpush
+
+
 @endsection

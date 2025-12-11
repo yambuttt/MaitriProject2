@@ -121,6 +121,13 @@ Route::middleware(['auth', 'admin'])
     ->prefix('admin')
     ->name('admin.')
     ->group(function () {
+        Route::get('/orders/search', [DashboardController::class, 'searchOrderByCode'])
+            ->name('orders.search');
+        // routes/web.php (di dalam group admin)
+        Route::get('/orders/{code}/detail', [DashboardController::class, 'orderDetail'])
+            ->name('orders.detail');
+
+
 
         // ...
     

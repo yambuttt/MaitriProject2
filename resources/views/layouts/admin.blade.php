@@ -244,6 +244,8 @@
     </script>
 
     @stack('body')
+    @stack('scripts')
+
 </body>
 
 </html>
