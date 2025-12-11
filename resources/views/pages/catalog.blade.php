@@ -104,7 +104,7 @@
                   Top Up Digital
                 </p>
                 <h2 class="mt-2 text-2xl md:text-3xl font-semibold text-white">
-                  TOP UP E-WALLET<br class="hidden sm:block" />
+                  TOP UP DIGITAL GOODS<br class="hidden sm:block" />
                   INSTANT &amp; TERMURAH
                 </h2>
                 <p class="mt-3 text-sm text-violet-100/90 max-w-md">
