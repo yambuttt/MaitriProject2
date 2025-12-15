@@ -6,7 +6,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>@yield('title', 'MaitriProject')</title>
   <meta name="description"
-    content="@yield('meta_description', 'Top up pulsa, data, game, PLN, dan e-wallet cepat & aman. Terhubung Digiflazz.')">
+    content="@yield('meta_description', 'Top up pulsa, data, game, PLN, dan e-wallet cepat & aman.')">
   @vite(['resources/css/app.css', 'resources/js/app.js'])
   @stack('head')
   <style>
