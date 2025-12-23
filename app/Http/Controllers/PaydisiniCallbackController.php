@@ -120,10 +120,11 @@ class PaydisiniCallbackController extends Controller
                 $order->save();
 
                 // kalau order masih menunggu pembayaran, kirim ke Digiflazz
-                if ($order->status === 'waiting_payment') {
-                    // panggil logic yang sama dengan AJAX checkPaymentStatus
+                // kalau order masih menunggu pembayaran, kirim ke Digiflazz
+                if (in_array($order->status, ['pending', 'waiting_payment'], true)) {
                     app(CheckoutController::class)->processOrderAfterPayment($order, $digiflazzService);
                 }
+
             } else {
                 // pembayaran gagal / dibatalkan
                 $payment->status = 'canceled';
