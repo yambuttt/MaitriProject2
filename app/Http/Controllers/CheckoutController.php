@@ -359,7 +359,7 @@ class CheckoutController extends Controller
             'valid_time' => $validTime,
             'type_fee' => 1,
             'payment_guide' => false,
-            'callback_count' => 0,
+            'callback_count' => 3,
             'signature' => $signature,
         ];
 
@@ -453,100 +453,18 @@ class CheckoutController extends Controller
     /**
      * AJAX: cek status pembayaran di Paydisini berdasarkan OrderPayment.
      */
-    public function checkPaymentStatus(OrderPayment $payment, DigiflazzService $digiflazzService)
+    public function checkPaymentStatus(OrderPayment $payment)
     {
-        $order = $payment->order;
-
-        if (!$order) {
-            abort(404);
-        }
-
-        $order = $payment->order;
-
-        // kalau sudah final, tidak perlu call API lagi
-        if (in_array($payment->status, ['paid', 'canceled', 'expired'], true)) {
-            return response()->json([
-                'ok' => true,
-                'status' => $payment->status,
-                'order_status' => $order->status,
-                'message' => 'local-only',
-            ]);
-        }
-
-        $apiKey = env('PAYDISINI_API_KEY');
-        $baseUrl = rtrim(env('PAYDISINI_BASE_URL', 'https://api.paydisini.co.id/v1/'), '/');
-
-        $uniqueCode = $payment->paydisini_unique_code;
-        $signature = md5($apiKey . $uniqueCode . 'StatusTransaction');
-
-        $payload = [
-            'key' => $apiKey,
-            'request' => 'status',
-            'unique_code' => $uniqueCode,
-            'signature' => $signature,
-        ];
-
-        $response = Http::asForm()->post($baseUrl . '/', $payload);
-
-        if (!$response->successful()) {
-            return response()->json([
-                'ok' => false,
-                'status' => $payment->status,
-                'message' => 'HTTP error ' . $response->status(),
-            ], 500);
-        }
-
-        $json = $response->json();
-
-        if (!isset($json['success']) || $json['success'] !== true) {
-            return response()->json([
-                'ok' => false,
-                'status' => $payment->status,
-                'message' => $json['msg'] ?? 'Paydisini error',
-            ], 500);
-        }
-
-        $data = $json['data'] ?? [];
-        $status = strtolower($data['status'] ?? '');
-
-        // mapping status Paydisini
-        $newStatus = match ($status) {
-            'success' => 'paid',
-            'canceled' => 'canceled',
-            default => 'pending',
-        };
-
-        // update payment
-        // update payment
-        $payment->update([
-            'status' => $newStatus,
-            'callback_payload' => $json,
-            'paid_at' => $newStatus === 'paid' ? now() : $payment->paid_at,
-        ]);
-
-        // kalau pembayaran sukses:
-        if ($newStatus === 'paid') {
-            // tandai order sudah lunas
-            if ($order->payment_status !== 'paid') {
-                $order->update([
-                    'payment_status' => 'paid',
-                ]);
-            }
-
-            // kalau order masih belum pernah diproses, kirim ke Digiflazz
-            if (in_array($order->status, ['pending', 'waiting_payment'], true)) {
-                $this->processOrderAfterPayment($order, $digiflazzService);
-            }
-        }
+        $payment->refresh();
+        $order = $payment->order()->first(); // atau $payment->order
 
         return response()->json([
             'ok' => true,
-            'status' => $payment->status,
-            'order_status' => $order->status,
-            'message' => 'Status updated',
+            'status' => $payment->status,      // pending/paid/canceled
+            'order_status' => $order?->status, // opsional
         ]);
-
     }
+
 
     /**
      * Dipanggil setelah pembayaran NON-saldo berhasil:
