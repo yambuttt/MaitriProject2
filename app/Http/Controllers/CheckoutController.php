@@ -328,7 +328,7 @@ class CheckoutController extends Controller
                 'payment_method' => 'paydisini_' . $channel,
                 'payment_status' => 'pending',
                 'method' => 'saldo_maitri', // biarkan dulu, nanti kalau mau bisa bikin enum baru
-                'status' => 'pending',
+                'status' => 'waiting_payment',
             ]);
 
             $uniqueCode = 'ORDPAY' . $order->id . now()->format('ymdHis');
