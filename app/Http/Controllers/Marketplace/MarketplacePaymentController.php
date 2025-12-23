@@ -56,97 +56,20 @@ class MarketplacePaymentController extends Controller
      */
     public function checkPaymentStatus(MarketplaceOrderPayment $payment): JsonResponse
     {
-        $order = $payment->order;
+        $payment->refresh();
+        $order = $payment->order()->first();
 
-        // kalau sudah final, nggak usah call API lagi
-        if (in_array($payment->status, ['paid', 'canceled', 'expired'], true)) {
-            return response()->json([
-                'ok' => true,
-                'status' => $payment->status,
-                'order_status' => $order->status,
-                'redirect_url' => $payment->status === 'paid'
-                    ? route('marketplace.invoice.show', $order)
-                    : null,
-            ]);
-        }
-
-        $apiKey = env('PAYDISINI_API_KEY');
-        $baseUrl = rtrim(env('PAYDISINI_BASE_URL', 'https://api.paydisini.co.id/v1/'), '/');
-
-        $uniqueCode = $payment->paydisini_unique_code;
-        $signature = md5($apiKey . $uniqueCode . 'StatusTransaction');
-
-        $payload = [
-            'key' => $apiKey,
-            'request' => 'status',
-            'unique_code' => $uniqueCode,
-            'signature' => $signature,
-        ];
-
-        $response = Http::asForm()->post($baseUrl . '/', $payload);
-
-        if (!$response->successful()) {
-            return response()->json([
-                'ok' => false,
-                'status' => $payment->status,
-                'message' => 'Gagal menghubungi Paydisini (HTTP ' . $response->status() . ')',
-            ], 500);
-        }
-
-        $json = $response->json();
-
-        if (!isset($json['success']) || $json['success'] !== true) {
-            return response()->json([
-                'ok' => false,
-                'status' => $payment->status,
-                'message' => $json['msg'] ?? 'Paydisini error',
-            ], 500);
-        }
-
-        $data = $json['data'] ?? [];
-        $status = strtolower($data['status'] ?? '');
-
-        $newStatus = match ($status) {
-            'success' => 'paid',
-            'canceled' => 'canceled',
-            default => 'pending',
-        };
-
-        // update payment
-        $payment->update([
-            'status' => $newStatus,
-            'callback_payload' => $json,
-            'paid_at' => $newStatus === 'paid' ? now() : $payment->paid_at,
-        ]);
-
-
-        // kalau sukses → tandai order sudah dibayar (PAID & PESANAN DI TERIMA)
-        // kalau sukses → tandai order sudah dibayar (PAID & PESANAN DI TERIMA)
-        // if ($newStatus === 'paid' && $order->payment_status !== 'paid') {
-        //     $order->update([
-        //         'payment_status' => 'paid',
-        //         'status' => 'paid_received',
-        //         'paid_at' => now(),
-        //     ]);
-
-        //     // kirim email notifikasi
-        //     if ($order->customer_email) {
-        //         Mail::to($order->customer_email)->send(new MarketplaceOrderPaidMail($order));
-        //     }
-
-        // }
-        if ($newStatus === 'paid') {
-            app(MarketplaceOrderService::class)->markAsPaid($order);
-        }
-
+        $isFinal = in_array($payment->status, ['paid', 'canceled', 'expired'], true);
 
         return response()->json([
             'ok' => true,
             'status' => $payment->status,
-            'order_status' => $order->status,
-            'redirect_url' => $payment->status === 'paid'
+            'order_status' => $order?->status,
+            'redirect_url' => ($payment->status === 'paid' && $order)
                 ? route('marketplace.invoice.show', $order)
                 : null,
+            'final' => $isFinal,
         ]);
     }
+
 }
