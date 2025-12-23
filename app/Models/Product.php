@@ -19,7 +19,7 @@ class Product extends Model
 
     // === RELASI ===
     public function category(){ return $this->belongsTo(Category::class); }
-    public function subcategory(){ return $this->belongsTo(Subcategory::class); }
+    public function subcategory(){ return $this->belongsTo(SubCategory::class); }
     public function variants(){ return $this->hasMany(\App\Models\ProductVariant::class); }
 
     // === NORMALISASI THUMBNAIL DARI DB LAMA & BARU ===

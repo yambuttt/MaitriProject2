@@ -187,103 +187,22 @@ class UserWalletController extends Controller
 
 
 
-    /**
-     * Cek status topup ke Paydisini berdasarkan unique_code.
-     * Dipakai oleh AJAX polling dari halaman QR/VA.
-     */
     public function checkTopupStatus(Request $request, WalletTopup $topup)
     {
         $user = Auth::user();
-
-        // keamanan: pastikan topup milik user yg lagi login
-        if ($topup->user_id !== $user->id) {
+        if ($topup->user_id !== $user->id)
             abort(403);
-        }
 
-        // kalau sudah sukses / canceled, tidak usah call API lagi
-        if (in_array($topup->status, ['success', 'canceled'], true)) {
-            return response()->json([
-                'ok' => true,
-                'status' => $topup->status,
-                'message' => 'local-only',
-            ]);
-        }
-
-        $apiKey = env('PAYDISINI_API_KEY');
-        $baseUrl = rtrim(env('PAYDISINI_BASE_URL', 'https://api.paydisini.co.id/v1/'), '/');
-
-        $uniqueCode = $topup->unique_code;
-
-        // sesuai dokumentasi:
-        // request = 'status'
-        // signature = md5(key . unique_code . 'StatusTransaction')
-        $signature = md5($apiKey . $uniqueCode . 'StatusTransaction');
-
-        $payload = [
-            'key' => $apiKey,
-            'request' => 'status',
-            'unique_code' => $uniqueCode,
-            'signature' => $signature,
-        ];
-
-        $response = Http::asForm()->post($baseUrl . '/', $payload);
-
-        if (!$response->successful()) {
-            return response()->json([
-                'ok' => false,
-                'status' => $topup->status,
-                'message' => 'HTTP error ' . $response->status(),
-            ], 500);
-        }
-
-        $json = $response->json();
-
-        // contoh gagal di dokumentasi:
-        // { "success": false, "msg": "Kode unik tidak ditemukan." }
-        if (!($json['success'] ?? false)) {
-            return response()->json([
-                'ok' => false,
-                'status' => $topup->status,
-                'message' => $json['msg'] ?? 'Status API error',
-            ], 400);
-        }
-
-        // Struktur tepatnya nggak kelihatan di screenshot,
-        // jadi kita ambil defensif: coba dari data.status dulu.
-        $data = $json['data'] ?? $json;
-        $status = strtolower($data['status'] ?? '');
-
-        if (!in_array($status, ['pending', 'success', 'canceled'], true)) {
-            // kalau fieldnya beda, kirim raw json buat debugging
-            return response()->json([
-                'ok' => false,
-                'status' => $topup->status,
-                'message' => 'Unknown status format',
-                'raw' => $json,
-            ], 500);
-        }
-
-        // sinkronkan status lokal dengan status dari Paydisini
-        if ($status === 'success' && $topup->status !== 'success') {
-            // CREDIT saldo user sekali saja
-            $user->incrementBalance($topup->amount, 'Topup via Paydisini (' . $topup->method . ')');
-
-            $topup->status = 'success';
-            $topup->paid_at = now();
-            $topup->callback_payload = $json; // simpan respon status terakhir
-            $topup->save();
-        } elseif ($status === 'canceled' && $topup->status !== 'canceled') {
-            $topup->status = 'canceled';
-            $topup->callback_payload = $json;
-            $topup->save();
-        }
+        $topup->refresh(); // ambil update terbaru dari callback
 
         return response()->json([
-            'ok' => true,
             'status' => $topup->status,
-            'message' => 'Status updated',
+            'message' => $topup->status === 'success'
+                ? 'Pembayaran berhasil. Saldo akan segera diperbarui.'
+                : ($topup->status === 'failed' ? 'Pembayaran gagal/dibatalkan.' : 'Menunggu pembayaran...'),
         ]);
     }
+
 
 
 
