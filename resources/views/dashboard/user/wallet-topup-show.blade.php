@@ -68,9 +68,17 @@
                     <span id="countdown" class="font-mono text-slate-100">--:--</span>
                 </p>
 
-                <p id="topup-status-text" class="text-sm text-amber-400">
-                    Status: Menunggu pembayaran (pending)...
+                <p id="topup-status-text"
+                    class="text-sm {{ $topup->status === 'success' ? 'text-emerald-400' : ($topup->status === 'canceled' ? 'text-rose-400' : 'text-amber-400') }}">
+                    @if($topup->status === 'success')
+                        Status: Pembayaran berhasil. Saldo akan segera diperbarui...
+                    @elseif($topup->status === 'canceled')
+                        Status: Pembayaran dibatalkan.
+                    @else
+                        Status: Menunggu pembayaran (pending)...
+                    @endif
                 </p>
+
 
                 <div id="payment-body" class="mt-4">
                     @if($topup->method === 'qris')
@@ -88,8 +96,8 @@
                             <div class="flex items-center gap-2">
                                 <code id="va-number"
                                     class="px-3 py-2 rounded-xl bg-slate-950 border border-slate-700 text-lg font-mono">
-                                                    {{ $data['virtual_account'] ?? '000000000000' }}
-                                                </code>
+                                                            {{ $data['virtual_account'] ?? '000000000000' }}
+                                                        </code>
                                 <button type="button" onclick="copyVA()"
                                     class="h-10 px-3 rounded-xl bg-slate-700 hover:bg-slate-600 text-xs font-medium">
                                     Salin

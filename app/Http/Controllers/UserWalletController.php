@@ -196,10 +196,11 @@ class UserWalletController extends Controller
         $topup->refresh(); // ambil update terbaru dari callback
 
         return response()->json([
+            'ok' => true,
             'status' => $topup->status,
             'message' => $topup->status === 'success'
                 ? 'Pembayaran berhasil. Saldo akan segera diperbarui.'
-                : ($topup->status === 'failed' ? 'Pembayaran gagal/dibatalkan.' : 'Menunggu pembayaran...'),
+                : ($topup->status === 'canceled' ? 'Pembayaran gagal/dibatalkan.' : 'Menunggu pembayaran...'),
         ]);
     }
 
