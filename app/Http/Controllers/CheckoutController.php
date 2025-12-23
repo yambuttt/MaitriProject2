@@ -359,7 +359,7 @@ class CheckoutController extends Controller
             'valid_time' => $validTime,
             'type_fee' => 1,
             'payment_guide' => false,
-            'callback_count' => 3,
+            'callback_count' => 0,
             'signature' => $signature,
         ];
 

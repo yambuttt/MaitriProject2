@@ -27,9 +27,7 @@ Route::get('/catalog', [CatalogController::class, 'index'])->name('catalog');
 Route::get('/product/{product:slug}', [CatalogController::class, 'show'])
     ->name('catalog.product.show');
 Route::post('/paydisini/callback', [PaydisiniCallbackController::class, 'handle'])
-    ->withoutMiddleware([\App\Http\Middleware\VerifyCsrfToken::class])
     ->name('paydisini.callback');
-
 
 
 Route::get('/test-log', function () {

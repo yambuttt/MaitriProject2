@@ -16,6 +16,9 @@ return Application::configure(basePath: dirname(__DIR__))
         $middleware->alias([
             'admin' => AdminOnly::class,
         ]);
+        $middleware->validateCsrfTokens(except: [
+            'paydisini/callback',
+        ]);
     })
     ->withExceptions(function (Exceptions $exceptions): void {
         //
