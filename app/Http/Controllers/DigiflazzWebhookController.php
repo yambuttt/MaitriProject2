@@ -5,6 +5,8 @@ namespace App\Http\Controllers;
 use App\Models\Order;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Log;
+use App\Services\OrderRefundService;
+
 use App\Services\OrderNotificationService;
 class DigiflazzWebhookController extends Controller
 {
@@ -83,6 +85,12 @@ class DigiflazzWebhookController extends Controller
         ]);
         if ($mappedStatus === 'success') {
             app(OrderNotificationService::class)->notifySuccess($order);
+        }
+        if ($mappedStatus === 'failed') {
+            app(\App\Services\OrderRefundService::class)->refundToWalletIfEligible(
+                $order,
+                'Digiflazz webhook failed'
+            );
         }
 
         Log::info('Digiflazz webhook: order updated', [

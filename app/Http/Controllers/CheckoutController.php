@@ -165,6 +165,12 @@ class CheckoutController extends Controller
             }
 
             $order->update($updateData);
+            if ($mappedStatus === 'failed') {
+                app(\App\Services\OrderRefundService::class)->refundToWalletIfEligible(
+                    $order,
+                    'Digiflazz direct response failed (wallet)'
+                );
+            }
             // kirim notifikasi jika sukses
             if ($mappedStatus === 'success') {
                 app(\App\Services\OrderNotificationService::class)
@@ -195,6 +201,11 @@ class CheckoutController extends Controller
                 'failed_at' => $order->failed_at ?? now(),
                 'profit' => 0,
             ]);
+            app(\App\Services\OrderRefundService::class)->refundToWalletIfEligible(
+                $order,
+                'Exception when creating Digiflazz transaction (wallet)'
+            );
+
         }
 
 
@@ -522,6 +533,13 @@ class CheckoutController extends Controller
             }
 
             $order->update($updateData);
+            if ($mappedStatus === 'failed') {
+                app(\App\Services\OrderRefundService::class)->refundToWalletIfEligible(
+                    $order,
+                    'Digiflazz failed after Paydisini payment'
+                );
+            }
+
             // kirim notifikasi jika sukses
             if ($mappedStatus === 'success') {
                 app(\App\Services\OrderNotificationService::class)
@@ -547,6 +565,10 @@ class CheckoutController extends Controller
                 'failed_at' => $order->failed_at ?? now(),
                 'profit' => 0,
             ]);
+            app(\App\Services\OrderRefundService::class)->refundToWalletIfEligible(
+                $order,
+                'Exception when creating Digiflazz transaction (after Paydisini)'
+            );
         }
 
     }

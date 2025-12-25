@@ -49,6 +49,12 @@ class Order extends Model
         'paid_at',
         'completed_at',
         'failed_at',
+
+        // refund
+        'refunded_at',
+        'refund_amount',
+        'refund_reason',
+        'refunded_to_user_id',
     ];
 
     protected $casts = [
@@ -64,6 +70,8 @@ class Order extends Model
         'paid_at' => 'datetime',
         'completed_at' => 'datetime',
         'failed_at' => 'datetime',
+        'refunded_at' => 'datetime',
+        'refund_amount' => 'integer',
     ];
     // relasi ke OrderPayment
     public function payments()
@@ -124,5 +132,5 @@ class Order extends Model
         return sprintf('%s%05d', $prefix, $number);
     }
 
-    
+
 }
