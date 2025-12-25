@@ -186,6 +186,63 @@
                     Jika terjadi kendala, kamu bisa menyertakan kode ini saat menghubungi bantuan MaitriProject.
                 </p>
             </div>
+
+            {{-- Tombol bantuan WhatsApp (hanya untuk: gagal + guest/tidak login + paydisini) --}}
+            @php
+                // Admin WA (format internasional WA): 0855... => 62855...
+                $adminWa = '08551721118';
+                $adminWaIntl = preg_replace('/^0/', '62', $adminWa);
+
+                // Kondisi sesuai kebutuhanmu:
+                // - status gagal
+                // - bukan pembayaran wallet
+                // - order guest (tidak login) => user_id null
+                $isGuestFailedPaydisini =
+                    ($order->status === 'failed')
+                    && ($order->payment_method !== 'wallet')
+                    && empty($order->user_id);
+
+                // Susun pesan WA otomatis
+                $productName = $order->product?->name ?? '-';
+                $variantName = $order->variant?->name ?? '-';
+                $target = $order->target ?? '-';
+                $method = $paymentLabel ?? ($order->payment_method ?? '-'); // $paymentLabel sudah ada di view :contentReference[oaicite:2]{index=2}
+                $email = $order->email ?? '-';
+                $phone = $order->phone ?? '-';
+
+                $waMessage =
+                    "Halo admin Maitri!, aku ada transaksi gagal dengan rincian berikut.\n" .
+                    "Kode Pesanan: {$order->code}\n" .
+                    "Produk: {$productName} - {$variantName}\n" .
+                    "Target Tujuan: {$target}\n" .
+                    "Metode Pembayaran: {$method}\n" .
+                    "Email Pembeli: {$email}\n" .
+                    "No HP Pembeli: {$phone}\n" .
+                    "Terima kasih admin, mohon untuk di proses.";
+
+                $waUrl = "https://wa.me/{$adminWaIntl}?text=" . rawurlencode($waMessage);
+            @endphp
+
+            @if ($isGuestFailedPaydisini)
+                <div
+                    class="rounded-2xl border border-rose-500/30 bg-rose-500/5 px-4 py-3 text-sm text-rose-100 flex flex-col gap-3">
+                    <div>
+                        <p class="font-semibold">Transaksi kamu gagal.</p>
+                        <p class="text-xs text-rose-200/80">
+                            Karena kamu belum login saat pembayaran, refund tidak bisa diproses otomatis. Klik tombol bantuan
+                            untuk chat admin.
+                        </p>
+                    </div>
+
+                    <div class="flex flex-wrap gap-2">
+                        <a href="{{ $waUrl }}" target="_blank" rel="noopener"
+                            class="inline-flex items-center justify-center rounded-2xl border border-emerald-500/50 bg-emerald-500/10 px-4 py-2 text-sm font-medium text-emerald-200 hover:bg-emerald-500/15">
+                            Bantuan via WhatsApp
+                        </a>
+                    </div>
+                </div>
+            @endif
+
         </div>
 
         {{-- Tombol kembali --}}
