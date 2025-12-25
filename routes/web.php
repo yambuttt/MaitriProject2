@@ -31,11 +31,7 @@ Route::get('/product/{product:slug}', [CatalogController::class, 'show'])
 Route::post('/paydisini/callback', [PaydisiniCallbackController::class, 'handle'])
     ->name('paydisini.callback');
 
-Route::get('/refunds', [AdminRefundController::class, 'index'])->name('refunds.index');
-Route::get('/refunds/create', [AdminRefundController::class, 'create'])->name('refunds.create');
-Route::post('/refunds/check', [AdminRefundController::class, 'check'])->name('refunds.check');
-Route::post('/refunds', [AdminRefundController::class, 'store'])->name('refunds.store');
-Route::get('/refunds/users/search', [AdminRefundController::class, 'searchUsers'])->name('refunds.users.search');
+
 
 
 
@@ -135,6 +131,11 @@ Route::middleware(['auth', 'admin'])
         // routes/web.php (di dalam group admin)
         Route::get('/orders/{code}/detail', [DashboardController::class, 'orderDetail'])
             ->name('orders.detail');
+        Route::get('/refunds', [AdminRefundController::class, 'index'])->name('refunds.index');
+        Route::get('/refunds/create', [AdminRefundController::class, 'create'])->name('refunds.create');
+        Route::post('/refunds/check', [AdminRefundController::class, 'check'])->name('refunds.check');
+        Route::post('/refunds', [AdminRefundController::class, 'store'])->name('refunds.store');
+        Route::get('/refunds/users/search', [AdminRefundController::class, 'searchUsers'])->name('refunds.users.search');
 
 
 
