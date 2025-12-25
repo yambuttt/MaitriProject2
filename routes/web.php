@@ -19,6 +19,8 @@ use App\Http\Controllers\Marketplace\MarketplaceCheckoutController;
 use App\Http\Controllers\Marketplace\MarketplacePaymentController;
 use App\Http\Controllers\Admin\AdminMarketplaceOrderController;
 use App\Http\Controllers\LandingController;
+use App\Http\Controllers\AdminRefundController;
+
 
 
 Route::get('/', [LandingController::class, 'index'])->name('landing');
@@ -28,6 +30,13 @@ Route::get('/product/{product:slug}', [CatalogController::class, 'show'])
     ->name('catalog.product.show');
 Route::post('/paydisini/callback', [PaydisiniCallbackController::class, 'handle'])
     ->name('paydisini.callback');
+
+Route::get('/refunds', [AdminRefundController::class, 'index'])->name('refunds.index');
+Route::get('/refunds/create', [AdminRefundController::class, 'create'])->name('refunds.create');
+Route::post('/refunds/check', [AdminRefundController::class, 'check'])->name('refunds.check');
+Route::post('/refunds', [AdminRefundController::class, 'store'])->name('refunds.store');
+Route::get('/refunds/users/search', [AdminRefundController::class, 'searchUsers'])->name('refunds.users.search');
+
 
 
 Route::get('/test-log', function () {

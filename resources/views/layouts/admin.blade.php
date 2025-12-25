@@ -31,8 +31,7 @@
     <div class="min-h-screen grid grid-cols-1 lg:grid-cols-[260px_1fr]">
 
         {{-- Sidebar --}}
-        <aside id="adminSidebar"
-            class="z-40 border-r border-slate-800/70 bg-[#0E1524]
+        <aside id="adminSidebar" class="z-40 border-r border-slate-800/70 bg-[#0E1524]
                    lg:static fixed inset-y-0 left-0 w-[260px]
                    -translate-x-full lg:translate-x-0
                    transition-transform duration-300 ease-out will-change-transform
@@ -65,8 +64,8 @@
                 @php
                     $r = fn($name) =>
                         request()->routeIs($name)
-                            ? 'bg-[#121a2b] text-white border-violet-700/60'
-                            : 'border-slate-800/70 hover:border-slate-700';
+                        ? 'bg-[#121a2b] text-white border-violet-700/60'
+                        : 'border-slate-800/70 hover:border-slate-700';
                 @endphp
 
                 <a href="{{ route('admin.dashboard') }}"
@@ -77,6 +76,14 @@
                     </svg>
                     <span>Overview</span>
                 </a>
+                <a href="{{ route('admin.refunds.index') }}"
+                    class="group flex items-center gap-3 px-3 py-2.5 rounded-xl border transition {{ request()->routeIs('admin.refunds.*') ? 'bg-[#121a2b] text-white border-violet-700/60' : 'border-slate-800/70 hover:border-slate-700' }}">
+                    <svg class="size-5 text-slate-400 group-hover:text-slate-300" viewBox="0 0 24 24" fill="none">
+                        <path d="M12 3v18m9-9H3" stroke="currentColor" stroke-width="1.5" />
+                    </svg>
+                    <span>Refund</span>
+                </a>
+
 
                 <a href="{{ route('admin.categories.index') }}"
                     class="group flex items-center gap-3 px-3 py-2.5 rounded-xl border transition {{ request()->routeIs('admin.categories.*') ? 'bg-[#121a2b] text-white border-violet-700/60' : 'border-slate-800/70 hover:border-slate-700' }}">
@@ -197,8 +204,7 @@
     </div>
 
     {{-- Overlay for mobile sidebar --}}
-    <div id="sidebarBackdrop"
-        class="fixed inset-0 bg-black/50 backdrop-blur-sm
+    <div id="sidebarBackdrop" class="fixed inset-0 bg-black/50 backdrop-blur-sm
                opacity-0 hidden lg:hidden
                transition-opacity duration-300">
     </div>
