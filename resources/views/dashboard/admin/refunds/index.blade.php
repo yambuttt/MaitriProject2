@@ -85,45 +85,21 @@
               <td class="px-4 py-3 text-right">
                 <button type="button"
                   class="inline-flex items-center justify-center rounded-xl border border-slate-700/70 px-3 py-1.5 text-xs text-slate-200 hover:border-violet-400 hover:text-violet-200"
-                  onclick="openRefundDetail(this)" data-refund='@json([
-                    "refund" => [
-                      "id" => $r->id,
-                      "created_at" => $r->created_at->format("d M Y H:i"),
-                      "method" => $r->refund_method === "wallet" ? "Saldo Maitri" : "Transfer Manual",
-                      "amount" => (int) $r->amount,
-                      "note" => $r->note,
-                      "proof_url" => ($r->refund_method === "manual_transfer" && $r->manual_proof_path)
-                        ? asset("storage/" . $r->manual_proof_path)
-                        : null,
-                    ],
-                    "order" => [
-                      "code" => $r->order?->code,
-                      "status" => $r->order?->status,
-                      "payment_status" => $r->order?->payment_status,
-                      "payment_method" => $r->order?->payment_method,
-                      "total" => (int) ($r->order?->total ?? 0),
-                      "target" => $r->order?->target,
-                      "email" => $r->order?->email,
-                      "phone" => $r->order?->phone,
-                      "product" => $r->order?->product?->name,
-                      "variant" => $r->order?->variant?->name,
-                      "paid_at" => optional($r->order?->paid_at)->format("d M Y H:i"),
-                      "failed_at" => optional($r->order?->failed_at)->format("d M Y H:i"),
-                      "refunded_at" => optional($r->order?->refunded_at)->format("d M Y H:i"),
-                      "refund_amount" => (int) ($r->order?->refund_amount ?? 0),
-                      "refund_reason" => $r->order?->refund_reason,
-                    ],
-                    "admin" => [
-                      "name" => $r->admin?->name,
-                      "email" => $r->admin?->email,
-                    ],
-                    "target_user" => [
-                      "name" => $r->targetUser?->name,
-                      "email" => $r->targetUser?->email,
-                    ],
-                  ]) }}'>
+                  onclick="openRefundDetail(this)" data-order-code="{{ $r->order?->code }}"
+                  data-product="{{ $r->order?->product?->name }}" data-variant="{{ $r->order?->variant?->name }}"
+                  data-target="{{ $r->order?->target }}" data-payment-method="{{ $r->order?->payment_method }}"
+                  data-total="{{ (int) ($r->order?->total ?? 0) }}" data-status="{{ $r->order?->status }}"
+                  data-payment-status="{{ $r->order?->payment_status }}" data-email="{{ $r->order?->email }}"
+                  data-phone="{{ $r->order?->phone }}"
+                  data-refund-method="{{ $r->refund_method === 'wallet' ? 'Saldo Maitri' : 'Transfer Manual' }}"
+                  data-refund-amount="{{ (int) $r->amount }}" data-refund-time="{{ $r->created_at->format('d M Y H:i') }}"
+                  data-refund-note="{{ $r->note }}" data-admin-name="{{ $r->admin?->name }}"
+                  data-admin-email="{{ $r->admin?->email }}" data-target-user="{{ $r->targetUser?->name }}"
+                  data-target-user-email="{{ $r->targetUser?->email }}"
+                  data-proof-url="{{ $r->manual_proof_path ? asset('storage/' . $r->manual_proof_path) : '' }}">
                   Detail
                 </button>
+
               </td>
 
             </tr>
@@ -184,104 +160,78 @@
 
 @endsection
 <script>
-  let __lastRefundPayload = null;
-
   function formatRupiah(n) {
-    try { return 'Rp ' + Number(n || 0).toLocaleString('id-ID'); }
-    catch (e) { return 'Rp ' + (n || 0); }
+    return 'Rp ' + Number(n || 0).toLocaleString('id-ID');
   }
 
-  function safe(v) { return (v === null || v === undefined || v === '') ? '-' : v; }
+  function val(el, name) {
+    return el.dataset[name] || '-';
+  }
 
   function openRefundDetail(btn) {
-    const raw = btn.getAttribute('data-refund');
-    if (!raw) return;
+    const modal = document.getElementById('refundModal');
+    const body = document.getElementById('modalBody');
+    const proofText = document.getElementById('modalProofText');
+    const sub = document.getElementById('modalSub');
 
-    const payload = JSON.parse(raw);
-    __lastRefundPayload = payload;
+    const orderCode = val(btn, 'orderCode');
 
-    const r = payload.refund || {};
-    const o = payload.order || {};
-    const a = payload.admin || {};
-    const t = payload.target_user || {};
+    sub.textContent =
+      `Order ${orderCode} • ${val(btn, 'refundMethod')} • ${formatRupiah(val(btn, 'refundAmount'))} • ${val(btn, 'refundTime')}`;
 
-    // header sub
-    document.getElementById('modalSub').textContent =
-      `Order ${safe(o.code)} • ${safe(r.method)} • ${formatRupiah(r.amount)} • ${safe(r.created_at)}`;
-
-    // body html
-    const body = `
-        <div class="grid md:grid-cols-2 gap-3">
-          <div class="rounded-xl border border-slate-800/70 bg-slate-950/30 p-3">
-            <div class="text-xs text-slate-400 mb-2">Detail Order</div>
-            <div class="space-y-1 text-sm">
-              <div><span class="text-slate-400">Kode:</span> <span class="font-mono text-slate-100">${safe(o.code)}</span></div>
-              <div><span class="text-slate-400">Produk:</span> <span class="text-slate-100">${safe(o.product)} - ${safe(o.variant)}</span></div>
-              <div><span class="text-slate-400">Target:</span> <span class="font-mono text-slate-100">${safe(o.target)}</span></div>
-              <div><span class="text-slate-400">Metode Bayar:</span> <span class="text-slate-100">${safe(o.payment_method)}</span></div>
-              <div><span class="text-slate-400">Total:</span> <span class="text-slate-100">${formatRupiah(o.total)}</span></div>
-              <div><span class="text-slate-400">Status:</span> <span class="text-slate-100">${safe(o.status)} / ${safe(o.payment_status)}</span></div>
-            </div>
-          </div>
-
-          <div class="rounded-xl border border-slate-800/70 bg-slate-950/30 p-3">
-            <div class="text-xs text-slate-400 mb-2">Data Pembeli</div>
-            <div class="space-y-1 text-sm">
-              <div><span class="text-slate-400">Email:</span> <span class="text-slate-100">${safe(o.email)}</span></div>
-              <div><span class="text-slate-400">No HP:</span> <span class="text-slate-100">${safe(o.phone)}</span></div>
-            </div>
-
-            <div class="text-xs text-slate-400 mt-3 mb-2">Timeline</div>
-            <div class="space-y-1 text-sm">
-              <div><span class="text-slate-400">Paid at:</span> <span class="text-slate-100">${safe(o.paid_at)}</span></div>
-              <div><span class="text-slate-400">Failed at:</span> <span class="text-slate-100">${safe(o.failed_at)}</span></div>
-              <div><span class="text-slate-400">Refunded at:</span> <span class="text-slate-100">${safe(o.refunded_at)}</span></div>
-            </div>
-          </div>
+    body.innerHTML = `
+    <div class="grid md:grid-cols-2 gap-3">
+      <div class="rounded-xl border border-slate-800/70 bg-slate-950/30 p-3">
+        <div class="text-xs text-slate-400 mb-2">Detail Order</div>
+        <div class="space-y-1">
+          <div><b>Kode:</b> ${orderCode}</div>
+          <div><b>Produk:</b> ${val(btn, 'product')} - ${val(btn, 'variant')}</div>
+          <div><b>Target:</b> ${val(btn, 'target')}</div>
+          <div><b>Metode Bayar:</b> ${val(btn, 'paymentMethod')}</div>
+          <div><b>Total:</b> ${formatRupiah(val(btn, 'total'))}</div>
+          <div><b>Status:</b> ${val(btn, 'status')} / ${val(btn, 'paymentStatus')}</div>
         </div>
+      </div>
 
-        <div class="rounded-xl border border-slate-800/70 bg-slate-950/30 p-3">
-          <div class="text-xs text-slate-400 mb-2">Detail Refund</div>
-          <div class="grid md:grid-cols-2 gap-2 text-sm">
-            <div><span class="text-slate-400">Metode Refund:</span> <span class="text-slate-100">${safe(r.method)}</span></div>
-            <div><span class="text-slate-400">Jumlah Refund:</span> <span class="text-slate-100">${formatRupiah(r.amount)}</span></div>
-            <div><span class="text-slate-400">Admin:</span> <span class="text-slate-100">${safe(a.name)} (${safe(a.email)})</span></div>
-            <div><span class="text-slate-400">Target (wallet):</span> <span class="text-slate-100">${safe(t.name)} ${t.email ? '(' + t.email + ')' : ''}</span></div>
-            <div class="md:col-span-2"><span class="text-slate-400">Alasan:</span> <span class="text-slate-100">${safe(o.refund_reason)}</span></div>
-            <div class="md:col-span-2"><span class="text-slate-400">Catatan:</span> <span class="text-slate-100">${safe(r.note)}</span></div>
-            <div class="md:col-span-2">
-              <span class="text-slate-400">Bukti:</span>
-              ${r.proof_url ? `<a class="text-violet-300 underline" href="${r.proof_url}" target="_blank" rel="noopener">Lihat bukti</a>` : `<span class="text-slate-500">—</span>`}
-            </div>
-          </div>
+      <div class="rounded-xl border border-slate-800/70 bg-slate-950/30 p-3">
+        <div class="text-xs text-slate-400 mb-2">Pembeli</div>
+        <div class="space-y-1">
+          <div><b>Email:</b> ${val(btn, 'email')}</div>
+          <div><b>No HP:</b> ${val(btn, 'phone')}</div>
         </div>
-      `;
-    document.getElementById('modalBody').innerHTML = body;
+      </div>
+    </div>
 
-    // proof text for screenshot/copy
-    const text =
-      `BUKTI REFUND — MAITRI
-  Tanggal Refund: ${safe(r.created_at)}
-  Kode Pesanan: ${safe(o.code)}
-  Produk: ${safe(o.product)} - ${safe(o.variant)}
-  Target: ${safe(o.target)}
-  Metode Bayar: ${safe(o.payment_method)}
-  Email Pembeli: ${safe(o.email)}
-  No HP Pembeli: ${safe(o.phone)}
-  Total Bayar: ${formatRupiah(o.total)}
-  Status Awal: FAILED
-  Metode Refund: ${safe(r.method)}
-  Jumlah Refund: ${formatRupiah(r.amount)}
-  Target Refund (jika wallet): ${safe(t.name)} ${t.email ? '(' + t.email + ')' : ''}
-  Admin Proses: ${safe(a.name)} (${safe(a.email)})
-  Catatan: ${safe(r.note)}
-  Bukti Transfer: ${r.proof_url ? r.proof_url : '-'}
+    <div class="rounded-xl border border-slate-800/70 bg-slate-950/30 p-3">
+      <div class="text-xs text-slate-400 mb-2">Detail Refund</div>
+      <div class="space-y-1">
+        <div><b>Metode Refund:</b> ${val(btn, 'refundMethod')}</div>
+        <div><b>Jumlah:</b> ${formatRupiah(val(btn, 'refundAmount'))}</div>
+        <div><b>Target Wallet:</b> ${val(btn, 'targetUser')} (${val(btn, 'targetUserEmail')})</div>
+        <div><b>Admin:</b> ${val(btn, 'adminName')} (${val(btn, 'adminEmail')})</div>
+        <div><b>Catatan:</b> ${val(btn, 'refundNote')}</div>
+        ${val(btn, 'proofUrl') !== '-'
+        ? `<div><a href="${val(btn, 'proofUrl')}" target="_blank" class="text-violet-300 underline">Lihat Bukti Transfer</a></div>`
+        : ''
+      }
+      </div>
+    </div>
+  `;
 
-  Keterangan: Refund sudah diproses oleh admin.`;
-    document.getElementById('modalProofText').textContent = text;
+    proofText.textContent =
+      `BUKTI REFUND MAITRI
+Kode Pesanan: ${orderCode}
+Produk: ${val(btn, 'product')} - ${val(btn, 'variant')}
+Target: ${val(btn, 'target')}
+Metode Bayar: ${val(btn, 'paymentMethod')}
+Total: ${formatRupiah(val(btn, 'total'))}
+Metode Refund: ${val(btn, 'refundMethod')}
+Jumlah Refund: ${formatRupiah(val(btn, 'refundAmount'))}
+Target Refund: ${val(btn, 'targetUser')} (${val(btn, 'targetUserEmail')})
+Admin: ${val(btn, 'adminName')}
+Catatan: ${val(btn, 'refundNote')}`;
 
-    // show modal
-    document.getElementById('refundModal').classList.remove('hidden');
+    modal.classList.remove('hidden');
     document.body.style.overflow = 'hidden';
   }
 
@@ -289,31 +239,4 @@
     document.getElementById('refundModal').classList.add('hidden');
     document.body.style.overflow = '';
   }
-
-  async function copyRefundDetail() {
-    const pre = document.getElementById('modalProofText');
-    const text = pre ? pre.textContent : '';
-    if (!text) return;
-
-    try {
-      await navigator.clipboard.writeText(text);
-      // feedback kecil
-      const sub = document.getElementById('modalSub');
-      const old = sub.textContent;
-      sub.textContent = old + ' • (Copied)';
-      setTimeout(() => { sub.textContent = old; }, 900);
-    } catch (e) {
-      // fallback
-      const ta = document.createElement('textarea');
-      ta.value = text;
-      document.body.appendChild(ta);
-      ta.select();
-      document.execCommand('copy');
-      document.body.removeChild(ta);
-    }
-  }
-
-  document.addEventListener('keydown', (e) => {
-    if (e.key === 'Escape') closeRefundDetail();
-  });
 </script>
