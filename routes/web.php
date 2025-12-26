@@ -20,6 +20,7 @@ use App\Http\Controllers\Marketplace\MarketplacePaymentController;
 use App\Http\Controllers\Admin\AdminMarketplaceOrderController;
 use App\Http\Controllers\LandingController;
 use App\Http\Controllers\AdminRefundController;
+use App\Http\Controllers\PasswordResetController;
 
 
 
@@ -32,6 +33,15 @@ Route::post('/paydisini/callback', [PaydisiniCallbackController::class, 'handle'
     ->name('paydisini.callback');
 
 
+// Password reset (OTP via email)
+Route::get('/forgot-password', [PasswordResetController::class, 'showRequest'])->name('password.forgot');
+Route::post('/forgot-password', [PasswordResetController::class, 'sendCode'])->name('password.forgot.send');
+
+Route::get('/forgot-password/verify', [PasswordResetController::class, 'showVerify'])->name('password.forgot.verify');
+Route::post('/forgot-password/verify', [PasswordResetController::class, 'verifyCode'])->name('password.forgot.verify.post');
+
+Route::get('/reset-password', [PasswordResetController::class, 'showReset'])->name('password.reset');
+Route::post('/reset-password', [PasswordResetController::class, 'resetPassword'])->name('password.reset.post');
 
 
 

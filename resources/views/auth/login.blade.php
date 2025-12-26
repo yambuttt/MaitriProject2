@@ -43,8 +43,11 @@
                     <div>
                         <div class="flex items-center justify-between">
                             <label class="text-sm text-slate-300">Kata Sandi</label>
-                            <a class="text-xs text-slate-400 hover:text-slate-200 whitespace-nowrap" href="#">Lupa
-                                sandi?</a>
+                            <a class="text-xs text-slate-400 hover:text-slate-200 whitespace-nowrap"
+                                href="{{ route('password.forgot') }}">
+                                Lupa sandi?
+                            </a>
+
                         </div>
                         <div class="relative mt-1">
                             <input id="loginPass" name="password" type="password" placeholder="••••••••" required
