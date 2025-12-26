@@ -180,34 +180,37 @@
     </div>
   </div>
 
-  <script>
-    let __lastRefundPayload = null;
 
-    function formatRupiah(n) {
-      try { return 'Rp ' + Number(n || 0).toLocaleString('id-ID'); }
-      catch (e) { return 'Rp ' + (n || 0); }
-    }
 
-    function safe(v) { return (v === null || v === undefined || v === '') ? '-' : v; }
+@endsection
+<script>
+  let __lastRefundPayload = null;
 
-    function openRefundDetail(btn) {
-      const raw = btn.getAttribute('data-refund');
-      if (!raw) return;
+  function formatRupiah(n) {
+    try { return 'Rp ' + Number(n || 0).toLocaleString('id-ID'); }
+    catch (e) { return 'Rp ' + (n || 0); }
+  }
 
-      const payload = JSON.parse(raw);
-      __lastRefundPayload = payload;
+  function safe(v) { return (v === null || v === undefined || v === '') ? '-' : v; }
 
-      const r = payload.refund || {};
-      const o = payload.order || {};
-      const a = payload.admin || {};
-      const t = payload.target_user || {};
+  function openRefundDetail(btn) {
+    const raw = btn.getAttribute('data-refund');
+    if (!raw) return;
 
-      // header sub
-      document.getElementById('modalSub').textContent =
-        `Order ${safe(o.code)} • ${safe(r.method)} • ${formatRupiah(r.amount)} • ${safe(r.created_at)}`;
+    const payload = JSON.parse(raw);
+    __lastRefundPayload = payload;
 
-      // body html
-      const body = `
+    const r = payload.refund || {};
+    const o = payload.order || {};
+    const a = payload.admin || {};
+    const t = payload.target_user || {};
+
+    // header sub
+    document.getElementById('modalSub').textContent =
+      `Order ${safe(o.code)} • ${safe(r.method)} • ${formatRupiah(r.amount)} • ${safe(r.created_at)}`;
+
+    // body html
+    const body = `
         <div class="grid md:grid-cols-2 gap-3">
           <div class="rounded-xl border border-slate-800/70 bg-slate-950/30 p-3">
             <div class="text-xs text-slate-400 mb-2">Detail Order</div>
@@ -253,11 +256,11 @@
           </div>
         </div>
       `;
-      document.getElementById('modalBody').innerHTML = body;
+    document.getElementById('modalBody').innerHTML = body;
 
-      // proof text for screenshot/copy
-      const text =
-        `BUKTI REFUND — MAITRI
+    // proof text for screenshot/copy
+    const text =
+      `BUKTI REFUND — MAITRI
   Tanggal Refund: ${safe(r.created_at)}
   Kode Pesanan: ${safe(o.code)}
   Produk: ${safe(o.product)} - ${safe(o.variant)}
@@ -275,44 +278,42 @@
   Bukti Transfer: ${r.proof_url ? r.proof_url : '-'}
 
   Keterangan: Refund sudah diproses oleh admin.`;
-      document.getElementById('modalProofText').textContent = text;
+    document.getElementById('modalProofText').textContent = text;
 
-      // show modal
-      document.getElementById('refundModal').classList.remove('hidden');
-      document.body.style.overflow = 'hidden';
+    // show modal
+    document.getElementById('refundModal').classList.remove('hidden');
+    document.body.style.overflow = 'hidden';
+  }
+
+  function closeRefundDetail() {
+    document.getElementById('refundModal').classList.add('hidden');
+    document.body.style.overflow = '';
+  }
+
+  async function copyRefundDetail() {
+    const pre = document.getElementById('modalProofText');
+    const text = pre ? pre.textContent : '';
+    if (!text) return;
+
+    try {
+      await navigator.clipboard.writeText(text);
+      // feedback kecil
+      const sub = document.getElementById('modalSub');
+      const old = sub.textContent;
+      sub.textContent = old + ' • (Copied)';
+      setTimeout(() => { sub.textContent = old; }, 900);
+    } catch (e) {
+      // fallback
+      const ta = document.createElement('textarea');
+      ta.value = text;
+      document.body.appendChild(ta);
+      ta.select();
+      document.execCommand('copy');
+      document.body.removeChild(ta);
     }
+  }
 
-    function closeRefundDetail() {
-      document.getElementById('refundModal').classList.add('hidden');
-      document.body.style.overflow = '';
-    }
-
-    async function copyRefundDetail() {
-      const pre = document.getElementById('modalProofText');
-      const text = pre ? pre.textContent : '';
-      if (!text) return;
-
-      try {
-        await navigator.clipboard.writeText(text);
-        // feedback kecil
-        const sub = document.getElementById('modalSub');
-        const old = sub.textContent;
-        sub.textContent = old + ' • (Copied)';
-        setTimeout(() => { sub.textContent = old; }, 900);
-      } catch (e) {
-        // fallback
-        const ta = document.createElement('textarea');
-        ta.value = text;
-        document.body.appendChild(ta);
-        ta.select();
-        document.execCommand('copy');
-        document.body.removeChild(ta);
-      }
-    }
-
-    document.addEventListener('keydown', (e) => {
-      if (e.key === 'Escape') closeRefundDetail();
-    });
-  </script>
-
-@endsection
+  document.addEventListener('keydown', (e) => {
+    if (e.key === 'Escape') closeRefundDetail();
+  });
+</script>
