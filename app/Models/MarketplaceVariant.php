@@ -3,10 +3,12 @@
 namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\SoftDeletes;
 
 // app/Models/MarketplaceVariant.php
 class MarketplaceVariant extends Model
 {
+    use SoftDeletes;
     protected $fillable = [
         'marketplace_product_id',
         'name',

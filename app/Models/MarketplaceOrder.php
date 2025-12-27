@@ -34,15 +34,7 @@ class MarketplaceOrder extends Model
         'finished_at' => 'datetime',
     ];
 
-    public function product()
-    {
-        return $this->belongsTo(MarketplaceProduct::class, 'marketplace_product_id');
-    }
 
-    public function variant()
-    {
-        return $this->belongsTo(MarketplaceVariant::class, 'marketplace_variant_id');
-    }
 
     public function user()
     {
@@ -52,5 +44,14 @@ class MarketplaceOrder extends Model
     public function payment()
     {
         return $this->hasOne(MarketplaceOrderPayment::class);
+    }
+    public function product()
+    {
+        return $this->belongsTo(MarketplaceProduct::class, 'marketplace_product_id')->withTrashed();
+    }
+
+    public function variant()
+    {
+        return $this->belongsTo(MarketplaceVariant::class, 'marketplace_variant_id')->withTrashed();
     }
 }
