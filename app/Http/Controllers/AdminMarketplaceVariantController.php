@@ -81,9 +81,9 @@ class AdminMarketplaceVariantController extends Controller
         }
 
         // (Opsional tapi disarankan)
-        if (\App\Models\MarketplaceOrder::where('marketplace_variant_id', $variant->id)->exists()) {
-            return back()->with('error', 'Varian tidak bisa dihapus karena sudah memiliki order.');
-        }
+        // if (\App\Models\MarketplaceOrder::where('marketplace_variant_id', $variant->id)->exists()) {
+        //     return back()->with('error', 'Varian tidak bisa dihapus karena sudah memiliki order.');
+        // }
 
         $variant->delete();
 

@@ -153,9 +153,9 @@ class AdminMarketplaceProductController extends Controller
     {
         // (Opsional tapi sangat disarankan)
         // cegah hapus kalau sudah ada order marketplace biar histori tidak hilang
-        if ($product->orders()->exists()) {
-            return back()->with('error', 'Produk tidak bisa dihapus karena sudah memiliki order.');
-        }
+        // if ($product->orders()->exists()) {
+        //     return back()->with('error', 'Produk tidak bisa dihapus karena sudah memiliki order.');
+        // }
 
         // hapus thumbnail jika ada
         if ($product->thumbnail) {
