@@ -33,10 +33,7 @@ class MarketplaceProduct extends Model
             ->orderBy('id');
     }
 
-    public function orders()
-    {
-        return $this->hasMany(MarketplaceOrder::class, 'marketplace_product_id');
-    }
+
 
 
 }
