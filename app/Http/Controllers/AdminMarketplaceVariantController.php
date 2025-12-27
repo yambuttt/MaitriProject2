@@ -13,7 +13,7 @@ class AdminMarketplaceVariantController extends Controller
         $variants = $product->variants()->orderBy('price')->get();
 
         return view('dashboard.admin.marketplace.variants.index', [
-            'product'  => $product,
+            'product' => $product,
             'variants' => $variants,
         ]);
     }
@@ -28,10 +28,10 @@ class AdminMarketplaceVariantController extends Controller
     public function store(Request $request, MarketplaceProduct $product)
     {
         $data = $request->validate([
-            'name'          => ['required', 'string', 'max:255'],
+            'name' => ['required', 'string', 'max:255'],
             'duration_days' => ['nullable', 'integer', 'min:1'],
-            'price'         => ['required', 'integer', 'min:0'],
-            'is_active'     => ['nullable', 'boolean'],
+            'price' => ['required', 'integer', 'min:0'],
+            'is_active' => ['nullable', 'boolean'],
         ]);
 
         $data['marketplace_product_id'] = $product->id;
@@ -55,10 +55,10 @@ class AdminMarketplaceVariantController extends Controller
     public function update(Request $request, MarketplaceProduct $product, MarketplaceVariant $variant)
     {
         $data = $request->validate([
-            'name'          => ['required', 'string', 'max:255'],
+            'name' => ['required', 'string', 'max:255'],
             'duration_days' => ['nullable', 'integer', 'min:1'],
-            'price'         => ['required', 'integer', 'min:0'],
-            'is_active'     => ['nullable', 'boolean'],
+            'price' => ['required', 'integer', 'min:0'],
+            'is_active' => ['nullable', 'boolean'],
         ]);
 
         $variant->name = $data['name'];
@@ -72,4 +72,24 @@ class AdminMarketplaceVariantController extends Controller
             ->route('admin.marketplace.variants.index', $product)
             ->with('ok', 'Varian berhasil diperbarui.');
     }
+
+    public function destroy(MarketplaceProduct $product, MarketplaceVariant $variant)
+    {
+        // pastikan variant memang milik product tsb
+        if ($variant->marketplace_product_id !== $product->id) {
+            abort(404);
+        }
+
+        // (Opsional tapi disarankan)
+        if (\App\Models\MarketplaceOrder::where('marketplace_variant_id', $variant->id)->exists()) {
+            return back()->with('error', 'Varian tidak bisa dihapus karena sudah memiliki order.');
+        }
+
+        $variant->delete();
+
+        return redirect()
+            ->route('admin.marketplace.variants.index', $product)
+            ->with('ok', 'Varian berhasil dihapus.');
+    }
+
 }

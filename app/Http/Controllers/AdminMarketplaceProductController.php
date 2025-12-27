@@ -148,4 +148,33 @@ class AdminMarketplaceProductController extends Controller
             ->route('admin.marketplace.products.index')
             ->with('ok', 'Produk marketplace berhasil diperbarui.');
     }
+
+    public function destroy(MarketplaceProduct $product)
+    {
+        // (Opsional tapi sangat disarankan)
+        // cegah hapus kalau sudah ada order marketplace biar histori tidak hilang
+        if ($product->orders()->exists()) {
+            return back()->with('error', 'Produk tidak bisa dihapus karena sudah memiliki order.');
+        }
+
+        // hapus thumbnail jika ada
+        if ($product->thumbnail) {
+            Storage::disk('public')->delete($product->thumbnail);
+        }
+
+        // hapus semua file images (records akan ikut kehapus via cascade)
+        $product->load('images');
+        foreach ($product->images as $img) {
+            if ($img->path) {
+                Storage::disk('public')->delete($img->path);
+            }
+        }
+
+        $product->delete();
+
+        return redirect()
+            ->route('admin.marketplace.products.index')
+            ->with('ok', 'Produk marketplace berhasil dihapus.');
+    }
+
 }

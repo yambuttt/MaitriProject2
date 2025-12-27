@@ -207,6 +207,14 @@ Route::middleware(['auth', 'admin'])
             ->name('marketplace.variants.edit');
         Route::post('/marketplace/products/{product}/variants/{variant}', [\App\Http\Controllers\AdminMarketplaceVariantController::class, 'update'])
             ->name('marketplace.variants.update');
+        // Produk
+        Route::delete('/marketplace/products/{product}', [\App\Http\Controllers\AdminMarketplaceProductController::class, 'destroy'])
+            ->name('marketplace.products.destroy');
+
+        // Variants per product
+        Route::delete('/marketplace/products/{product}/variants/{variant}', [\App\Http\Controllers\AdminMarketplaceVariantController::class, 'destroy'])
+            ->name('marketplace.variants.destroy');
+
 
 
     });
