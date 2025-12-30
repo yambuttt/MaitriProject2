@@ -139,6 +139,33 @@
                     <span>Marketplace Catalog</span>
                 </a>
 
+                <a href="{{ route('admin.affiliates.applications') }}"
+                    class="group flex items-center gap-3 px-3 py-2.5 rounded-xl border transition {{ request()->routeIs('admin.affiliates.applications*') ? 'bg-[#121a2b] text-white border-violet-700/60' : 'border-slate-800/70 hover:border-slate-700' }}">
+                    <svg class="size-5 text-slate-400 group-hover:text-slate-300" viewBox="0 0 24 24" fill="none">
+                        <path d="M4 7h16M4 12h16M4 17h10" stroke="currentColor" stroke-width="1.5"
+                            stroke-linecap="round" />
+                    </svg>
+                    <span>Affiliate Applicants</span>
+                </a>
+
+                <a href="{{ route('admin.affiliates.index') }}"
+                    class="group flex items-center gap-3 px-3 py-2.5 rounded-xl border transition {{ request()->routeIs('admin.affiliates.*') && !request()->routeIs('admin.affiliates.applications*') ? 'bg-[#121a2b] text-white border-violet-700/60' : 'border-slate-800/70 hover:border-slate-700' }}">
+                    <svg class="size-5 text-slate-400 group-hover:text-slate-300" viewBox="0 0 24 24" fill="none">
+                        <path d="M12 12a5 5 0 1 0 0-10 5 5 0 0 0 0 10ZM3 21a9 9 0 1 1 18 0" stroke="currentColor"
+                            stroke-width="1.5" />
+                    </svg>
+                    <span>Affiliates</span>
+                </a>
+
+                <a href="{{ route('admin.affiliate-levels.index') }}"
+                    class="group flex items-center gap-3 px-3 py-2.5 rounded-xl border transition {{ request()->routeIs('admin.affiliate-levels.*') ? 'bg-[#121a2b] text-white border-violet-700/60' : 'border-slate-800/70 hover:border-slate-700' }}">
+                    <svg class="size-5 text-slate-400 group-hover:text-slate-300" viewBox="0 0 24 24" fill="none">
+                        <path d="M4 4h16v16H4V4Zm4 12V8m4 8V6m4 10v-6" stroke="currentColor" stroke-width="1.5" />
+                    </svg>
+                    <span>Affiliate Levels</span>
+                </a>
+
+
                 <a href="{{ route('admin.users.index') }}"
                     class="group flex items-center gap-3 px-3 py-2.5 rounded-xl border transition {{ request()->routeIs('admin.users.*') ? 'bg-[#121a2b] text-white border-violet-700/60' : 'border-slate-800/70 hover:border-slate-700' }}">
                     <svg class="size-5 text-slate-400 group-hover:text-slate-300" viewBox="0 0 24 24" fill="none">

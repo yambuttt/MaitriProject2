@@ -22,7 +22,9 @@ use App\Http\Controllers\LandingController;
 use App\Http\Controllers\AdminRefundController;
 use App\Http\Controllers\PasswordResetController;
 use App\Http\Controllers\DashboardAffiliateController;
+use App\Http\Controllers\AdminAffiliateController;
 
+use App\Http\Controllers\AdminAffiliateLevelController;
 
 
 Route::get('/', [LandingController::class, 'index'])->name('landing');
@@ -149,6 +151,38 @@ Route::middleware(['auth', 'admin'])
         Route::post('/refunds/check', [AdminRefundController::class, 'check'])->name('refunds.check');
         Route::post('/refunds', [AdminRefundController::class, 'store'])->name('refunds.store');
         Route::get('/refunds/users/search', [AdminRefundController::class, 'searchUsers'])->name('refunds.users.search');
+
+
+        Route::get('/affiliates/applications', [AdminAffiliateController::class, 'applications'])->name('admin.affiliates.applications');
+        Route::post('/affiliates/applications/{application}/approve', [AdminAffiliateController::class, 'approve'])->name('admin.affiliates.applications.approve');
+        Route::post('/affiliates/applications/{application}/reject', [AdminAffiliateController::class, 'reject'])->name('admin.affiliates.applications.reject');
+
+        Route::get('/affiliates', [AdminAffiliateController::class, 'index'])->name('admin.affiliates.index');
+        Route::get('/affiliates/{user}', [AdminAffiliateController::class, 'show'])->name('admin.affiliates.show');
+        Route::get('/affiliates', [AdminAffiliateController::class, 'index'])
+            ->name('affiliates.index');
+
+        Route::get('/affiliates/{user}', [AdminAffiliateController::class, 'show'])
+            ->name('affiliates.show');
+
+        // Affiliate Levels (reward settings)
+        Route::get('/affiliate-levels', [AdminAffiliateLevelController::class, 'index'])
+            ->name('affiliate-levels.index');
+
+        Route::get('/affiliate-levels/create', [AdminAffiliateLevelController::class, 'create'])
+            ->name('affiliate-levels.create');
+
+        Route::post('/affiliate-levels', [AdminAffiliateLevelController::class, 'store'])
+            ->name('affiliate-levels.store');
+
+        Route::get('/affiliate-levels/{level}/edit', [AdminAffiliateLevelController::class, 'edit'])
+            ->name('affiliate-levels.edit');
+
+        Route::put('/affiliate-levels/{level}', [AdminAffiliateLevelController::class, 'update'])
+            ->name('affiliate-levels.update');
+
+        Route::post('/affiliate-levels/{level}/toggle', [AdminAffiliateLevelController::class, 'toggle'])
+            ->name('affiliate-levels.toggle');
 
 
 
