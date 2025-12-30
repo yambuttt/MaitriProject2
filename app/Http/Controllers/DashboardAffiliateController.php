@@ -34,6 +34,9 @@ class DashboardAffiliateController extends Controller
 
         $affiliateLink = null;
 
+        // ✅ tambahan: history redeem
+        $redeems = collect();
+
         if ($user->is_affiliate) {
             $conversions = \App\Models\AffiliateConversion::where('affiliate_user_id', $user->id)
                 ->latest()
@@ -50,11 +53,9 @@ class DashboardAffiliateController extends Controller
             }
 
             /**
-             * ==========================
              * Decorate for UI:
              * - display_type: "Digital Goods" / "Marketplace"
              * - display_code: "MP-00147" / "MPM-00007"
-             * ==========================
              */
             $items = $conversions->getCollection();
 
@@ -65,7 +66,7 @@ class DashboardAffiliateController extends Controller
                 ? collect()
                 : \App\Models\Order::whereIn('id', $digiflazzIds)->pluck('code', 'id');
 
-            // IMPORTANT: marketplace kamu pakai kolom invoice_number
+            // marketplace pakai invoice_number
             $marketplaceMap = $marketplaceIds->isEmpty()
                 ? collect()
                 : \App\Models\MarketplaceOrder::whereIn('id', $marketplaceIds)->pluck('invoice_number', 'id');
@@ -85,9 +86,11 @@ class DashboardAffiliateController extends Controller
             });
 
             $conversions->setCollection($items);
-        } else {
-            // belum affiliate => link kosong
-            $affiliateLink = null;
+
+            // ✅ history redeem (paginate sendiri, biar gak bentrok sama pagination conversions)
+            $redeems = \App\Models\PointRedemption::where('user_id', $user->id)
+                ->latest()
+                ->paginate(10, ['*'], 'redeems_page');
         }
 
         return view('dashboard.user.affiliate', compact(
@@ -96,9 +99,11 @@ class DashboardAffiliateController extends Controller
             'level',
             'conversions',
             'summary',
-            'affiliateLink'
+            'affiliateLink',
+            'redeems'
         ));
     }
+
 
     public function apply(Request $request)
     {

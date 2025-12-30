@@ -23,7 +23,7 @@ class DashboardPointRedeemController extends Controller
         $method = (string) $data['method'];
         $phone = $data['phone'] ?? null;
 
-        // asumsi 1 point = 1 rupiah (kalau mau beda, tinggal ubah rumusnya)
+        // asumsi 1 point = 1 rupiah
         $amount = $points;
 
         if ($method === 'cash' && empty($phone)) {
@@ -32,35 +32,44 @@ class DashboardPointRedeemController extends Controller
 
         return \Illuminate\Support\Facades\DB::transaction(function () use ($user, $method, $points, $amount, $phone) {
 
-            // Lock row user biar aman dari double submit
+            /** @var \App\Models\User $lockedUser */
             $lockedUser = \App\Models\User::query()
                 ->whereKey($user->id)
                 ->lockForUpdate()
-                ->first();
+                ->firstOrFail();
 
             if ((int) $lockedUser->maitri_points < $points) {
                 return back()->with('error', 'Point kamu tidak cukup.');
             }
 
-            // 1) Redeem ke Saldo Maitri => langsung potong points + tambah saldo
+            // 1) Redeem ke saldo maitri (instan)
             if ($method === 'wallet') {
                 // potong point
                 $lockedUser->maitri_points = (int) $lockedUser->maitri_points - $points;
-
-                // tambahkan saldo (sesuaikan field saldo kamu: saldo_maitri / balance / dll)
-                // NOTE: di project kamu sebelumnya ada "saldo_maitri" dan juga dipakai buat bayar digiflazz
-                $lockedUser->saldo_maitri = (int) $lockedUser->saldo_maitri + $amount;
-
                 $lockedUser->save();
 
-                // (opsional) catat log redeem di tabel redeem_requests kalau kamu pakai
-                // \App\Models\PointRedeem::create([...]);
+                // tambah saldo pakai helper project kamu (maitri_balance + wallet_transactions)
+                $lockedUser->incrementBalance(
+                    amount: $amount,
+                    description: 'Redeem point ke Saldo Maitri'
+                );
+
+                // catat riwayat redeem (opsional tapi bagus)
+                \App\Models\PointRedemption::create([
+                    'user_id' => $lockedUser->id,
+                    'method' => 'wallet',
+                    'points' => $points,
+                    'amount' => $amount,
+                    'status' => 'instant',
+                    'phone' => $phone,
+                    'processed_at' => now(),
+                ]);
 
                 return back()->with('ok', 'Redeem berhasil. Point sudah masuk ke Saldo Maitri.');
             }
 
-            // 2) Redeem Cash => buat request status pending, point belum dipotong dulu
-            PointRedeemption::create([
+            // 2) Redeem cash (pending admin), point belum dipotong
+            \App\Models\PointRedemption::create([
                 'user_id' => $lockedUser->id,
                 'method' => 'cash',
                 'points' => $points,
@@ -72,5 +81,7 @@ class DashboardPointRedeemController extends Controller
             return back()->with('ok', 'Request redeem cash berhasil dibuat. Menunggu approval admin.');
         });
     }
+
+
 
 }
