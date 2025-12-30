@@ -23,7 +23,8 @@ use App\Http\Controllers\AdminRefundController;
 use App\Http\Controllers\PasswordResetController;
 use App\Http\Controllers\DashboardAffiliateController;
 use App\Http\Controllers\AdminAffiliateController;
-
+use App\Http\Controllers\DashboardPointRedeemController;
+use App\Http\Controllers\AdminPointRedeemController;
 use App\Http\Controllers\AdminAffiliateLevelController;
 
 
@@ -132,6 +133,8 @@ Route::middleware(['auth'])->prefix('dashboard')->name('dashboard.')->group(func
     Route::get('/marketplace-orders', [DashboardController::class, 'marketplaceOrders'])->name('marketplace.orders');
     Route::get('/affiliate', [DashboardAffiliateController::class, 'index'])->name('affiliate');
     Route::post('/affiliate/apply', [DashboardAffiliateController::class, 'apply'])->name('affiliate.apply');
+    Route::post('/affiliate/redeem', [DashboardPointRedeemController::class, 'store'])
+        ->name('affiliate.redeem');
 
 
 });
@@ -185,6 +188,15 @@ Route::middleware(['auth', 'admin'])
 
         Route::post('/affiliate-levels/{level}/toggle', [AdminAffiliateLevelController::class, 'toggle'])
             ->name('affiliate-levels.toggle');
+        Route::get('/point-redeems', [AdminPointRedeemController::class, 'index'])
+            ->name('point-redeems.index');
+        Route::get('/point-redeems/{redeem}', [AdminPointRedeemController::class, 'show'])
+            ->name('point-redeems.show');
+        Route::post('/point-redeems/{redeem}/approve', [AdminPointRedeemController::class, 'approve'])
+            ->name('point-redeems.approve');
+        Route::post('/point-redeems/{redeem}/reject', [AdminPointRedeemController::class, 'reject'])
+            ->name('point-redeems.reject');
+
 
 
 

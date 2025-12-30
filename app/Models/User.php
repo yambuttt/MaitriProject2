@@ -104,5 +104,10 @@ class User extends Authenticatable
     {
         return $this->belongsTo(\App\Models\AffiliateLevel::class, 'affiliate_level_id');
     }
+    public function pointRedemptions()
+    {
+        return $this->hasMany(\App\Models\PointRedemption::class);
+    }
+
 
 }
