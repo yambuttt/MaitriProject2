@@ -6,6 +6,7 @@ use App\Models\Order;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Log;
 use App\Services\OrderRefundService;
+use App\Services\AffiliateRewardService;
 
 use App\Services\OrderNotificationService;
 class DigiflazzWebhookController extends Controller
@@ -83,8 +84,12 @@ class DigiflazzWebhookController extends Controller
             'completed_at' => $completedAt,
             'failed_at' => $failedAt,
         ]);
+        $previousStatus = $order->status;
         if ($mappedStatus === 'success') {
             app(OrderNotificationService::class)->notifySuccess($order);
+            if ($previousStatus !== 'success') {
+                app(AffiliateRewardService::class)->awardForDigiflazzSuccess($order);
+            }
         }
         if ($mappedStatus === 'failed') {
             app(\App\Services\OrderRefundService::class)->refundToWalletIfEligible(
