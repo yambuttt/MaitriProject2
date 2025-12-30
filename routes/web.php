@@ -21,6 +21,7 @@ use App\Http\Controllers\Admin\AdminMarketplaceOrderController;
 use App\Http\Controllers\LandingController;
 use App\Http\Controllers\AdminRefundController;
 use App\Http\Controllers\PasswordResetController;
+use App\Http\Controllers\DashboardAffiliateController;
 
 
 
@@ -127,6 +128,8 @@ Route::middleware(['auth'])->prefix('dashboard')->name('dashboard.')->group(func
 
     // baru — riwayat marketplace
     Route::get('/marketplace-orders', [DashboardController::class, 'marketplaceOrders'])->name('marketplace.orders');
+    Route::get('/affiliate', [DashboardAffiliateController::class, 'index'])->name('affiliate');
+    Route::post('/affiliate/apply', [DashboardAffiliateController::class, 'apply'])->name('affiliate.apply');
 
 
 });
