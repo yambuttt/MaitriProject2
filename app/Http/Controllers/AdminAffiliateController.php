@@ -85,34 +85,69 @@ class AdminAffiliateController extends Controller
         return view('dashboard.admin.affiliates.index', compact('affiliates', 'q'));
     }
 
-    public function show(User $user)
+    public function show(\App\Models\User $user)
     {
         abort_unless($user->is_affiliate, 404);
 
-        $level = $user->affiliateLevel;
-        $levels = \App\Models\AffiliateLevel::orderBy('id')->get();
-
+        $user->load('affiliateLevel');
 
         $summary = [
-            'total_points_ledger' => (int) AffiliateConversion::where('affiliate_user_id', $user->id)->sum('points_awarded'),
-            'digiflazz_count' => (int) AffiliateConversion::where('affiliate_user_id', $user->id)->where('order_type', 'digiflazz')->count(),
-            'marketplace_count' => (int) AffiliateConversion::where('affiliate_user_id', $user->id)->where('order_type', 'marketplace')->count(),
+            'total_points_ledger' => (int) \App\Models\AffiliateConversion::where('affiliate_user_id', $user->id)->sum('points_awarded'),
+            'digiflazz_count' => (int) \App\Models\AffiliateConversion::where('affiliate_user_id', $user->id)->where('order_type', 'digiflazz')->count(),
+            'marketplace_count' => (int) \App\Models\AffiliateConversion::where('affiliate_user_id', $user->id)->where('order_type', 'marketplace')->count(),
         ];
 
-        $conversions = AffiliateConversion::where('affiliate_user_id', $user->id)
+        $conversions = \App\Models\AffiliateConversion::where('affiliate_user_id', $user->id)
             ->latest()
             ->paginate(30);
 
         $affiliateLink = $user->affiliate_code ? route('landing', ['ref' => $user->affiliate_code]) : null;
 
+        /**
+         * ==========================
+         * Decorate for UI:
+         * - display_type: "Digital Goods" / "Marketplace"
+         * - display_code: "MP-00147" / "MPM-00007"
+         * ==========================
+         */
+        $items = $conversions->getCollection();
+
+        $digiflazzIds = $items->where('order_type', 'digiflazz')->pluck('order_id')->filter()->unique()->values();
+        $marketplaceIds = $items->where('order_type', 'marketplace')->pluck('order_id')->filter()->unique()->values();
+
+        $digiflazzMap = $digiflazzIds->isEmpty()
+            ? collect()
+            : \App\Models\Order::whereIn('id', $digiflazzIds)->pluck('code', 'id');
+
+        // IMPORTANT: marketplace kamu pakai kolom invoice_number
+        $marketplaceMap = $marketplaceIds->isEmpty()
+            ? collect()
+            : \App\Models\MarketplaceOrder::whereIn('id', $marketplaceIds)->pluck('invoice_number', 'id');
+
+        $items = $items->map(function ($c) use ($digiflazzMap, $marketplaceMap) {
+            $c->display_type = $c->order_type === 'digiflazz'
+                ? 'Digital Goods'
+                : 'Marketplace';
+
+            if ($c->order_type === 'digiflazz') {
+                $c->display_code = $digiflazzMap[$c->order_id] ?? ('#' . $c->order_id);
+            } else {
+                $c->display_code = $marketplaceMap[$c->order_id] ?? ('#' . $c->order_id);
+            }
+
+            return $c;
+        });
+
+        $conversions->setCollection($items);
+
         return view('dashboard.admin.affiliates.show', compact(
             'user',
             'summary',
             'conversions',
-            'affiliateLink',
-            'levels'
+            'affiliateLink'
         ));
     }
+
 
     private function generateUniqueAffiliateCode(): string
     {

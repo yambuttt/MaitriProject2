@@ -90,8 +90,9 @@
                         @forelse($conversions as $c)
                             <tr>
                                 <td class="py-2 pr-3 text-slate-300 text-xs">{{ $c->awarded_at?->format('d M Y H:i') ?? '-' }}</td>
-                                <td class="py-2 px-3 text-slate-200">{{ strtoupper($c->order_type) }}</td>
-                                <td class="py-2 px-3 text-slate-300 font-mono text-xs">{{ $c->order_id }}</td>
+                                <td>{{ $c->display_type }}</td>
+<td class="font-mono text-xs">{{ $c->display_code }}</td>
+
                                 <td class="py-2 px-3 text-right font-semibold text-emerald-300">{{ number_format($c->points_awarded) }}</td>
                             </tr>
                         @empty

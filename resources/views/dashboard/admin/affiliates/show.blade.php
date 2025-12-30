@@ -100,8 +100,9 @@
                             <tr class="hover:bg-white/5">
                                 <td class="px-4 py-3 text-xs text-slate-300">{{ $c->awarded_at?->format('d M Y H:i') ?? '-' }}
                                 </td>
-                                <td class="px-4 py-3">{{ strtoupper($c->order_type) }}</td>
-                                <td class="px-4 py-3 font-mono text-xs text-slate-300">{{ $c->order_id }}</td>
+                                <td>{{ $c->display_type }}</td>
+                                <td class="font-mono text-xs">{{ $c->display_code }}</td>
+
                                 <td class="px-4 py-3 text-slate-400 text-xs">{{ $c->buyer_user_id ?? '-' }}</td>
                                 <td class="px-4 py-3 text-right font-semibold text-emerald-300">
                                     {{ number_format($c->points_awarded) }}</td>
