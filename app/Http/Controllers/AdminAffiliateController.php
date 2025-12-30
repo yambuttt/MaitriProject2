@@ -89,7 +89,11 @@ class AdminAffiliateController extends Controller
     {
         abort_unless($user->is_affiliate, 404);
 
+        // relasi ini sekarang sudah ada di User.php
         $user->load('affiliateLevel');
+
+        // ✅ penting: kirim levels untuk dropdown
+        $levels = \App\Models\AffiliateLevel::orderBy('id')->get();
 
         $summary = [
             'total_points_ledger' => (int) \App\Models\AffiliateConversion::where('affiliate_user_id', $user->id)->sum('points_awarded'),
@@ -101,15 +105,11 @@ class AdminAffiliateController extends Controller
             ->latest()
             ->paginate(30);
 
-        $affiliateLink = $user->affiliate_code ? route('landing', ['ref' => $user->affiliate_code]) : null;
+        $affiliateLink = $user->affiliate_code
+            ? route('landing', ['ref' => $user->affiliate_code])
+            : null;
 
-        /**
-         * ==========================
-         * Decorate for UI:
-         * - display_type: "Digital Goods" / "Marketplace"
-         * - display_code: "MP-00147" / "MPM-00007"
-         * ==========================
-         */
+        // ====== Decorate conversions (buat tampilan "Digital Goods" + kode transaksi) ======
         $items = $conversions->getCollection();
 
         $digiflazzIds = $items->where('order_type', 'digiflazz')->pluck('order_id')->filter()->unique()->values();
@@ -119,7 +119,7 @@ class AdminAffiliateController extends Controller
             ? collect()
             : \App\Models\Order::whereIn('id', $digiflazzIds)->pluck('code', 'id');
 
-        // IMPORTANT: marketplace kamu pakai kolom invoice_number
+        // marketplace kamu pakai kolom invoice_number
         $marketplaceMap = $marketplaceIds->isEmpty()
             ? collect()
             : \App\Models\MarketplaceOrder::whereIn('id', $marketplaceIds)->pluck('invoice_number', 'id');
@@ -142,6 +142,7 @@ class AdminAffiliateController extends Controller
 
         return view('dashboard.admin.affiliates.show', compact(
             'user',
+            'levels',       // ✅ ini yang bikin error hilang
             'summary',
             'conversions',
             'affiliateLink'

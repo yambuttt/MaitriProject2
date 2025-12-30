@@ -100,5 +100,9 @@ class User extends Authenticatable
     {
         return $this->hasPaymentPin() && $this->maitri_balance >= $amount;
     }
+    public function affiliateLevel()
+    {
+        return $this->belongsTo(\App\Models\AffiliateLevel::class, 'affiliate_level_id');
+    }
 
 }
