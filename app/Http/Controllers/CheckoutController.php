@@ -75,6 +75,7 @@ class CheckoutController extends Controller
             // Kurangi saldo Maitri
             $user->maitri_balance -= $amount;
             $user->save();
+            
 
             // Buat order
             $order = Order::create([
@@ -112,6 +113,7 @@ class CheckoutController extends Controller
 
                 // status order (untuk proses ke Digiflazz)
                 'status' => 'processing',
+                
             ]);
 
             // Catat pembayaran di order_payments
