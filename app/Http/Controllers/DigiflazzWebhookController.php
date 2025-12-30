@@ -60,6 +60,7 @@ class DigiflazzWebhookController extends Controller
 
 
         $sn = $data['sn'] ?? $data['sn_customer'] ?? null;
+        $previousStatus = $order->status;
 
         // Update kolom-kolom terkait Digiflazz + status internal
         $order->update([
@@ -84,7 +85,9 @@ class DigiflazzWebhookController extends Controller
             'completed_at' => $completedAt,
             'failed_at' => $failedAt,
         ]);
-        $previousStatus = $order->status;
+        $order->refresh(); // supaya object terbaru
+
+
         if ($mappedStatus === 'success') {
             app(OrderNotificationService::class)->notifySuccess($order);
             if ($previousStatus !== 'success') {
