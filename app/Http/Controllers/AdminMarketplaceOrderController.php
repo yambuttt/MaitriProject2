@@ -75,6 +75,10 @@ class AdminMarketplaceOrderController extends Controller
         }
 
         $order->save();
+        if ($data['status'] === 'paid_finished') {
+            app(\App\Services\AffiliateRewardService::class)->awardForMarketplaceFinished($order);
+        }
+
 
         // 🔔 Kirim WhatsApp ke pembeli kalau status tertentu
         $orderService->notifyAdminStatusUpdate($order);

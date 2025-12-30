@@ -38,6 +38,8 @@ class MarketplaceCheckoutController extends Controller
         $invoiceNumber = 'MPM-' . str_pad($lastId + 1, 5, '0', STR_PAD_LEFT);
 
         $user = Auth::user();
+        $affiliateId = app(\App\Services\AffiliateAttributionService::class)
+            ->resolveAffiliateUserId($request);
 
         $order = MarketplaceOrder::create([
             'invoice_number' => $invoiceNumber,
@@ -52,6 +54,8 @@ class MarketplaceCheckoutController extends Controller
             'payment_method' => 'not_set',
             'payment_status' => 'not_paid',
             'status' => 'not_paid',
+            'affiliate_user_id' => $affiliateId,
+            'affiliate_attributed_at' => $affiliateId ? now() : null,
         ]);
 
         return redirect()->route('marketplace.checkout.show', $order);

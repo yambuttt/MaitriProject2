@@ -60,8 +60,10 @@ class CheckoutController extends Controller
 
         // 5. Transaksi database: kurangi saldo + buat order + catat order_payment
         $order = null;
+        $affiliateId = app(\App\Services\AffiliateAttributionService::class)
+            ->resolveAffiliateUserId($request);
 
-        DB::transaction(function () use ($user, $variant, $validated, $amount, &$order) {
+        DB::transaction(function () use ($user, $variant, $validated, $amount, &$order, $affiliateId) {
             // generate kode unik untuk order
             $code = Order::generateCode();
 
@@ -75,7 +77,7 @@ class CheckoutController extends Controller
             // Kurangi saldo Maitri
             $user->maitri_balance -= $amount;
             $user->save();
-            
+
 
             // Buat order
             $order = Order::create([
@@ -113,7 +115,9 @@ class CheckoutController extends Controller
 
                 // status order (untuk proses ke Digiflazz)
                 'status' => 'processing',
-                
+                'affiliate_user_id' => $affiliateId,
+                'affiliate_attributed_at' => $affiliateId ? now() : null,
+
             ]);
 
             // Catat pembayaran di order_payments
@@ -177,6 +181,8 @@ class CheckoutController extends Controller
             if ($mappedStatus === 'success') {
                 app(\App\Services\OrderNotificationService::class)
                     ->notifySuccess($order);
+                app(\App\Services\AffiliateRewardService::class)->awardForDigiflazzSuccess($order);
+
             }
 
         } catch (\Throwable $e) {
@@ -309,8 +315,11 @@ class CheckoutController extends Controller
 
         $order = null;
         $payment = null;
+        $affiliateId = app(\App\Services\AffiliateAttributionService::class)
+            ->resolveAffiliateUserId($request);
 
-        DB::transaction(function () use ($user, $variant, $validated, $amount, $channel, $serviceId, &$order, &$payment) {
+
+        DB::transaction(function () use ($user, $variant, $validated, $amount, $channel, $serviceId, &$order, &$payment, $affiliateId) {
             $code = Order::generateCode();
 
             $order = Order::create([
@@ -342,6 +351,8 @@ class CheckoutController extends Controller
                 'payment_status' => 'pending',
                 'method' => 'saldo_maitri', // biarkan dulu, nanti kalau mau bisa bikin enum baru
                 'status' => 'pending',
+                'affiliate_user_id' => $affiliateId,
+                'affiliate_attributed_at' => $affiliateId ? now() : null,
             ]);
 
             $uniqueCode = 'ORDPAY' . $order->id . now()->format('ymdHis');
@@ -546,6 +557,8 @@ class CheckoutController extends Controller
             if ($mappedStatus === 'success') {
                 app(\App\Services\OrderNotificationService::class)
                     ->notifySuccess($order);
+                app(\App\Services\AffiliateRewardService::class)->awardForDigiflazzSuccess($order);
+
             }
 
         } catch (\Throwable $e) {

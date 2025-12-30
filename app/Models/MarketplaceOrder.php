@@ -26,12 +26,15 @@ class MarketplaceOrder extends Model
         'paid_at',
         'rejected_at',
         'finished_at',
+        'affiliate_user_id',
+        'affiliate_attributed_at',
     ];
 
     protected $casts = [
         'paid_at' => 'datetime',
         'rejected_at' => 'datetime',
         'finished_at' => 'datetime',
+        'affiliate_attributed_at' => 'datetime',
     ];
 
 

@@ -55,6 +55,8 @@ class Order extends Model
         'refund_amount',
         'refund_reason',
         'refunded_to_user_id',
+        'affiliate_user_id',
+        'affiliate_attributed_at',
     ];
 
     protected $casts = [
@@ -72,6 +74,7 @@ class Order extends Model
         'failed_at' => 'datetime',
         'refunded_at' => 'datetime',
         'refund_amount' => 'integer',
+        'affiliate_attributed_at' => 'datetime',
     ];
     // relasi ke OrderPayment
     public function payments()
