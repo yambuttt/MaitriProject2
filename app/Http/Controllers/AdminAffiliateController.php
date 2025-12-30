@@ -90,6 +90,8 @@ class AdminAffiliateController extends Controller
         abort_unless($user->is_affiliate, 404);
 
         $level = $user->affiliateLevel;
+        $levels = \App\Models\AffiliateLevel::orderBy('id')->get();
+
 
         $summary = [
             'total_points_ledger' => (int) AffiliateConversion::where('affiliate_user_id', $user->id)->sum('points_awarded'),
@@ -103,7 +105,13 @@ class AdminAffiliateController extends Controller
 
         $affiliateLink = $user->affiliate_code ? route('landing', ['ref' => $user->affiliate_code]) : null;
 
-        return view('dashboard.admin.affiliates.show', compact('user', 'level', 'summary', 'conversions', 'affiliateLink'));
+        return view('dashboard.admin.affiliates.show', compact(
+            'user',
+            'summary',
+            'conversions',
+            'affiliateLink',
+            'levels'
+        ));
     }
 
     private function generateUniqueAffiliateCode(): string
@@ -115,4 +123,19 @@ class AdminAffiliateController extends Controller
 
         return $code;
     }
+
+    public function updateLevel(Request $request, User $user)
+    {
+        abort_unless($user->is_affiliate, 404);
+
+        $data = $request->validate([
+            'affiliate_level_id' => ['nullable', 'integer', 'exists:affiliate_levels,id'],
+        ]);
+
+        $user->affiliate_level_id = $data['affiliate_level_id'] ?? null;
+        $user->save();
+
+        return back()->with('ok', 'Level affiliate berhasil diubah.');
+    }
+
 }

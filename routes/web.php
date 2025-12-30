@@ -161,6 +161,8 @@ Route::middleware(['auth', 'admin'])
         Route::get('/affiliates/{user}', [AdminAffiliateController::class, 'show'])->name('admin.affiliates.show');
         Route::get('/affiliates', [AdminAffiliateController::class, 'index'])
             ->name('affiliates.index');
+        Route::post('/affiliates/{user}/level', [AdminAffiliateController::class, 'updateLevel'])
+            ->name('affiliates.level');
 
         Route::get('/affiliates/{user}', [AdminAffiliateController::class, 'show'])
             ->name('affiliates.show');
