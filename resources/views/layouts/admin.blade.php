@@ -164,6 +164,16 @@
                     </svg>
                     <span>Affiliate Levels</span>
                 </a>
+                <a href="{{ route('admin.point-redeems.index') }}"
+                    class="group flex items-center gap-3 px-3 py-2.5 rounded-xl border transition
+   {{ request()->routeIs('admin.point-redeems.*') ? 'bg-[#121a2b] text-white border-violet-700/60' : 'border-slate-800/70 hover:border-slate-700' }}">
+                    <svg class="size-5 text-slate-400 group-hover:text-slate-300" viewBox="0 0 24 24" fill="none">
+                        <path d="M12 1v22M5 7h14M5 17h14" stroke="currentColor" stroke-width="1.5"
+                            stroke-linecap="round" />
+                    </svg>
+                    <span>Redeem Requests</span>
+                </a>
+
 
 
                 <a href="{{ route('admin.users.index') }}"

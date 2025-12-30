@@ -196,6 +196,9 @@ Route::middleware(['auth', 'admin'])
             ->name('point-redeems.approve');
         Route::post('/point-redeems/{redeem}/reject', [AdminPointRedeemController::class, 'reject'])
             ->name('point-redeems.reject');
+        Route::get('/point-redeems', [AdminPointRedeemController::class, 'index'])
+            ->name('point-redeems.index');
+
 
 
 
