@@ -153,9 +153,9 @@ Route::middleware(['auth', 'admin'])
         Route::get('/refunds/users/search', [AdminRefundController::class, 'searchUsers'])->name('refunds.users.search');
 
 
-        Route::get('/affiliates/applications', [AdminAffiliateController::class, 'applications'])->name('admin.affiliates.applications');
-        Route::post('/affiliates/applications/{application}/approve', [AdminAffiliateController::class, 'approve'])->name('admin.affiliates.applications.approve');
-        Route::post('/affiliates/applications/{application}/reject', [AdminAffiliateController::class, 'reject'])->name('admin.affiliates.applications.reject');
+        Route::get('/affiliates/applications', [AdminAffiliateController::class, 'applications'])->name('affiliates.applications');
+        Route::post('/affiliates/applications/{application}/approve', [AdminAffiliateController::class, 'approve'])->name('affiliates.applications.approve');
+        Route::post('/affiliates/applications/{application}/reject', [AdminAffiliateController::class, 'reject'])->name('affiliates.applications.reject');
 
         Route::get('/affiliates', [AdminAffiliateController::class, 'index'])->name('admin.affiliates.index');
         Route::get('/affiliates/{user}', [AdminAffiliateController::class, 'show'])->name('admin.affiliates.show');

@@ -11,15 +11,22 @@ use Illuminate\Support\Str;
 
 class AdminAffiliateController extends Controller
 {
-    public function applications()
+    public function applications(Request $request)
     {
-        $apps = AffiliateApplication::with('user')
-            ->where('status', 'pending')
-            ->latest()
-            ->paginate(20);
+        $status = $request->query('status', 'pending'); // pending|approved|rejected
+        if (!in_array($status, ['pending', 'approved', 'rejected'], true)) {
+            $status = 'pending';
+        }
 
-        return view('dashboard.admin.affiliates.applications', compact('apps'));
+        $apps = AffiliateApplication::with('user')
+            ->where('status', $status)
+            ->latest()
+            ->paginate(20)
+            ->withQueryString();
+
+        return view('dashboard.admin.affiliates.applications', compact('apps', 'status'));
     }
+
 
     public function approve(Request $request, AffiliateApplication $application)
     {
@@ -58,13 +65,24 @@ class AdminAffiliateController extends Controller
         return back()->with('ok', 'Pengajuan affiliate ditolak.');
     }
 
-    public function index()
+    public function index(Request $request)
     {
-        $affiliates = User::where('is_affiliate', true)
-            ->latest()
-            ->paginate(20);
+        $q = trim((string) $request->query('q', ''));
 
-        return view('dashboard.admin.affiliates.index', compact('affiliates'));
+        $affiliates = User::query()
+            ->where('is_affiliate', true)
+            ->when($q !== '', function ($query) use ($q) {
+                $query->where(function ($q2) use ($q) {
+                    $q2->where('name', 'like', "%{$q}%")
+                        ->orWhere('email', 'like', "%{$q}%")
+                        ->orWhere('affiliate_code', 'like', "%{$q}%");
+                });
+            })
+            ->latest()
+            ->paginate(20)
+            ->withQueryString();
+
+        return view('dashboard.admin.affiliates.index', compact('affiliates', 'q'));
     }
 
     public function show(User $user)
