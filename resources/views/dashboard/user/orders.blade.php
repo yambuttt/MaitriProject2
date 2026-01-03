@@ -1,77 +1,163 @@
 @extends('layouts.dashboard')
+@section('title','Riwayat Produk')
+@section('breadcrumb','Dashboard • Riwayat Produk')
 
 @section('content')
-    <h1 class="text-xl font-semibold mb-4">Riwayat Pembelian Produk</h1>
+  <div class="space-y-6">
 
-    <div class="space-y-3">
-        @foreach($orders as $order)
-            <div class="p-4 rounded-xl bg-slate-800/40 border border-slate-700 flex items-center justify-between">
-
-                <div>
-                    <div class="font-medium text-slate-100">{{ $order->code }}</div>
-                    <div class="text-xs text-slate-400">
-                        {{ $order->buyer_sku_code }} • {{ $order->target }}
-                    </div>
-                    <div class="text-xs mt-1">
-                        Status:
-                        <span
-                            class="text-{{ $order->status === 'success' ? 'emerald' : ($order->status === 'failed' ? 'rose' : 'yellow') }}-400">
-                            {{ strtoupper($order->status) }}
-                        </span>
-                    </div>
-                </div>
-
-                <div class="text-right">
-                    <div class="text-slate-200 font-semibold">
-                        Rp {{ number_format($order->total) }}
-                    </div>
-
-                    @php
-                        // label metode bayar (copas dari invoice show)
-                        $paymentLabel = match ($order->payment_method) {
-                            'wallet' => 'Saldo Maitri',
-                            'paydisini_qris' => 'QRIS PayDisini',
-                            'paydisini_va_mandiri' => 'VA Mandiri (PayDisini)',
-                            'paydisini_alfamart' => 'Alfamart (PayDisini)',
-                            'paydisini_indomaret' => 'Indomaret (PayDisini)',
-                            default => 'Metode lain',
-                        };
-
-                        $statusUpper = strtoupper($order->status);
-                    @endphp
-
-                    {{-- tombol modal detail --}}
-                    <button type="button" class="block text-xs text-sky-400 underline mb-1 open-order-detail"
-                        data-code="{{ $order->code }}" data-product="{{ $order->product->name ?? '-' }}"
-                        data-variant="{{ $order->variant->name ?? '-' }}" data-target="{{ $order->target }}"
-                        data-total="Rp {{ number_format($order->total, 0, ',', '.') }}"
-                        data-subtotal="Rp {{ number_format($order->subtotal, 0, ',', '.') }}"
-                        data-adminfee="{{ $order->admin_fee > 0 ? 'Rp ' . number_format($order->admin_fee, 0, ',', '.') : 'Gratis' }}"
-                        data-payment="{{ $paymentLabel }}" data-status="{{ $order->status }}"
-                        data-status-text="{{ $statusUpper }}" data-email="{{ $order->email ?? '-' }}"
-                        data-phone="{{ $order->phone ?? '-' }}" data-created="{{ $order->created_at->format('d M Y, H:i') }}"
-                        data-sn="{{ $order->provider_sn ?? '' }}">
-                        Lihat detail pesanan
-                    </button>
-
-                    @if($payment ?? false)
-                        <a href="{{ route('orders.payment.show', ['order' => $order, 'payment' => $payment]) }}"
-                            class="text-xs text-emerald-400 underline">
-                            Lanjutkan Pembayaran
-                        </a>
-                    @else
-                        <a href="{{ route('invoices.show', $order->code) }}" class="text-xs text-slate-400 underline">
-                            Lihat Invoice
-                        </a>
-                    @endif
-                </div>
-
-
-
-            </div>
-        @endforeach
+    {{-- Header --}}
+    <div class="flex flex-col md:flex-row md:items-end md:justify-between gap-3">
+      <div>
+        <h1 class="text-xl md:text-2xl font-semibold">Riwayat Produk</h1>
+        <p class="text-sm text-slate-400 mt-1">Transaksi Digital Goods yang pernah kamu beli.</p>
+      </div>
+      <div class="text-xs text-slate-500">
+        Total: <span class="text-slate-200 font-medium">{{ $orders->total() }}</span> transaksi
+      </div>
     </div>
-    {{-- Modal detail pesanan --}}
+
+    {{-- Filter bar --}}
+    <form method="get" class="grid gap-3 sm:grid-cols-2 lg:grid-cols-[minmax(0,2fr)_200px_140px]">
+      <div class="sm:col-span-2 lg:col-span-1">
+        <div class="relative">
+          <input name="q" value="{{ $q ?? '' }}" placeholder="Cari kode MP-, nomor tujuan, atau SKU..."
+            class="w-full h-11 rounded-2xl bg-slate-950/40 border border-slate-800/70 px-4 ps-10 text-sm
+                   placeholder:text-slate-500 focus:outline-none focus:border-violet-500/60 focus:ring-1 focus:ring-violet-500/40">
+          <svg class="absolute left-4 top-1/2 -translate-y-1/2 size-4 text-slate-500" viewBox="0 0 24 24" fill="none">
+            <path d="M21 21l-4.3-4.3M11 19a8 8 0 1 1 0-16 8 8 0 0 1 0 16Z" stroke="currentColor" stroke-width="1.5"/>
+          </svg>
+        </div>
+      </div>
+
+      <div>
+        <select name="status"
+          class="w-full h-11 rounded-2xl bg-slate-950/40 border border-slate-800/70 px-4 text-sm
+                 focus:outline-none focus:border-violet-500/60 focus:ring-1 focus:ring-violet-500/40">
+          <option value="">Semua status</option>
+          <option value="success" @selected(($status ?? '') === 'success')>Success</option>
+          <option value="processing" @selected(($status ?? '') === 'processing')>Processing</option>
+          <option value="pending" @selected(($status ?? '') === 'pending')>Pending</option>
+          <option value="waiting_payment" @selected(($status ?? '') === 'waiting_payment')>Waiting payment</option>
+          <option value="failed" @selected(($status ?? '') === 'failed')>Failed</option>
+        </select>
+      </div>
+
+      <button class="h-11 rounded-2xl bg-violet-600 hover:bg-violet-500 text-sm font-medium transition">
+        Filter
+      </button>
+    </form>
+
+    {{-- List --}}
+    <div class="space-y-3">
+      @forelse($orders as $order)
+        @php
+          $statusRaw = strtolower($order->status ?? '');
+          $statusLabel = match ($statusRaw) {
+            'success' => 'Sukses',
+            'failed' => 'Gagal',
+            'processing' => 'Diproses',
+            'pending' => 'Menunggu',
+            'waiting_payment' => 'Menunggu Pembayaran',
+            default => strtoupper($statusRaw),
+          };
+
+          $statusCls = match ($statusRaw) {
+            'success' => 'bg-emerald-500/10 border-emerald-500/30 text-emerald-300',
+            'failed' => 'bg-rose-500/10 border-rose-500/30 text-rose-300',
+            'pending', 'processing', 'waiting_payment' => 'bg-amber-500/10 border-amber-500/30 text-amber-300',
+            default => 'bg-slate-500/10 border-slate-500/30 text-slate-200',
+          };
+
+          $pay = $order->latestPayment;
+          $canContinuePay = $pay
+            && ($pay->status === 'pending')
+            && (!$pay->expired_at || $pay->expired_at->isFuture());
+        @endphp
+
+        <div class="rounded-3xl border border-slate-800/70 bg-slate-950/35 hover:bg-slate-950/45 transition overflow-hidden">
+          <div class="p-5">
+            <div class="flex flex-col md:flex-row md:items-start md:justify-between gap-4">
+              <div class="min-w-0">
+                <div class="flex flex-wrap items-center gap-2">
+                  <span class="text-[11px] px-2 py-0.5 rounded-full border border-violet-500/20 bg-violet-500/10 text-violet-200">
+                    Digital Goods
+                  </span>
+                  <span class="font-mono text-xs text-slate-300">{{ $order->code }}</span>
+                  <span class="text-xs text-slate-600">•</span>
+                  <span class="text-xs text-slate-400">{{ $order->created_at?->format('d M Y, H:i') }}</span>
+                </div>
+
+                <div class="mt-2 text-base font-semibold truncate">
+                  {{ $order->product->name ?? '-' }}
+                  <span class="text-slate-500 font-medium">— {{ $order->variant->name ?? '-' }}</span>
+                </div>
+
+                <div class="mt-2 flex flex-wrap items-center gap-2 text-xs text-slate-400">
+                  <span class="px-2 py-1 rounded-xl border border-slate-800/70 bg-[#0B1222]/40 font-mono">
+                    {{ $order->target }}
+                  </span>
+                  <span class="inline-flex items-center rounded-full border px-2.5 py-0.5 text-[11px] font-medium {{ $statusCls }}">
+                    {{ $statusLabel }}
+                  </span>
+                </div>
+              </div>
+
+              <div class="shrink-0 text-right space-y-2">
+                <div class="text-lg font-semibold text-slate-100">
+                  Rp {{ number_format((int) $order->total, 0, ',', '.') }}
+                </div>
+
+                <div class="flex flex-wrap md:justify-end gap-2">
+                  <button type="button"
+                    class="h-9 px-3 rounded-2xl border border-slate-800/70 hover:bg-slate-900/40 text-xs transition open-order-detail"
+                    data-code="{{ $order->code }}"
+                    data-product="{{ $order->product->name ?? '-' }}"
+                    data-variant="{{ $order->variant->name ?? '-' }}"
+                    data-target="{{ $order->target }}"
+                    data-total="Rp {{ number_format($order->total, 0, ',', '.') }}"
+                    data-subtotal="Rp {{ number_format($order->subtotal, 0, ',', '.') }}"
+                    data-adminfee="{{ $order->admin_fee > 0 ? 'Rp ' . number_format($order->admin_fee, 0, ',', '.') : 'Gratis' }}"
+                    data-payment="{{ $order->payment_method_label ?? '-' }}"
+                    data-status="{{ $order->status }}"
+                    data-status-text="{{ strtoupper($order->status) }}"
+                    data-email="{{ $order->email ?? '-' }}"
+                    data-phone="{{ $order->phone ?? '-' }}"
+                    data-created="{{ $order->created_at->format('d M Y, H:i') }}"
+                    data-sn="{{ $order->provider_sn ?? '' }}">
+                    Detail
+                  </button>
+
+                  <a href="{{ route('invoices.show', $order->code) }}"
+                    class="h-9 px-3 rounded-2xl border border-slate-800/70 hover:bg-slate-900/40 text-xs transition">
+                    Invoice
+                  </a>
+
+                  @if($canContinuePay)
+                    <a href="{{ route('orders.payment.show', ['order' => $order, 'payment' => $pay]) }}"
+                      class="h-9 px-3 rounded-2xl bg-violet-600 hover:bg-violet-500 text-xs font-medium transition">
+                      Lanjutkan Bayar
+                    </a>
+                  @endif
+                </div>
+              </div>
+            </div>
+          </div>
+
+          {{-- divider halus --}}
+          <div class="h-px bg-gradient-to-r from-transparent via-slate-800/80 to-transparent"></div>
+        </div>
+      @empty
+        <div class="rounded-3xl border border-slate-800/70 bg-slate-950/35 p-6 text-sm text-slate-400">
+          Belum ada transaksi Digital Goods. Coba beli produk dari katalog dulu.
+        </div>
+      @endforelse
+    </div>
+
+    <div>
+      {{ $orders->links() }}
+    </div>
+
+    
     <div id="orderDetailModal" class="fixed inset-0 z-40 hidden items-center justify-center bg-black/60">
         <div class="w-full max-w-2xl rounded-3xl bg-slate-900 border border-slate-800 p-5 md:p-6 space-y-5">
             {{-- Header --}}
@@ -181,10 +267,13 @@
             </div>
         </div>
     </div>
-
-
     {{ $orders->links() }}
+  </div>
 @endsection
+
+
+
+
 @push('body')
 <script>
 document.addEventListener('DOMContentLoaded', () => {

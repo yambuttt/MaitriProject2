@@ -13,8 +13,54 @@ class DashboardController extends Controller
 {
     public function user()
     {
-        return view('dashboard.user.index');   // ← path barumu
+        $userId = auth()->id();
+
+        // 1) Ambil order Digiflazz milik user (ambil lebih dulu, nanti digabung)
+        $digiflazz = \App\Models\Order::with(['product', 'variant'])
+            ->where('user_id', $userId)
+            ->latest()
+            ->take(5)
+            ->get()
+            ->map(function (\App\Models\Order $o) {
+                return [
+                    'source' => 'digiflazz',
+                    'code' => $o->code,
+                    'title' => trim(($o->product->name ?? 'Produk Digiflazz') . ' — ' . ($o->variant->name ?? '')),
+                    'amount' => $o->total,
+                    'status' => $o->status, // success / failed / processing / waiting_payment / ...
+                    'created_at' => $o->created_at,
+                    'url' => route('orders.show', $o), // invoice Digiflazz
+                ];
+            });
+
+        // 2) Ambil order Marketplace milik user
+        $marketplace = \App\Models\MarketplaceOrder::with(['product', 'variant'])
+            ->where('user_id', $userId)
+            ->latest()
+            ->take(5)
+            ->get()
+            ->map(function (\App\Models\MarketplaceOrder $o) {
+                return [
+                    'source' => 'marketplace',
+                    'code' => $o->invoice_number,
+                    'title' => trim(($o->product->name ?? 'Produk Marketplace') . ' — ' . ($o->variant->name ?? '')),
+                    'amount' => $o->total_amount,
+                    'status' => $o->status, // not_paid / paid_processing / paid_finished / ...
+                    'created_at' => $o->created_at,
+                    'url' => route('marketplace.invoice.show', $o->invoice_number),
+                ];
+            });
+
+        // 3) Gabungkan, urutkan berdasarkan terbaru, ambil 5
+        $latestTransactions = $digiflazz
+            ->concat($marketplace)
+            ->sortByDesc('created_at')
+            ->take(5)
+            ->values();
+
+        return view('dashboard.user.index', compact('latestTransactions'));
     }
+
 
     public function admin(Request $request)
     {
@@ -93,25 +139,50 @@ class DashboardController extends Controller
 
 
 
-    public function orders()
+    public function orders(\Illuminate\Http\Request $request)
     {
-        $orders = Order::where('user_id', auth()->id())
-            ->orderBy('id', 'desc')
-            ->paginate(10);
+        $q = trim((string) $request->query('q', ''));
+        $status = trim((string) $request->query('status', ''));
 
-        return view('dashboard.user.orders', compact('orders'));
+        $orders = \App\Models\Order::with(['product', 'variant', 'latestPayment'])
+            ->where('user_id', auth()->id())
+            ->when($q !== '', function ($query) use ($q) {
+                $query->where(function ($qq) use ($q) {
+                    $qq->where('code', 'like', "%{$q}%")
+                        ->orWhere('target', 'like', "%{$q}%")
+                        ->orWhere('buyer_sku_code', 'like', "%{$q}%");
+                });
+            })
+            ->when($status !== '', fn($query) => $query->where('status', $status))
+            ->latest()
+            ->paginate(10)
+            ->withQueryString();
+
+        return view('dashboard.user.orders', compact('orders', 'q', 'status'));
     }
 
-    public function marketplaceOrders()
+
+    public function marketplaceOrders(\Illuminate\Http\Request $request)
     {
         $user = auth()->user();
+        $q = trim((string) $request->query('q', ''));
+        $status = trim((string) $request->query('status', ''));
 
-        $orders = MarketplaceOrder::with(['product', 'variant', 'payment'])
+        $orders = \App\Models\MarketplaceOrder::with(['product', 'variant', 'payment'])
             ->where('user_id', $user->id)
+            ->when($q !== '', function ($query) use ($q) {
+                $query->where(function ($qq) use ($q) {
+                    $qq->where('invoice_number', 'like', "%{$q}%")
+                        ->orWhere('customer_email', 'like', "%{$q}%")
+                        ->orWhere('customer_phone', 'like', "%{$q}%");
+                });
+            })
+            ->when($status !== '', fn($query) => $query->where('status', $status))
             ->latest()
-            ->paginate(10);
+            ->paginate(10)
+            ->withQueryString();
 
-        return view('dashboard.user.marketplace-orders', compact('orders'));
+        return view('dashboard.user.marketplace-orders', compact('orders', 'q', 'status'));
     }
 
     public function searchOrderByCode(Request $request)
