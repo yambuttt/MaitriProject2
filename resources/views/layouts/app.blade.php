@@ -7,8 +7,16 @@
   <title>@yield('title', 'MaitriProject')</title>
   <meta name="description"
     content="@yield('meta_description', 'Top up pulsa, data, game, PLN, dan e-wallet cepat & aman.')">
+
+
+
+
+
   @vite(['resources/css/app.css', 'resources/js/app.js'])
   @stack('head')
+
+
+
   <style>
     /* ✅ Bikin semua .reveal nampak sebagai default (tidak blank) */
     .reveal {
@@ -68,6 +76,7 @@
       }
     })();
   </script>
+
 </head>
 @if(auth()->check() && !auth()->user()->hasPaymentPin())
   @php
@@ -139,6 +148,9 @@
     </div>
   </div>
 
+
+
+
   {{-- JS kecil untuk toggle step & close modal --}}
   <script>
     document.addEventListener('DOMContentLoaded', function () {
@@ -168,19 +180,22 @@
       }
     });
   </script>
-@endif
-  <script>
-    document.addEventListener('DOMContentLoaded', function () {
-      const btn = document.getElementById('mobileBtn');
-      const menu = document.getElementById('mobileMenu');
+  @endif
 
-      if (!btn || !menu) return;
 
-      btn.addEventListener('click', function () {
-        menu.classList.toggle('hidden');
-      });
+<script>
+  document.addEventListener('DOMContentLoaded', function () {
+    const btn = document.getElementById('mobileBtn');
+    const menu = document.getElementById('mobileMenu');
+
+    if (!btn || !menu) return;
+
+    btn.addEventListener('click', function () {
+      menu.classList.toggle('hidden');
     });
-  </script>
+  });
+</script>
+
 
 
 <body class="bg-[#0B0F17] text-slate-200 antialiased" data-page="@yield('page', 'default')">
@@ -193,6 +208,10 @@
   @include('partials.footer')
 
   @stack('body')
+
+
 </body>
+
+
 
 </html>

@@ -11,14 +11,18 @@ class MarketplaceController extends Controller
 {
     public function index()
     {
-        $products = MarketplaceProduct::with(['category', 'images'])
+        $products = MarketplaceProduct::with([
+            'category',
+            'images',
+            'variants' => fn($q) => $q->where('is_active', true)->orderBy('price'),
+        ])
             ->where('is_active', true)
             ->whereHas('variants', fn($q) => $q->where('is_active', true))
             ->get();
 
-
         return view('marketplace.index', compact('products'));
     }
+
 
     public function show(MarketplaceProduct $product)
     {

@@ -26,7 +26,7 @@ use App\Http\Controllers\AdminAffiliateController;
 use App\Http\Controllers\DashboardPointRedeemController;
 use App\Http\Controllers\AdminPointRedeemController;
 use App\Http\Controllers\AdminAffiliateLevelController;
-
+use App\Http\Controllers\SearchController;
 
 Route::get('/', [LandingController::class, 'index'])->name('landing');
 Route::get('/catalog', [CatalogController::class, 'index'])->name('catalog');
@@ -36,7 +36,7 @@ Route::get('/product/{product:slug}', [CatalogController::class, 'show'])
 Route::post('/paydisini/callback', [PaydisiniCallbackController::class, 'handle'])
     ->name('paydisini.callback');
 
-
+Route::get('/search', [SearchController::class, 'index'])->name('search');
 // Password reset (OTP via email)
 Route::get('/forgot-password', [PasswordResetController::class, 'showRequest'])->name('password.forgot');
 Route::post('/forgot-password', [PasswordResetController::class, 'sendCode'])->name('password.forgot.send');

@@ -41,35 +41,35 @@ class OrderNotificationService
         }
 
         // 2. KIRIM WHATSAPP (kalau customer isi nomor hp)
-        if (!empty($order->phone)) {
-            $phone = $this->normalizePhone($order->phone);
+        // if (!empty($order->phone)) {
+        //     $phone = $this->normalizePhone($order->phone);
 
-            $text =
-                "Transaksi kamu *BERHASIL* 🎉\n\n" .
-                "📄 *Kode*: {$order->code}\n" .
-                "🛍️ *Produk*: " . ($order->product->name ?? 'Produk') . "\n" .
-                "🔢 *Varian*: " . ($order->variant->name ?? '-') . "\n" .
-                "🎯 *Tujuan*: {$order->target}\n" .
-                "💰 *Total*: Rp " . number_format($order->total, 0, ',', '.') . "\n";
+        //     $text =
+        //         "Transaksi kamu *BERHASIL* 🎉\n\n" .
+        //         "📄 *Kode*: {$order->code}\n" .
+        //         "🛍️ *Produk*: " . ($order->product->name ?? 'Produk') . "\n" .
+        //         "🔢 *Varian*: " . ($order->variant->name ?? '-') . "\n" .
+        //         "🎯 *Tujuan*: {$order->target}\n" .
+        //         "💰 *Total*: Rp " . number_format($order->total, 0, ',', '.') . "\n";
 
-            if ($order->provider_sn) {
-                $text .= "🔐 *SN / Ref*: {$order->provider_sn}\n";
-            }
+        //     if ($order->provider_sn) {
+        //         $text .= "🔐 *SN / Ref*: {$order->provider_sn}\n";
+        //     }
 
-            $text .= "\nTerima kasih sudah bertransaksi di MaitriProject 🙏";
+        //     $text .= "\nTerima kasih sudah bertransaksi di MaitriProject 🙏";
 
-            try {
-                Http::timeout(5)->post('http://167.172.66.220:31500/send', [
-                    'to' => $phone,
-                    'text' => $text,
-                ]);
-            } catch (\Throwable $e) {
-                \Log::warning('Gagal kirim WA sukses order', [
-                    'order_id' => $order->id,
-                    'error' => $e->getMessage(),
-                ]);
-            }
-        }
+        //     try {
+        //         Http::timeout(5)->post('http://167.172.66.220:31500/send', [
+        //             'to' => $phone,
+        //             'text' => $text,
+        //         ]);
+        //     } catch (\Throwable $e) {
+        //         \Log::warning('Gagal kirim WA sukses order', [
+        //             'order_id' => $order->id,
+        //             'error' => $e->getMessage(),
+        //         ]);
+        //     }
+        // }
     }
 
     /**
