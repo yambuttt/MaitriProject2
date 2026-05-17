@@ -13,8 +13,8 @@
         $customerPhone = $order->customer_phone ?? '-';
         $total = $order->total_amount;
         $fee = $order->fee ?? 0;
-        $userNote = $order->user_note;   // catatan dari pembeli
-        $adminNote = $order->admin_note;  // catatan dari admin
+        $userNote = $order->user_note;
+        $adminNote = $order->admin_note;
         $createdAt = $order->created_at;
         $paidAt = $order->paid_at;
         $method = $order->payment_method;
@@ -35,167 +35,186 @@
         $method = $order->payment_method;
         $payment = $order->payments->first();
     }
+
+    // Badge styling mapping
+    if ($status === 'success' || $status === 'paid_finished') {
+        $statusBadge = 'bg-emerald-500/10 text-emerald-400 border-emerald-500/20 shadow-[0_0_10px_rgba(16,185,129,0.1)]';
+    } elseif ($status === 'failed' || $status === 'paid_rejected') {
+        $statusBadge = 'bg-rose-500/10 text-rose-400 border-rose-500/20 shadow-[0_0_10px_rgba(244,63,94,0.1)]';
+    } else {
+        $statusBadge = 'bg-sky-500/10 text-sky-400 border-sky-500/20 shadow-[0_0_10px_rgba(14,165,233,0.1)]';
+    }
 @endphp
 
-<div class="space-y-4">
-    {{-- Header --}}
-    <div class="flex items-start justify-between gap-4">
-        <div>
-            <h2 class="text-base font-semibold text-slate-50">
-                Detail Pesanan
-            </h2>
-            <p class="text-xs text-slate-400 mt-1">
-                {{ $isMarketplace ? 'Marketplace Order' : 'Produk Digiflazz' }} •
-                <span class="font-mono">{{ $code }}</span>
-            </p>
+<div class="space-y-5 animate-in fade-in slide-in-from-bottom-2 duration-200">
+    
+    {{-- Header ID Tag --}}
+    <div class="flex items-center justify-between gap-4 bg-white/[0.02] border border-white/5 px-4 py-3 rounded-2xl">
+        <div class="flex items-center gap-2">
+            <span class="size-2 rounded-full bg-violet-500 animate-ping"></span>
+            <span class="font-mono text-xs text-violet-300 font-extrabold">{{ $code }}</span>
         </div>
+        <span class="text-[8px] font-extrabold uppercase tracking-widest px-2.5 py-1 rounded-lg bg-white/5 border border-white/5 text-slate-400">
+            {{ $isMarketplace ? 'Marketplace' : 'Digiflazz' }}
+        </span>
     </div>
 
-    {{-- Info utama --}}
-    <div class="grid grid-cols-1 md:grid-cols-2 gap-4 text-xs">
-        <div class="space-y-2">
-            <div>
-                <div class="text-slate-400">Produk</div>
-                <div class="text-slate-100 font-medium">
+    {{-- Detail Grid Columns --}}
+    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+        
+        {{-- Left: Customer & Product Info --}}
+        <div class="space-y-4">
+            
+            {{-- Info Produk --}}
+            <div class="bg-white/[0.02] border border-white/5 p-4 rounded-2xl space-y-2">
+                <span class="text-[9px] font-extrabold uppercase tracking-widest text-slate-500 block">📦 Informasi Produk</span>
+                <div class="text-white font-bold text-sm tracking-tight leading-snug">
                     {{ $productName }}
                 </div>
-                <div class="text-slate-400">
-                    Varian: {{ $variantName }}
+                <div class="text-[11px] text-slate-400">
+                    Varian: <span class="text-slate-300 font-semibold">{{ $variantName }}</span>
                 </div>
             </div>
 
-            <div>
-                <div class="text-slate-400">Customer</div>
-                <div class="text-slate-100">{{ $customerEmail }}</div>
-                <div class="text-slate-400">{{ $customerPhone ?: '-' }}</div>
+            {{-- Info Customer --}}
+            <div class="bg-white/[0.02] border border-white/5 p-4 rounded-2xl space-y-2">
+                <span class="text-[9px] font-extrabold uppercase tracking-widest text-slate-500 block">👤 Informasi Pelanggan</span>
+                <div class="text-xs text-white font-bold tracking-tight">
+                    {{ $customerEmail }}
+                </div>
+                <div class="text-[11px] text-slate-400">
+                    No. HP: <span class="text-slate-300 font-semibold">{{ $customerPhone ?: '-' }}</span>
+                </div>
             </div>
 
-            <div>
-                <div class="text-slate-400">Waktu</div>
-                <div class="text-slate-100">
-                    {{ $createdAt->format('d M Y H:i') }}
+            {{-- Info Waktu --}}
+            <div class="bg-white/[0.02] border border-white/5 p-4 rounded-2xl space-y-2.5">
+                <span class="text-[9px] font-extrabold uppercase tracking-widest text-slate-500 block">📅 Riwayat Waktu</span>
+                <div class="flex items-center justify-between text-[11px]">
+                    <span class="text-slate-400">Dibuat</span>
+                    <span class="text-white font-semibold">{{ $createdAt->format('d M Y, H:i') }}</span>
                 </div>
                 @if($paidAt)
-                    <div class="text-slate-400">
-                        Dibayar: {{ $paidAt->format('d M Y H:i') }}
+                    <div class="flex items-center justify-between text-[11px] pt-1.5 border-t border-white/[0.03]">
+                        <span class="text-slate-400">Dibayar</span>
+                        <span class="text-emerald-400 font-semibold">{{ $paidAt->format('d M Y, H:i') }}</span>
                     </div>
                 @endif
             </div>
+
         </div>
 
-        <div class="space-y-2">
-            <div>
-                <div class="text-slate-400">Status Pesanan</div>
-                <div class="mt-1 flex flex-wrap gap-2">
-                    <span class="px-2 py-1 rounded-lg text-[11px] border
-                        @if($status === 'success' || $status === 'paid_finished') border-emerald-500/60 text-emerald-300 bg-emerald-500/10
-                        @elseif($status === 'failed' || $status === 'paid_rejected') border-rose-500/60 text-rose-300 bg-rose-500/10
-                        @else border-sky-500/60 text-sky-300 bg-sky-500/10 @endif">
+        {{-- Right: Status & Billing Info --}}
+        <div class="space-y-4">
+            
+            {{-- Status & Payment --}}
+            <div class="bg-white/[0.02] border border-white/5 p-4 rounded-2xl space-y-3">
+                <span class="text-[9px] font-extrabold uppercase tracking-widest text-slate-500 block">📊 Status Transaksi</span>
+                <div class="flex flex-wrap gap-2 pt-1">
+                    <span class="px-2.5 py-1 rounded-lg text-[10px] font-extrabold uppercase tracking-wider border {{ $statusBadge }}">
                         {{ strtoupper(str_replace('_', ' ', $status)) }}
                     </span>
+                    <span class="px-2.5 py-1 rounded-lg text-[10px] font-extrabold uppercase tracking-wider border border-white/10 bg-white/5 text-slate-300">
+                        {{ strtoupper($paymentStatus ?? '-') }}
+                    </span>
+                </div>
+                
+                <div class="pt-2.5 border-t border-white/[0.03] text-[11px]">
+                    <div class="flex justify-between">
+                        <span class="text-slate-400">Metode Pembayaran</span>
+                        <span class="text-white font-bold">{{ $method ? strtoupper(str_replace('_', ' ', $method)) : '-' }}</span>
+                    </div>
+                    @if($payment && $payment->provider)
+                        <div class="flex justify-between mt-1.5">
+                            <span class="text-slate-400">Provider</span>
+                            <span class="text-violet-400 font-semibold">{{ strtoupper($payment->provider) }}</span>
+                        </div>
+                    @endif
+                </div>
+            </div>
 
-                    <span
-                        class="px-2 py-1 rounded-lg text-[11px] border border-slate-600 text-slate-200 bg-slate-700/20">
-                        PAYMENT: {{ strtoupper($paymentStatus ?? '-') }}
+            {{-- Billing Breakdown --}}
+            <div class="bg-white/[0.02] border border-white/5 p-4 rounded-2xl space-y-2.5">
+                <span class="text-[9px] font-extrabold uppercase tracking-widest text-slate-500 block">💰 Rincian Pembayaran</span>
+                
+                <div class="flex justify-between text-[11px] text-slate-400">
+                    <span>Subtotal</span>
+                    <span class="text-white font-semibold">Rp {{ number_format($total - $fee, 0, ',', '.') }}</span>
+                </div>
+                <div class="flex justify-between text-[11px] text-slate-400 pb-2 border-b border-dashed border-white/10">
+                    <span>Biaya Admin</span>
+                    <span class="text-white font-semibold">Rp {{ number_format($fee, 0, ',', '.') }}</span>
+                </div>
+                <div class="flex justify-between items-center pt-1">
+                    <span class="text-[10px] font-extrabold uppercase tracking-wider text-slate-300">Total Akhir</span>
+                    <span class="text-lg font-extrabold text-violet-300 tracking-tight">
+                        Rp {{ number_format($total, 0, ',', '.') }}
                     </span>
                 </div>
             </div>
 
-            <div>
-                <div class="text-slate-400">Metode Pembayaran</div>
-                <div class="text-slate-100">
-                    {{ $method ? strtoupper(str_replace('_', ' ', $method)) : '-' }}
-                </div>
-                @if($payment && $payment->provider)
-                    <div class="text-slate-400">
-                        Provider: {{ strtoupper($payment->provider) }}
-                    </div>
-                @endif
-            </div>
-
-            <div class="border border-slate-700/70 rounded-xl px-3 py-2 bg-slate-900/50">
-                <div class="flex justify-between text-slate-300">
-                    <span>Subtotal</span>
-                    <span>Rp {{ number_format($total - $fee, 0, ',', '.') }}</span>
-                </div>
-                <div class="flex justify-between text-slate-400 text-[11px] mt-1">
-                    <span>Biaya Admin</span>
-                    <span>Rp {{ number_format($fee, 0, ',', '.') }}</span>
-                </div>
-                <div
-                    class="border-t border-slate-700/70 mt-2 pt-2 flex justify-between text-sm font-semibold text-slate-50">
-                    <span>Total</span>
-                    <span>Rp {{ number_format($total, 0, ',', '.') }}</span>
-                </div>
-            </div>
         </div>
+
     </div>
 
-    {{-- Bagian khusus berdasarkan tipe --}}
+    {{-- Type Specific Integration Details Panel --}}
     @if(!$isMarketplace)
-        {{-- Detail Digiflazz --}}
-        <div class="border border-slate-800/80 rounded-xl px-3 py-2 bg-slate-950/50 text-xs space-y-1">
-            <div class="text-slate-400 font-medium mb-1">Detail Digiflazz</div>
-
-            <div class="flex justify-between gap-3">
-                <span class="text-slate-400">Ref ID Provider</span>
-                <span class="text-slate-100 font-mono">
-                    {{ $order->provider_ref_id ?? '-' }}
-                </span>
-            </div>
-
-            <div class="flex justify-between gap-3">
-                <span class="text-slate-400">Status Provider</span>
-                <span class="text-slate-100">
-                    {{ $order->provider_status ?? '-' }}
-                </span>
-            </div>
-
-            {{-- 🔽 Provider message (alasan gagal / pesan sukses dari Digiflazz) --}}
-            <div class="flex justify-between gap-3">
-                <span class="text-slate-400">Pesan Provider</span>
-                <span class="text-right text-slate-100 max-w-[260px]">
-                    {{ $order->provider_message ?? '-' }}
-                </span>
-            </div>
-
-            <div class="flex justify-between gap-3">
-                <span class="text-slate-400">SN</span>
-                <span class="text-slate-100">
-                    {{ $order->provider_sn ?? '-' }}
-                </span>
+        {{-- Digiflazz API Details --}}
+        <div class="bg-black/30 border border-white/5 rounded-2xl p-4 space-y-2.5">
+            <span class="text-[9px] font-extrabold uppercase tracking-widest text-violet-400 block">⚡ RESPONS DIGIFLAZZ API</span>
+            
+            <div class="grid grid-cols-1 sm:grid-cols-2 gap-x-6 gap-y-2 text-[11px] font-semibold text-slate-400">
+                <div class="flex justify-between py-1 border-b border-white/[0.02] sm:border-none">
+                    <span>Ref ID Provider</span>
+                    <span class="text-white font-mono font-medium">{{ $order->provider_ref_id ?? '-' }}</span>
+                </div>
+                <div class="flex justify-between py-1 border-b border-white/[0.02] sm:border-none">
+                    <span>Status Provider</span>
+                    <span class="text-white font-medium">{{ $order->provider_status ?? '-' }}</span>
+                </div>
+                <div class="flex justify-between py-1 border-b border-white/[0.02] sm:border-none">
+                    <span>Serial Number (SN)</span>
+                    <span class="text-white font-mono font-medium">{{ $order->provider_sn ?? '-' }}</span>
+                </div>
+                <div class="flex justify-between py-1">
+                    <span>Pesan Provider</span>
+                    <span class="text-white font-medium text-right max-w-[200px] truncate" title="{{ $order->provider_message }}">
+                        {{ $order->provider_message ?? '-' }}
+                    </span>
+                </div>
             </div>
         </div>
 
     @else
-        {{-- Detail Marketplace --}}
-        {{-- Detail Marketplace --}}
-        <div class="border border-slate-800/80 rounded-xl px-3 py-2 bg-slate-950/50 text-xs space-y-2">
-            <div class="text-slate-400 font-medium mb-1">Detail Marketplace</div>
-
-            @if(!empty($userNote))
-                <div class="text-slate-100">
-                    <span class="text-slate-400 block mb-0.5">Catatan dari pembeli</span>
-                    <div class="whitespace-pre-line">
-                        {!! nl2br(e($userNote)) !!}
+        {{-- Marketplace Client Details --}}
+        <div class="bg-black/30 border border-white/5 rounded-2xl p-4 space-y-3">
+            <span class="text-[9px] font-extrabold uppercase tracking-widest text-violet-400 block">📝 CATATAN TRANSAKSI</span>
+            
+            <div class="space-y-3.5 text-[11px]">
+                @if(!empty($userNote))
+                    <div class="bg-white/[0.01] border border-white/5 p-3 rounded-xl">
+                        <span class="text-[8px] font-extrabold uppercase tracking-wider text-slate-500 block mb-1">Catatan Pembeli</span>
+                        <p class="text-white font-semibold leading-relaxed whitespace-pre-line">
+                            {!! nl2br(e($userNote)) !!}
+                        </p>
                     </div>
-                </div>
-            @endif
+                @endif
 
-            @if(!empty($adminNote))
-                <div class="text-slate-100">
-                    <span class="text-slate-400 block mb-0.5">Catatan Admin</span>
-                    <div class="whitespace-pre-line">
-                        {!! nl2br(e($adminNote)) !!}
+                @if(!empty($adminNote))
+                    <div class="bg-white/[0.01] border border-white/5 p-3 rounded-xl">
+                        <span class="text-[8px] font-extrabold uppercase tracking-wider text-slate-500 block mb-1">Catatan Admin</span>
+                        <p class="text-violet-300 font-semibold leading-relaxed whitespace-pre-line">
+                            {!! nl2br(e($adminNote)) !!}
+                        </p>
                     </div>
-                </div>
-            @endif
+                @endif
 
-            @if(empty($userNote) && empty($adminNote))
-                <div class="text-slate-500">
-                    Belum ada catatan dari pembeli maupun admin.
-                </div>
-            @endif
+                @if(empty($userNote) && empty($adminNote))
+                    <div class="text-center text-slate-500 py-2 font-bold uppercase tracking-wider text-[10px]">
+                        Belum ada catatan dari pembeli maupun admin.
+                    </div>
+                @endif
+            </div>
         </div>
 
     @endif
