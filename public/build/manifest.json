@@ -1,0 +1,32 @@
+{
+  "resources/css/app.css": {
+    "file": "assets/app-Ck2wJgnt.css",
+    "src": "resources/css/app.css",
+    "isEntry": true,
+    "names": [
+      "app.css"
+    ]
+  },
+  "resources/js/app.js": {
+    "file": "assets/app-Ty1WbNIK.js",
+    "name": "app",
+    "src": "resources/js/app.js",
+    "isEntry": true,
+    "dynamicImports": [
+      "resources/js/pages/landing.js",
+      "resources/js/pages/catalog.js"
+    ]
+  },
+  "resources/js/pages/catalog.js": {
+    "file": "assets/catalog-Bi7qk6No.js",
+    "name": "catalog",
+    "src": "resources/js/pages/catalog.js",
+    "isDynamicEntry": true
+  },
+  "resources/js/pages/landing.js": {
+    "file": "assets/landing-Cijw9wGg.js",
+    "name": "landing",
+    "src": "resources/js/pages/landing.js",
+    "isDynamicEntry": true
+  }
+}

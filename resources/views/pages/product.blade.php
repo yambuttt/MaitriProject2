@@ -5,530 +5,503 @@
 @section('page', 'product')
 
 @section('content')
-  <section class="py-8" id="productPage" data-slug="{{ $product->slug }}">
-    <div class="mx-auto max-w-[1280px] px-4 md:px-6 lg:px-8">
 
-      {{-- Back link --}}
-      <a href="{{ route('catalog') }}" class="text-sm text-slate-400 hover:text-slate-200">
-        ← Kembali ke katalog
+@push('head')
+<style>
+  .luxury-glass {
+    background: rgba(17, 24, 39, 0.4);
+    backdrop-filter: blur(20px);
+    -webkit-backdrop-filter: blur(20px);
+    border: 1px solid rgba(255, 255, 255, 0.06);
+  }
+  .step-card {
+    background: linear-gradient(180deg, rgba(30, 41, 59, 0.25) 0%, rgba(15, 23, 42, 0.5) 100%);
+    backdrop-filter: blur(16px);
+    border: 1px solid rgba(139, 92, 246, 0.1);
+    border-radius: 2rem;
+    padding: 1.5rem;
+    transition: all 0.3s ease;
+  }
+  .step-card:hover {
+    border-color: rgba(139, 92, 246, 0.25);
+    box-shadow: 0 10px 30px -10px rgba(139, 92, 246, 0.15);
+  }
+  .variant-card {
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    background: rgba(17, 24, 39, 0.3);
+    border: 1px solid rgba(255, 255, 255, 0.05);
+  }
+  .variant-card:not([disabled]):hover {
+    background: rgba(139, 92, 246, 0.05);
+    border-color: rgba(139, 92, 246, 0.3);
+    transform: translateY(-2px);
+  }
+  .variant-card.ring-2 {
+    background: rgba(139, 92, 246, 0.1) !important;
+    border-color: #8B5CF6 !important;
+    box-shadow: 0 0 20px rgba(139, 92, 246, 0.25) !important;
+  }
+  .text-gradient {
+    background: linear-gradient(to right, #C4B5FD, #A78BFA);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+  }
+</style>
+@endpush
+
+<section class="min-h-screen pb-24 pt-8 bg-[#050810] relative overflow-hidden">
+  
+  {{-- Ambient Lights --}}
+  <div class="fixed inset-0 pointer-events-none -z-10">
+    <div class="absolute top-[10%] left-[20%] w-[500px] h-[500px] bg-violet-900/10 blur-[130px] rounded-full"></div>
+    <div class="absolute bottom-[20%] right-[10%] w-[500px] h-[500px] bg-fuchsia-900/10 blur-[120px] rounded-full"></div>
+  </div>
+
+  <div class="mx-auto max-w-[1280px] px-4 md:px-6 lg:px-8">
+
+    {{-- Breadcrumb --}}
+    <div class="mb-6 reveal">
+      <a href="{{ route('catalog') }}" class="group inline-flex items-center gap-2 text-sm text-slate-400 hover:text-violet-400 transition-colors">
+        <svg class="size-4 transition-transform group-hover:-translate-x-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18" />
+        </svg>
+        Kembali ke katalog
       </a>
-
-      <div class="mt-4 space-y-6">
-
-        {{-- ========================= --}}
-        {{-- HERO: gambar + info produk --}}
-        {{-- ========================= --}}
-        <div
-          class="rounded-3xl border border-slate-800/80 bg-gradient-to-b from-slate-900/80 to-slate-950/90 shadow-xl shadow-slate-950/50">
-          <div class="grid gap-6 lg:grid-cols-[minmax(0,1.3fr)_minmax(0,2fr)] items-center p-5 sm:p-6 lg:p-8">
-
-            {{-- Thumbnail --}}
-            <div class="flex justify-center lg:justify-start">
-              <div
-                class="w-40 h-40 sm:w-48 sm:h-48 rounded-3xl border border-slate-800/80 bg-slate-900/80 overflow-hidden shadow-lg shadow-slate-950/40">
-                @if(!empty($product->thumbnail))
-                  <img src="{{ Storage::url($product->thumbnail) }}" alt="{{ $product->name }}"
-                    class="w-full h-full object-cover">
-                @else
-                  <div class="w-full h-full flex flex-col items-center justify-center gap-2 text-slate-500 text-xs">
-                    <div class="size-10 rounded-xl bg-violet-600/15 grid place-items-center text-violet-300">
-                      <svg class="size-5" viewBox="0 0 24 24" fill="none">
-                        <path d="M13 3 4 14h7l-1 7 9-11h-7l1-7Z" stroke="currentColor" stroke-width="1.5" />
-                      </svg>
-                    </div>
-                    <span>Gambar produk belum diatur</span>
-                  </div>
-                @endif
-              </div>
-            </div>
-
-            {{-- Info utama --}}
-            <div class="space-y-4">
-              <div>
-                <p class="text-[11px] font-medium tracking-[.15em] uppercase text-slate-500">
-
-                </p>
-                <h1 id="pName" class="mt-1 text-2xl sm:text-3xl font-semibold text-slate-50">
-                  {{ $product->name }}
-                </h1>
-                <p id="pMeta" class="mt-1 text-sm text-slate-400">
-                  {{ $product->category?->name ?? '—' }}
-                  @if($product->subcategory) • {{ $product->subcategory->name }} @endif
-                  @if($product->provider) • {{ $product->provider }} @endif
-                </p>
-              </div>
-
-              {{-- “Badge” kecil --}}
-              <div class="flex flex-wrap gap-2 text-[11px] text-slate-200">
-                <span class="inline-flex items-center gap-1 rounded-full bg-slate-800/80 px-3 py-1">
-                  ⚡ <span>Proses cepat</span>
-                </span>
-                <span class="inline-flex items-center gap-1 rounded-full bg-slate-800/80 px-3 py-1">
-                  💬 <span>Layanan chat 24/7</span>
-                </span>
-                <span class="inline-flex items-center gap-1 rounded-full bg-slate-800/80 px-3 py-1">
-                  🛡️ <span>Pembayaran aman</span>
-                </span>
-              </div>
-
-              {{-- Deskripsi: tampil di hero hanya untuk desktop, mobile pakai tab Keterangan --}}
-              <div id="pDescription" class="text-sm leading-relaxed text-slate-300 hidden md:block">
-                {!! nl2br(e($product->description)) !!}
-              </div>
-            </div>
-          </div>
-        </div>
-
-        {{-- ============================= --}}
-        {{-- MOBILE TABS Transaksi / Keterangan --}}
-        {{-- ============================= --}}
-        <div class="md:hidden">
-          <div class="flex rounded-2xl bg-slate-900/80 p-1 gap-1">
-            <button id="tabTransaksi" type="button"
-              class="flex-1 px-3 py-2 rounded-xl text-xs font-medium bg-slate-800 text-slate-50">
-              Transaksi
-            </button>
-            <button id="tabKeterangan" type="button"
-              class="flex-1 px-3 py-2 rounded-xl text-xs font-medium text-slate-400">
-              Keterangan
-            </button>
-          </div>
-        </div>
-
-        {{-- ============================= --}}
-        {{-- MAIN GRID: step kiri + info kanan --}}
-        {{-- ============================= --}}
-        <div class="grid gap-6 lg:grid-cols-[minmax(0,7fr)_minmax(0,4fr)] items-start">
-
-          {{-- ========== KIRI: STEP ========= --}}
-          <div class="space-y-4" id="panelTransaksi">
-            {{-- Ringkasan biaya (MOBILE ONLY, di atas tombol sticky) --}}
-
-
-
-            {{-- Step 1: Target --}}
-            <div class="rounded-3xl border border-slate-800/70 bg-[#111826] p-5">
-              <div class="flex items-center gap-2 text-slate-300">
-                <div class="size-6 grid place-items-center rounded-full border border-slate-700 text-xs">1</div>
-                <h2 class="font-medium">Target</h2>
-              </div>
-
-              <div class="mt-4 space-y-3">
-                {{-- Target --}}
-                <div>
-                  <label class="text-sm text-slate-400">User ID / Nomor Tujuan</label>
-                  <input id="fTarget" name="target" type="text" placeholder="Masukkan User ID atau Nomor"
-                    class="mt-1 w-full rounded-xl bg-[#0E1524] border border-slate-800/70
-                                                                 px-3 py-2 text-sm outline-none
-                                                                 focus:border-violet-500/60 focus:ring-2 focus:ring-violet-500/30">
-                  <p id="fTargetHelp" class="mt-1 text-xs text-slate-500">
-                    Contoh: 081234567890 atau 12345678(1234).
-                  </p>
-                </div>
-              </div>
-            </div>
-
-            {{-- Step 2: Pilih Nominal --}}
-            <div class="rounded-3xl border border-slate-800/70 bg-[#111826] p-5">
-              <div class="flex items-center gap-2 text-slate-300">
-                <div class="size-6 grid place-items-center rounded-full border border-slate-700 text-xs">2</div>
-                <h2 class="font-medium">Pilih Nominal</h2>
-              </div>
-
-              {{-- Grid Varian --}}
-              {{-- Grid Varian --}}
-              <div id="variantGrid" class="mt-4 grid sm:grid-cols-2 xl:grid-cols-3 gap-3">
-                @foreach($product->variants as $v)
-                  @php
-                    $master = $v->digiflazzVariant;
-
-                    // --- status seller / gangguan ---
-                    $sellerActive = $master?->seller_product_status ?? true;
-                    $statusText = strtolower($master->status ?? '');
-
-                    // --- data cutoff dari raw JSON Digiflazz ---
-                    $startCut = $master->raw['start_cut_off'] ?? null; // ex: "23:30"
-                    $endCut = $master->raw['end_cut_off'] ?? null;   // ex: "0:15"
-
-                    // waktu sekarang pakai timezone Laravel (yang tadi sudah kita set ke Asia/Jakarta)
-                    $now = \Carbon\Carbon::now(config('app.timezone'));
-                    $nowMinutes = $now->hour * 60 + $now->minute;
-
-                    $isInCutoff = false;
-
-                    if ($startCut && $endCut) {
-                      try {
-                        [$sh, $sm] = array_map('intval', explode(':', $startCut));
-                        [$eh, $em] = array_map('intval', explode(':', $endCut));
-
-                        $startMinutes = $sh * 60 + $sm;
-                        $endMinutes = $eh * 60 + $em;
-
-                        if ($startMinutes <= $endMinutes) {
-                          // tidak lewat tengah malam
-                          $isInCutoff = $nowMinutes >= $startMinutes && $nowMinutes <= $endMinutes;
-                        } else {
-                          // lewat tengah malam (contoh 23:30 - 00:15)
-                          $isInCutoff = $nowMinutes >= $startMinutes || $nowMinutes <= $endMinutes;
-                        }
-                      } catch (\Throwable $e) {
-                        $isInCutoff = false; // kalau ada format aneh, abaikan saja, jangan bikin error
-                      }
-                    }
-
-                    // varian dianggap "gangguan" jika:
-                    // - seller nonaktif, ATAU
-                    // - status mengandung kata "gangguan", ATAU
-                    // - sekarang lagi di jam cut off
-                    $isGangguan = !$sellerActive
-                      || str_contains($statusText, 'gangguan')
-                      || $isInCutoff;
-                  @endphp
-
-                  <button type="button" class="variant-card rounded-2xl border border-slate-800/70 p-4 text-left bg-[#0E1524]
-                       {{ $isGangguan ? 'opacity-60 cursor-not-allowed' : 'hover:border-slate-700 transition' }}"
-                    data-variant-id="{{ $v->id }}" data-variant-name="{{ $v->name }}"
-                    data-variant-price="{{ $v->final_price }}" @if($isGangguan) data-disabled="1" disabled @endif>
-                    <div class="text-sm font-medium text-slate-100">{{ $v->name }}</div>
-                    <div class="text-xs text-slate-400 mt-0.5">{{ $v->buyer_sku_code }}</div>
-
-                    <div class="mt-3 font-semibold text-slate-50">
-                      Rp {{ number_format($v->final_price, 0, ',', '.') }}
-                    </div>
-
-                    @if(!$sellerActive)
-                      <div class="mt-2 text-[11px] text-rose-300">
-                        Sedang nonaktif dari provider. Tidak dapat dipesan.
-                      </div>
-                    @elseif($isInCutoff)
-                      <div class="mt-2 text-[11px] text-amber-300">
-                        Sedang maintenance (cut off)
-                        {{ $startCut }} – {{ $endCut }}. Tidak dapat dipesan saat ini.
-                      </div>
-                    @elseif(str_contains($statusText, 'gangguan'))
-                      <div class="mt-2 text-[11px] text-amber-300">
-                        Sedang gangguan dari provider. Tidak dapat dipesan.
-                      </div>
-                    @endif
-                  </button>
-                @endforeach
-
-              </div>
-
-            </div>
-
-            {{-- Step 3: Pilih Pembayaran --}}
-            <div class="rounded-3xl border border-slate-800/70 bg-[#111826] p-5">
-              <div class="flex items-center gap-2 text-slate-300">
-                <div class="size-6 grid place-items-center rounded-full border border-slate-700 text-xs">3</div>
-                <h2 class="font-medium">Pilih Pembayaran</h2>
-              </div>
-
-              <div id="payList" class="mt-3 space-y-2">
-
-                {{-- Saldo Maitri --}}
-                @auth
-                  @php
-                    $formattedSaldo = 'Rp ' . number_format($walletBalance ?? 0, 0, ',', '.');
-                  @endphp
-
-                  <div class="rounded-xl border border-slate-800/70 p-3 flex items-center justify-between">
-                    <div class="text-sm">
-                      <div class="flex items-center gap-2">
-                        <span>Saldo Maitri</span>
-                        <span class="text-xs text-slate-400">({{ $formattedSaldo }})</span>
-                      </div>
-                      <div id="saldoWarning" class="mt-1 text-xs text-amber-300 hidden">
-                        Saldo tidak mencukupi untuk varian yang dipilih.
-                      </div>
-                    </div>
-
-                    <button type="button" id="paySaldoBtn"
-                      class="px-3 py-2 rounded-xl border border-slate-800/70 hover:border-slate-700 text-sm">
-                      Pilih
-                    </button>
-                  </div>
-                @else
-                  <div class="rounded-xl border border-slate-800/80 bg-slate-900/60 px-4 py-3 text-sm text-slate-300">
-                    Silakan login untuk menggunakan Saldo Maitri.
-                  </div>
-                @endauth
-
-                {{-- Channel Paydisini (Gateway) --}}
-                <div class="rounded-xl border border-slate-800/70 p-3 flex items-center justify-between">
-                  <div class="text-sm">QRIS</div>
-                  <button type="button"
-                    class="pickPay px-3 py-2 rounded-xl border border-slate-800/70 hover:border-slate-700 text-sm"
-                    data-pay="QRIS">
-                    Pilih
-                  </button>
-                </div>
-
-                <div class="rounded-xl border border-slate-800/70 p-3 flex items-center justify-between">
-                  <div class="text-sm">Virtual Account Mandiri</div>
-                  <button type="button"
-                    class="pickPay px-3 py-2 rounded-xl border border-slate-800/70 hover:border-slate-700 text-sm"
-                    data-pay="VA_MANDIRI">
-                    Pilih
-                  </button>
-                </div>
-
-                <div class="rounded-xl border border-slate-800/70 p-3 flex items-center justify-between">
-                  <div class="text-sm">Alfamart</div>
-                  <button type="button"
-                    class="pickPay px-3 py-2 rounded-xl border border-slate-800/70 hover:border-slate-700 text-sm"
-                    data-pay="ALFAMART">
-                    Pilih
-                  </button>
-                </div>
-
-                <div class="rounded-xl border border-slate-800/70 p-3 flex items-center justify-between">
-                  <div class="text-sm">Indomaret</div>
-                  <button type="button"
-                    class="pickPay px-3 py-2 rounded-xl border border-slate-800/70 hover:border-slate-700 text-sm"
-                    data-pay="INDOMARET">
-                    Pilih
-                  </button>
-                </div>
-              </div>
-            </div>
-
-            {{-- Step 4: Detail Kontak --}}
-            <div class="rounded-3xl border border-slate-800/70 bg-[#111826] p-5">
-              <div class="flex items-center gap-2 text-slate-300">
-                <div class="size-6 grid place-items-center rounded-full border border-slate-700 text-xs">4</div>
-                <h2 class="font-medium">Detail Kontak</h2>
-              </div>
-
-              <div class="mt-4 space-y-3">
-                {{-- Email --}}
-                <div>
-                  <label class="text-sm text-slate-400">Email (untuk bukti pembayaran)</label>
-                  <input id="fEmail" name="email" type="email" placeholder="nama@email.com" class="mt-1 w-full rounded-xl bg-[#0E1524] border border-slate-800/70
-                                                 px-3 py-2 text-sm outline-none
-                                                 focus:border-violet-500/60 focus:ring-2 focus:ring-violet-500/30">
-                  <p class="mt-1 text-[11px] text-slate-500">
-                    Bukti transaksi dan info pesanan bisa kami kirim ke email ini.
-                  </p>
-                </div>
-
-                {{-- Nomor HP / WhatsApp --}}
-                <div>
-                  <label class="text-sm text-slate-400">No. WhatsApp / HP</label>
-                  <input id="fPhone" name="phone" type="tel" placeholder="08xxxxxxxxxx" class="mt-1 w-full rounded-xl bg-[#0E1524] border border-slate-800/70
-                                                 px-3 py-2 text-sm outline-none
-                                                 focus:border-violet-500/60 focus:ring-2 focus:ring-violet-500/30">
-                  <p class="mt-1 text-[11px] text-slate-500">
-                    Nomor ini akan dihubungi jika terjadi masalah pada pesanan.
-                  </p>
-                </div>
-              </div>
-            </div>
-          </div>
-
-          {{-- ========== KANAN: KETERANGAN / RATING / SUMMARY ========= --}}
-          <aside class="space-y-4" id="panelKeterangan">
-
-            {{-- Deskripsi (khusus mobile tab Keterangan) --}}
-            <div class="rounded-3xl border border-slate-800/80 bg-slate-900/80 p-5 md:hidden">
-              <h2 class="text-sm font-semibold text-slate-100">Deskripsi {{ $product->name }}</h2>
-              <div class="mt-2 text-sm leading-relaxed text-slate-300">
-                {!! nl2br(e($product->description)) !!}
-              </div>
-            </div>
-
-            {{-- Rating --}}
-            <div class="rounded-3xl border border-slate-800/80 bg-slate-900/80 p-5">
-              <h2 class="text-sm font-semibold text-slate-100">Ulasan dan rating</h2>
-
-              <div class="mt-3 flex items-center gap-3">
-                <div class="flex items-baseline gap-1">
-                  <span class="text-3xl font-semibold text-slate-50">4.9</span>
-                  <span class="text-xs text-slate-400">/ 5.0</span>
-                </div>
-                <div class="flex items-center gap-0.5 text-amber-300 text-lg">
-                  ★★★★★
-                </div>
-              </div>
-
-              <p class="mt-1 text-[11px] text-slate-500">
-                Contoh tampilan rating — bisa dihubungkan ke sistem review kalau sudah siap.
-              </p>
-            </div>
-
-            {{-- Bantuan --}}
-            <div class="rounded-3xl border border-slate-800/80 bg-slate-900/80 p-5 flex gap-3">
-              <div
-                class="mt-0.5 h-9 w-9 flex items-center justify-center rounded-full border border-slate-700 text-slate-300">
-                ☎
-              </div>
-              <div class="space-y-1 text-sm">
-                <h2 class="font-semibold text-slate-100">Butuh Bantuan?</h2>
-                <p class="text-xs text-slate-400">
-                  Jika terjadi masalah pada pesanan, hubungi admin melalui WhatsApp atau menu Bantuan di atas.
-                </p>
-              </div>
-            </div>
-
-            {{-- Detail biaya + tombol checkout (muncul hanya jika siap) --}}
-            <div id="summaryWrapper"
-              class="hidden md:block rounded-3xl border border-violet-700/70 bg-[#111826] p-5 space-y-4">
-
-              <div class="flex items-center justify-between gap-2">
-                <h2 class="text-sm font-semibold text-slate-100">Detail biaya</h2>
-                <span class="text-[11px] text-violet-300">Cek kembali sebelum bayar</span>
-              </div>
-
-              <dl class="space-y-2 text-sm text-slate-200" id="summaryBox">
-                <div class="flex justify-between gap-4">
-                  <dt class="text-slate-400">Produk</dt>
-                  <dd class="text-right" id="sProd">{{ $product->name }}</dd>
-                </div>
-
-                <div class="flex justify-between gap-4">
-                  <dt class="text-slate-400">Varian</dt>
-                  <dd class="text-right" id="sVar">—</dd>
-                </div>
-
-                <div class="flex justify-between gap-4">
-                  <dt class="text-slate-400">Metode</dt>
-                  <dd class="text-right" id="sPay">—</dd>
-                </div>
-
-                <div class="flex justify-between gap-4">
-                  <dt class="text-slate-400">Subtotal</dt>
-                  <dd class="text-right" id="sSub">Rp 0</dd>
-                </div>
-
-                <div class="flex justify-between gap-4">
-                  <dt class="text-slate-400">Biaya Admin</dt>
-                  <dd class="text-right" id="sFee">Rp 0</dd>
-                </div>
-
-                <div class="flex justify-between gap-4 pt-2 border-t border-slate-800 mt-1">
-                  <dt class="text-slate-400">Total Bayar</dt>
-                  <dd class="text-right font-semibold text-slate-50" id="sTotal">Rp 0</dd>
-                </div>
-              </dl>
-
-              <button id="btnCheckout" class="w-full mt-2 px-5 py-3 rounded-2xl bg-violet-600 hover:bg-violet-500 text-sm font-medium
-                           text-white disabled:opacity-50 disabled:cursor-not-allowed" disabled>
-                Lanjutkan Pembayaran
-              </button>
-
-              <p class="text-[11px] text-slate-500">
-                Setelah pembayaran berhasil, detail transaksi lengkap akan muncul di halaman invoice.
-              </p>
-            </div>
-          </aside>
-        </div>
-      </div>
     </div>
 
-    {{-- =============== MODAL PIN SALDO MAITRI ============== --}}
-    @auth
-      <div id="saldoPinModal" class="fixed inset-0 z-40 hidden items-center justify-center bg-black/60">
-        <div class="w-full max-w-md rounded-2xl bg-slate-900 border border-violet-500/40 p-5 space-y-4">
-          <h2 class="text-lg font-semibold text-slate-50">Konfirmasi PIN Pembayaran</h2>
-          <p class="text-sm text-slate-300">
-            Masukkan PIN pembayaran Maitri untuk melanjutkan transaksi.
-          </p>
+    <div class="space-y-6">
 
-          <form method="POST" action="{{ route('checkout.saldo') }}" id="saldoPinForm" class="space-y-3">
-            @csrf
+      {{-- ==============================
+           1. HERO SECTION (PRODUCT INFO)
+           ============================== --}}
+      <div class="relative overflow-hidden rounded-[2.5rem] p-6 md:p-10 luxury-glass shadow-2xl reveal">
+        <div class="absolute -top-40 -right-40 w-96 h-96 bg-violet-600/20 blur-[100px] rounded-full pointer-events-none"></div>
+        
+        <div class="flex flex-col md:flex-row items-center md:items-start gap-8 relative z-10">
+          {{-- Thumbnail --}}
+          <div class="flex-shrink-0">
+            <div class="w-36 h-36 md:w-44 md:h-44 rounded-[2rem] border border-white/10 bg-black/40 overflow-hidden shadow-2xl">
+              @if(!empty($product->thumbnail))
+                <img src="{{ Storage::url($product->thumbnail) }}" alt="{{ $product->name }}" class="w-full h-full object-cover">
+              @else
+                <div class="w-full h-full flex flex-col items-center justify-center gap-2 text-slate-600">
+                  <svg class="size-10" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"/>
+                  </svg>
+                  <span class="text-[10px] uppercase font-bold tracking-widest">No Image</span>
+                </div>
+              @endif
+            </div>
+          </div>
 
-            {{-- Hidden inputs diisi JS --}}
-            <input type="hidden" name="product_id" value="{{ $product->id }}">
-            <input type="hidden" name="variant_id" id="modalVariantId">
-            <input type="hidden" name="target" id="modalTarget">
-            <input type="hidden" name="email" id="modalEmail">
-            <input type="hidden" name="phone" id="modalPhone">
-
-            {{-- PIN --}}
+          {{-- Meta Info --}}
+          <div class="flex-1 text-center md:text-left space-y-4">
             <div>
-              <label class="block text-xs font-medium text-slate-400 mb-1">PIN Pembayaran</label>
-              <input type="password" maxlength="6" name="pin"
-                class="h-10 w-full rounded-xl bg-slate-950 border border-slate-700/80
-                                                                                                   px-3 text-sm text-slate-100" placeholder="Masukkan PIN" required>
+              <div class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-white/5 border border-white/10 text-[10px] font-bold tracking-widest text-violet-300 uppercase mb-2">
+                <span>{{ $product->category?->name ?? 'Layanan' }}</span>
+                @if($product->subcategory)
+                  <span class="w-1 h-1 rounded-full bg-slate-600"></span>
+                  <span class="text-slate-400">{{ $product->subcategory->name }}</span>
+                @endif
+              </div>
+              <h1 id="pName" class="text-3xl md:text-5xl font-extrabold text-white leading-tight">
+                {{ $product->name }}
+              </h1>
+              @if($product->provider)
+                <p id="pMeta" class="mt-1 text-sm text-slate-400 font-medium">
+                  Provider Resmi: <span class="text-white">{{ $product->provider }}</span>
+                </p>
+              @endif
             </div>
 
-            <div class="flex justify-end gap-2 pt-1">
-              <button type="button" id="btnClosePin" class="h-9 px-3 rounded-xl text-sm text-slate-300 hover:bg-slate-800">
-                Batal
-              </button>
-
-              <button type="submit"
-                class="h-9 px-4 rounded-xl bg-violet-500 hover:bg-violet-600 text-sm font-medium text-white">
-                Bayar Sekarang
-              </button>
+            {{-- Badges --}}
+            <div class="flex flex-wrap justify-center md:justify-start gap-2 text-[11px] font-semibold text-slate-300">
+              <span class="inline-flex items-center gap-1.5 rounded-xl bg-white/5 border border-white/10 px-3 py-1.5 backdrop-blur-md">
+                ⚡ <span>Proses Cepat</span>
+              </span>
+              <span class="inline-flex items-center gap-1.5 rounded-xl bg-white/5 border border-white/10 px-3 py-1.5 backdrop-blur-md">
+                💬 <span>Aktif 24/7</span>
+              </span>
+              <span class="inline-flex items-center gap-1.5 rounded-xl bg-white/5 border border-white/10 px-3 py-1.5 backdrop-blur-md">
+                🛡️ <span>Aman & Legal</span>
+              </span>
             </div>
-          </form>
+
+            {{-- Description (Desktop only) --}}
+            <div id="pDescription" class="text-sm leading-relaxed text-slate-400 hidden md:block max-w-3xl pt-2 border-t border-white/5">
+              {!! nl2br(e($product->description)) !!}
+            </div>
+          </div>
         </div>
       </div>
-    @endauth
 
-    {{-- =========== FORM HIDDEN CHECKOUT PAYDISINI =========== --}}
-    <form id="paydisiniForm" method="POST" action="{{ route('checkout.paydisini') }}" class="hidden">
-      @csrf
-      <input type="hidden" name="product_id" value="{{ $product->id }}">
-      <input type="hidden" name="variant_id" id="paydisiniVariantId">
-      <input type="hidden" name="target" id="paydisiniTarget">
-      <input type="hidden" name="email" id="paydisiniEmail">
-      <input type="hidden" name="phone" id="paydisiniPhone">
-      <input type="hidden" name="payment_channel" id="paydisiniChannel">
-    </form>
+      {{-- ==============================
+           2. MOBILE TABS
+           ============================== --}}
+      <div class="md:hidden reveal">
+        <div class="flex rounded-2xl bg-slate-900/60 border border-white/5 p-1 gap-1">
+          <button id="tabTransaksi" type="button" class="flex-1 px-4 py-2.5 rounded-xl text-sm font-bold transition-all bg-slate-800 text-white shadow-lg">
+            Transaksi
+          </button>
+          <button id="tabKeterangan" type="button" class="flex-1 px-4 py-2.5 rounded-xl text-sm font-bold text-slate-400 transition-all">
+            Keterangan
+          </button>
+        </div>
+      </div>
 
-    {{-- STICKY CHECKOUT BAR (MOBILE) --}}
-    {{-- STICKY CHECKOUT BAR (MOBILE) --}}
-    <div id="checkoutBar"
-      class="fixed inset-x-0 bottom-0 z-40 hidden md:hidden bg-slate-950/95 border-t border-slate-800/80 backdrop-blur">
-      <div class="mx-auto max-w-[1280px] px-4 py-2 space-y-2">
+      {{-- ==============================
+           3. MAIN GRID (STEPS & SUMMARY)
+           ============================== --}}
+      <div class="grid gap-6 lg:grid-cols-[minmax(0,7.2fr)_minmax(0,3.8fr)] items-start">
 
-        {{-- Ringkasan pesanan MOBILE (nempel di atas tombol) --}}
-        <div id="summaryWrapperMobile"
-          class="rounded-2xl border border-violet-700/70 bg-[#111826] px-3 py-2 text-[11px] text-slate-200 hidden">
-          <div class="flex items-center justify-between gap-2">
-            <div class="min-w-0">
-              <p class="font-semibold truncate">{{ $product->name }}</p>
-              <p id="sHeaderMobile" class="text-[10px] text-slate-400 truncate">
-                Pilih varian &amp; metode pembayaran dulu.
+        {{-- LEFT COLUMN: STEP TRANSAKSI --}}
+        <div class="space-y-6" id="panelTransaksi">
+
+          {{-- STEP 1: TARGET --}}
+          <div class="step-card reveal">
+            <div class="flex items-center gap-3 pb-4 border-b border-white/5">
+              <span class="flex items-center justify-center size-8 rounded-xl bg-violet-600/10 border border-violet-500/30 text-violet-300 font-extrabold text-sm shadow-[0_0_15px_rgba(139,92,246,0.15)]">1</span>
+              <h2 class="text-lg font-bold text-white">Lengkapi Data Target</h2>
+            </div>
+
+            <div class="mt-5 space-y-4">
+              <div>
+                <label class="block text-xs font-bold uppercase tracking-widest text-slate-500 mb-2">User ID / Nomor Tujuan</label>
+                <input id="fTarget" name="target" type="text" placeholder="Masukkan ID game atau nomor HP tujuan..."
+                       class="h-12 w-full rounded-xl bg-black/40 border border-white/10 px-4 text-sm text-white placeholder-slate-500 outline-none focus:border-violet-500/50 focus:bg-black/60 focus:ring-0 transition-all">
+                <p id="fTargetHelp" class="mt-2 text-xs text-slate-500 leading-normal">
+                  Contoh: 12345678(1234) untuk game, atau 081234567890 untuk pulsa/data.
+                </p>
+              </div>
+            </div>
+          </div>
+
+          {{-- STEP 2: NOMINAL --}}
+          <div class="step-card reveal">
+            <div class="flex items-center gap-3 pb-4 border-b border-white/5">
+              <span class="flex items-center justify-center size-8 rounded-xl bg-violet-600/10 border border-violet-500/30 text-violet-300 font-extrabold text-sm shadow-[0_0_15px_rgba(139,92,246,0.15)]">2</span>
+              <h2 class="text-lg font-bold text-white">Pilih Nominal Varian</h2>
+            </div>
+
+            <div id="variantGrid" class="mt-5 grid grid-cols-2 sm:grid-cols-3 gap-3 md:gap-4">
+              @foreach($product->variants as $v)
+                @php
+                  $master = $v->digiflazzVariant;
+                  $sellerActive = $master?->seller_product_status ?? true;
+                  $statusText = strtolower($master->status ?? '');
+                  $startCut = $master->raw['start_cut_off'] ?? null;
+                  $endCut = $master->raw['end_cut_off'] ?? null;
+
+                  $now = \Carbon\Carbon::now(config('app.timezone'));
+                  $nowMinutes = $now->hour * 60 + $now->minute;
+                  $isInCutoff = false;
+
+                  if ($startCut && $endCut) {
+                    try {
+                      [$sh, $sm] = array_map('intval', explode(':', $startCut));
+                      [$eh, $em] = array_map('intval', explode(':', $endCut));
+                      $startMinutes = $sh * 60 + $sm;
+                      $endMinutes = $eh * 60 + $em;
+                      if ($startMinutes <= $endMinutes) {
+                        $isInCutoff = $nowMinutes >= $startMinutes && $nowMinutes <= $endMinutes;
+                      } else {
+                        $isInCutoff = $nowMinutes >= $startMinutes || $nowMinutes <= $endMinutes;
+                      }
+                    } catch (\Throwable $e) { $isInCutoff = false; }
+                  }
+
+                  $isGangguan = !$sellerActive || str_contains($statusText, 'gangguan') || $isInCutoff;
+                @endphp
+
+                <button type="button" class="variant-card relative rounded-2xl p-4 text-left overflow-hidden flex flex-col justify-between h-full min-h-[100px]
+                     {{ $isGangguan ? 'opacity-50 cursor-not-allowed' : 'cursor-pointer' }}"
+                  data-variant-id="{{ $v->id }}" 
+                  data-variant-name="{{ $v->name }}"
+                  data-variant-price="{{ $v->final_price }}" 
+                  @if($isGangguan) data-disabled="1" disabled @endif>
+                  
+                  <div>
+                    <div class="text-xs font-bold text-slate-200 line-clamp-2 leading-snug mb-1">{{ $v->name }}</div>
+                    <div class="text-[9px] font-bold text-slate-500 uppercase tracking-wider">{{ $v->buyer_sku_code }}</div>
+                  </div>
+
+                  <div class="mt-4 pt-3 border-t border-white/5 flex items-center justify-between w-full">
+                    <span class="text-xs font-extrabold text-white">
+                      Rp {{ number_format($v->final_price, 0, ',', '.') }}
+                    </span>
+                  </div>
+
+                  @if(!$sellerActive)
+                    <div class="absolute inset-0 bg-black/80 flex items-center justify-center p-2 text-center text-[9px] font-bold text-rose-400">Nonaktif</div>
+                  @elseif($isInCutoff)
+                    <div class="absolute inset-0 bg-black/80 flex items-center justify-center p-2 text-center text-[9px] font-bold text-amber-400">Maintenance</div>
+                  @elseif(str_contains($statusText, 'gangguan'))
+                    <div class="absolute inset-0 bg-black/80 flex items-center justify-center p-2 text-center text-[9px] font-bold text-amber-400">Gangguan</div>
+                  @endif
+                </button>
+              @endforeach
+            </div>
+          </div>
+
+          {{-- STEP 3: PEMBAYARAN --}}
+          <div class="step-card reveal">
+            <div class="flex items-center gap-3 pb-4 border-b border-white/5">
+              <span class="flex items-center justify-center size-8 rounded-xl bg-violet-600/10 border border-violet-500/30 text-violet-300 font-extrabold text-sm shadow-[0_0_15px_rgba(139,92,246,0.15)]">3</span>
+              <h2 class="text-lg font-bold text-white">Metode Pembayaran</h2>
+            </div>
+
+            <div id="payList" class="mt-5 space-y-3">
+              {{-- Saldo Maitri --}}
+              @auth
+                @php
+                  $formattedSaldo = 'Rp ' . number_format($walletBalance ?? 0, 0, ',', '.');
+                @endphp
+                <div class="group rounded-2xl border border-white/5 p-4 bg-[#111827]/30 flex items-center justify-between transition-all hover:bg-slate-800/40">
+                  <div class="space-y-1">
+                    <div class="text-sm font-bold text-slate-200">Saldo Maitri</div>
+                    <div class="text-xs text-slate-400">Tersedia: <span class="text-violet-300 font-semibold">{{ $formattedSaldo }}</span></div>
+                    <div id="saldoWarning" class="text-[10px] text-rose-400 font-semibold hidden">Saldo Anda tidak mencukupi</div>
+                  </div>
+                  <button type="button" id="paySaldoBtn" class="px-4 py-2 rounded-xl bg-white/5 border border-white/10 text-xs font-bold text-slate-300 hover:bg-violet-600 hover:border-violet-500 hover:text-white transition-all">
+                    Pilih
+                  </button>
+                </div>
+              @else
+                <div class="rounded-2xl border border-white/5 bg-slate-900/40 p-4 text-xs font-semibold text-slate-500 text-center">
+                  Silakan login terlebih dahulu untuk menggunakan Saldo Maitri.
+                </div>
+              @endauth
+
+              {{-- Gateway Paydisini Channels --}}
+              @foreach([
+                ['QRIS', 'QRIS Instan', 'Otomatis aktif & support semua e-wallet'],
+                ['VA_MANDIRI', 'Virtual Account Mandiri', 'Pembayaran via Bank Mandiri virtual account'],
+                ['ALFAMART', 'Alfamart', 'Bayar tunai di gerai Alfamart terdekat'],
+                ['INDOMARET', 'Indomaret', 'Bayar tunai di gerai Indomaret terdekat']
+              ] as $ch)
+                <div class="group rounded-2xl border border-white/5 p-4 bg-[#111827]/30 flex items-center justify-between transition-all hover:bg-slate-800/40">
+                  <div class="space-y-0.5">
+                    <div class="text-sm font-bold text-slate-200">{{ $ch[1] }}</div>
+                    <div class="text-xs text-slate-500 leading-normal">{{ $ch[2] }}</div>
+                  </div>
+                  <button type="button" class="pickPay px-4 py-2 rounded-xl bg-white/5 border border-white/10 text-xs font-bold text-slate-300 hover:bg-violet-600 hover:border-violet-500 hover:text-white transition-all" data-pay="{{ $ch[0] }}">
+                    Pilih
+                  </button>
+                </div>
+              @endforeach
+            </div>
+          </div>
+
+          {{-- STEP 4: KONTAK --}}
+          <div class="step-card reveal">
+            <div class="flex items-center gap-3 pb-4 border-b border-white/5">
+              <span class="flex items-center justify-center size-8 rounded-xl bg-violet-600/10 border border-violet-500/30 text-violet-300 font-extrabold text-sm shadow-[0_0_15px_rgba(139,92,246,0.15)]">4</span>
+              <h2 class="text-lg font-bold text-white">Detail Kontak</h2>
+            </div>
+
+            <div class="mt-5 space-y-4">
+              <div class="grid sm:grid-cols-2 gap-4">
+                <div>
+                  <label class="block text-xs font-bold uppercase tracking-widest text-slate-500 mb-2">Email (Untuk Bukti)</label>
+                  <input id="fEmail" name="email" type="email" placeholder="nama@email.com"
+                         class="h-12 w-full rounded-xl bg-black/40 border border-white/10 px-4 text-sm text-white placeholder-slate-500 outline-none focus:border-violet-500/50 focus:bg-black/60 focus:ring-0 transition-all">
+                </div>
+                <div>
+                  <label class="block text-xs font-bold uppercase tracking-widest text-slate-500 mb-2">No. WhatsApp / HP</label>
+                  <input id="fPhone" name="phone" type="tel" placeholder="08xxxxxxxxxx"
+                         class="h-12 w-full rounded-xl bg-black/40 border border-white/10 px-4 text-sm text-white placeholder-slate-500 outline-none focus:border-violet-500/50 focus:bg-black/60 focus:ring-0 transition-all">
+                </div>
+              </div>
+              <p class="text-xs text-slate-500 leading-normal">
+                Detail pemesanan dan bukti pembayaran akan kami koordinasikan melalui WhatsApp dan Email yang Anda masukkan.
               </p>
             </div>
-            <p id="sTotalShortMobile" class="text-xs font-semibold text-slate-50 whitespace-nowrap">
-              Rp 0
+          </div>
+
+        </div>
+
+        {{-- RIGHT COLUMN: SIDEBAR SUMMARY / DETAILS --}}
+        <aside class="space-y-6" id="panelKeterangan">
+
+          {{-- Mobile Description Tab Content --}}
+          <div class="step-card md:hidden reveal">
+            <h2 class="text-sm font-bold text-slate-300 uppercase tracking-wider mb-2">Deskripsi Layanan</h2>
+            <div class="text-sm leading-relaxed text-slate-400">
+              {!! nl2br(e($product->description)) !!}
+            </div>
+          </div>
+
+          {{-- CHECKOUT SUMMARY CARD --}}
+          <div id="summaryWrapper" class="hidden md:block rounded-[2rem] border border-violet-500/30 bg-gradient-to-b from-[#1E1B4B]/30 to-[#0F172A]/70 p-6 space-y-6 shadow-2xl reveal">
+            <div class="pb-4 border-b border-white/5 flex items-center justify-between">
+              <h2 class="text-base font-bold text-white">Detail Pembelian</h2>
+              <span class="text-[10px] font-bold tracking-widest text-violet-300 uppercase">Verifikasi</span>
+            </div>
+
+            <dl class="space-y-3.5 text-sm text-slate-300" id="summaryBox">
+              <div class="flex justify-between gap-4">
+                <dt class="text-slate-500">Nama Layanan</dt>
+                <dd class="text-right font-semibold text-white" id="sProd">{{ $product->name }}</dd>
+              </div>
+              <div class="flex justify-between gap-4">
+                <dt class="text-slate-500">Nominal Varian</dt>
+                <dd class="text-right font-semibold text-white truncate max-w-[150px]" id="sVar">—</dd>
+              </div>
+              <div class="flex justify-between gap-4">
+                <dt class="text-slate-500">Metode Pembayaran</dt>
+                <dd class="text-right font-semibold text-white" id="sPay">—</dd>
+              </div>
+              <div class="flex justify-between gap-4">
+                <dt class="text-slate-500">Harga Item</dt>
+                <dd class="text-right font-semibold text-white" id="sSub">Rp 0</dd>
+              </div>
+              <div class="flex justify-between gap-4">
+                <dt class="text-slate-500">Biaya Administrasi</dt>
+                <dd class="text-right font-semibold text-white" id="sFee">Rp 0</dd>
+              </div>
+              <div class="flex justify-between gap-4 pt-4 border-t border-white/5 mt-2">
+                <dt class="text-sm font-bold text-slate-400">Total Pembayaran</dt>
+                <dd class="text-lg font-extrabold text-white text-gradient" id="sTotal">Rp 0</dd>
+              </div>
+            </dl>
+
+            <button id="btnCheckout" class="w-full h-12 rounded-2xl bg-violet-600 hover:bg-violet-500 text-sm font-bold text-white tracking-wide transition-all shadow-[0_0_20px_rgba(139,92,246,0.3)] hover:shadow-[0_0_30px_rgba(139,92,246,0.5)] disabled:opacity-40 disabled:cursor-not-allowed" disabled>
+              Lanjutkan Transaksi
+            </button>
+            
+            <p class="text-[10px] text-slate-500 text-center leading-normal">
+              Dengan mengklik tombol, Anda menyetujui seluruh ketentuan layanan di platform MaitriProject.
             </p>
           </div>
 
-          <dl class="mt-1 grid grid-cols-2 gap-x-3 gap-y-0.5">
-            <div class="flex justify-between gap-2">
-              <dt class="text-slate-500">Varian</dt>
-              <dd id="sVarMobile" class="text-right">—</dd>
+          {{-- RATINGS CARD --}}
+          <div class="step-card reveal">
+            <h2 class="text-xs font-bold text-slate-500 uppercase tracking-widest mb-4">Ulasan & Reputasi</h2>
+            <div class="flex items-center gap-4">
+              <div class="flex items-baseline gap-1">
+                <span class="text-4xl font-extrabold text-white">4.9</span>
+                <span class="text-xs text-slate-500 font-bold">/ 5.0</span>
+              </div>
+              <div class="space-y-1">
+                <div class="flex items-center gap-0.5 text-amber-400 text-base font-bold">
+                  ★★★★★
+                </div>
+                <p class="text-[10px] text-slate-500 font-medium leading-none">Berdasarkan 1.842 review pelanggan</p>
+              </div>
             </div>
-            <div class="flex justify-between gap-2">
-              <dt class="text-slate-500">Metode</dt>
-              <dd id="sPayMobile" class="text-right">—</dd>
+          </div>
+
+          {{-- SUPPORT CARD --}}
+          <div class="step-card flex gap-4 items-start reveal">
+            <div class="flex-shrink-0 size-10 rounded-xl bg-white/5 border border-white/10 flex items-center justify-center text-slate-300">
+              <svg class="size-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M18.364 5.636l-3.536 3.536m0 5.656l3.536 3.536M9.172 9.172L5.636 5.636m3.536 9.192l-3.536 3.536M21 12a9 9 0 11-18 0 9 9 0 0118 0zm-5 0a4 4 0 11-8 0 4 4 0 018 0z"/>
+              </svg>
             </div>
-            <div class="flex justify-between gap-2">
-              <dt class="text-slate-500">Subtotal</dt>
-              <dd id="sSubMobile" class="text-right">Rp 0</dd>
+            <div class="space-y-1">
+              <h2 class="text-sm font-bold text-slate-200">Layanan Bantuan</h2>
+              <p class="text-xs text-slate-500 leading-normal">
+                Mengalami kendala pemesanan? Layanan CS kami siap siaga 24 jam melalui tautan menu Hubungi Admin.
+              </p>
             </div>
-            <div class="flex justify-between gap-2">
-              <dt class="text-slate-500">Total</dt>
-              <dd id="sTotalMobile" class="text-right font-semibold text-slate-50">Rp 0</dd>
-            </div>
-          </dl>
+          </div>
+
+        </aside>
+      </div>
+
+    </div>
+  </div>
+
+  {{-- =============== MODAL PIN SALDO MAITRI ============== --}}
+  @auth
+    <div id="saldoPinModal" class="fixed inset-0 z-50 hidden items-center justify-center bg-black/80 backdrop-blur-md">
+      <div class="w-full max-w-md mx-4 rounded-3xl bg-slate-950 border border-white/10 p-6 space-y-5 shadow-2xl">
+        <div class="space-y-2">
+          <h2 class="text-lg font-bold text-white">Konfirmasi PIN Keamanan</h2>
+          <p class="text-xs text-slate-400 leading-normal">
+            Masukkan PIN akun Maitri Anda demi menjaga keamanan proses debet saldo pembayaran.
+          </p>
         </div>
 
-        {{-- Tombol sticky --}}
-        <button id="btnCheckoutMobile" class="w-full h-11 rounded-2xl bg-violet-600 hover:bg-violet-500 text-sm font-medium
-                                 text-white disabled:opacity-50 disabled:cursor-not-allowed">
-          Pesan Sekarang!
-        </button>
+        <form method="POST" action="{{ route('checkout.saldo') }}" id="saldoPinForm" class="space-y-4">
+          @csrf
+          <input type="hidden" name="product_id" value="{{ $product->id }}">
+          <input type="hidden" name="variant_id" id="modalVariantId">
+          <input type="hidden" name="target" id="modalTarget">
+          <input type="hidden" name="email" id="modalEmail">
+          <input type="hidden" name="phone" id="modalPhone">
+
+          <div>
+            <label class="block text-xs font-bold uppercase tracking-widest text-slate-500 mb-2">PIN Keamanan</label>
+            <input type="password" maxlength="6" name="pin" placeholder="Masukkan 6-Digit PIN Anda..." required
+                   class="h-12 w-full rounded-xl bg-black/40 border border-white/10 px-4 text-sm text-white placeholder-slate-600 outline-none focus:border-violet-500/50 text-center tracking-widest font-extrabold">
+          </div>
+
+          <div class="flex justify-end gap-2 pt-2">
+            <button type="button" id="btnClosePin" class="h-10 px-4 rounded-xl text-xs font-bold text-slate-400 hover:bg-white/5 transition-all">
+              Batal
+            </button>
+            <button type="submit" class="h-10 px-5 rounded-xl bg-violet-600 hover:bg-violet-500 text-xs font-bold text-white transition-all shadow-lg">
+              Konfirmasi & Bayar
+            </button>
+          </div>
+        </form>
       </div>
     </div>
+  @endauth
 
+  {{-- =========== FORM HIDDEN CHECKOUT PAYDISINI =========== --}}
+  <form id="paydisiniForm" method="POST" action="{{ route('checkout.paydisini') }}" class="hidden">
+    @csrf
+    <input type="hidden" name="product_id" value="{{ $product->id }}">
+    <input type="hidden" name="variant_id" id="paydisiniVariantId">
+    <input type="hidden" name="target" id="paydisiniTarget">
+    <input type="hidden" name="email" id="paydisiniEmail">
+    <input type="hidden" name="phone" id="paydisiniPhone">
+    <input type="hidden" name="payment_channel" id="paydisiniChannel">
+  </form>
 
-  </section>
+  {{-- STICKY CHECKOUT BAR (MOBILE) --}}
+  <div id="checkoutBar" class="fixed inset-x-0 bottom-0 z-40 hidden md:hidden bg-[#0c101a]/95 border-t border-white/5 backdrop-blur-xl shadow-2xl">
+    <div class="mx-auto max-w-[1280px] px-4 py-3 space-y-3">
+      
+      {{-- Mobile Summary Box --}}
+      <div id="summaryWrapperMobile" class="rounded-2xl border border-violet-500/20 bg-[#111826]/80 px-4 py-3 text-xs text-slate-200 hidden shadow-inner">
+        <div class="flex items-center justify-between gap-4 pb-2 border-b border-white/5">
+          <div class="min-w-0">
+            <p class="font-bold text-white truncate">{{ $product->name }}</p>
+            <p id="sHeaderMobile" class="text-[10px] text-slate-400 truncate">Pilih varian & metode pembayaran.</p>
+          </div>
+          <p id="sTotalShortMobile" class="text-sm font-extrabold text-white text-gradient whitespace-nowrap">Rp 0</p>
+        </div>
+
+        <dl class="mt-2 grid grid-cols-2 gap-x-4 gap-y-1 text-[10px]">
+          <div class="flex justify-between gap-1">
+            <dt class="text-slate-500">Varian</dt>
+            <dd id="sVarMobile" class="text-right font-semibold text-slate-300 truncate max-w-[80px]">—</dd>
+          </div>
+          <div class="flex justify-between gap-1">
+            <dt class="text-slate-500">Metode</dt>
+            <dd id="sPayMobile" class="text-right font-semibold text-slate-300">—</dd>
+          </div>
+          <div class="flex justify-between gap-1">
+            <dt class="text-slate-500">Subtotal</dt>
+            <dd id="sSubMobile" class="text-right font-semibold text-slate-300">Rp 0</dd>
+          </div>
+          <div class="flex justify-between gap-1">
+            <dt class="text-slate-500">Total</dt>
+            <dd id="sTotalMobile" class="text-right font-bold text-white">Rp 0</dd>
+          </div>
+        </dl>
+      </div>
+
+      <button id="btnCheckoutMobile" class="w-full h-12 rounded-2xl bg-violet-600 hover:bg-violet-500 text-sm font-bold text-white tracking-wide transition-all shadow-[0_0_20px_rgba(139,92,246,0.3)]">
+        Pesan Sekarang!
+      </button>
+    </div>
+  </div>
+
+</section>
 @endsection
 
 @push('body')
