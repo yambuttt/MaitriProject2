@@ -1,11 +1,6 @@
 const reduce = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
 
-// Mobile drawer
-(function(){
-  const btn=document.getElementById('mobileBtn');
-  const menu=document.getElementById('mobileMenu');
-  if(btn&&menu){ btn.addEventListener('click',()=>menu.classList.toggle('hidden')); }
-})();
+
 
 // Scroll reveal
 (function(){

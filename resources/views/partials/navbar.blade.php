@@ -115,15 +115,3 @@
   </div>
 </header>
 
-<script>
-  (function () {
-    const btn = document.getElementById('mobileBtn');
-    const menu = document.getElementById('mobileMenu');
-    if (btn && menu) {
-      btn.addEventListener('click', function (e) {
-        e.stopPropagation();
-        menu.classList.toggle('hidden');
-      });
-    }
-  })();
-</script>
